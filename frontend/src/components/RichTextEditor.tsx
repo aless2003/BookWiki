@@ -62,7 +62,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     return text.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
         const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
         const name = entity ? entity.name : `Unknown ${type}`;
-        return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}">#${name}</span>`;
+        return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}">${name}</span>`;
     });
   };
 
@@ -152,6 +152,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     mention: {
       allowedChars: /^[A-Za-z\sÅÅÄÄÖÖ]*$/,
       mentionDenotationChars: ["#"],
+      showDenotationChar: false,
       source: function(searchTerm: string, renderList: any) {
         const values = dataRef.current.map(e => ({ 
             id: e.id, 
@@ -226,24 +227,30 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            background-color: #0d6efd !important;
-            color: white !important;
-            padding: 0 12px !important;
-            height: 1.6em !important;
+            color: #90caf9 !important;
+            background-color: rgba(144, 202, 249, 0.1) !important;
+            padding: 0 6px !important;
             margin: 0 2px !important;
-            border-radius: 1em !important;
+            border-radius: 4px !important;
+            border-bottom: 1px dashed rgba(144, 202, 249, 0.4) !important;
             user-select: all !important;
             font-weight: 500 !important;
             cursor: pointer !important;
-            border: 1px solid #0a58ca !important;
-            transition: background-color 0.2s !important;
+            transition: all 0.2s ease !important;
             text-decoration: none !important;
             white-space: nowrap !important;
             vertical-align: middle !important;
+            height: 1.5em !important;
             width: auto !important;
-            line-height: 1 !important;
+        }
+        .ql-mention-denotation-char {
+            display: none !important;
         }
         .mention:hover {
+            background-color: rgba(144, 202, 249, 0.2) !important;
+            color: #fff !important;
+            border-bottom: 1px solid #90caf9 !important;
+        }
             background-color: #0b5ed7 !important;
             box-shadow: 0 0 8px rgba(13, 110, 253, 0.5) !important;
         }

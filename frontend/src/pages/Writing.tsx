@@ -54,8 +54,20 @@ const Writing: React.FC = () => {
         // Chapters
         const processedChapters = (chaptersData || []).map((c: any) => ({ ...c, notes: c.notes || [] }));
         setChapters(processedChapters);
+        
         if (processedChapters.length > 0) {
-          setSelectedChapterId(processedChapters[0].id);
+            const savedId = localStorage.getItem(`lastChapter_${storyId}`);
+            const exists = savedId && processedChapters.some((c: Chapter) => c.id === parseInt(savedId));
+            
+            if (exists) {
+                setSelectedChapterId(parseInt(savedId!));
+            } else {
+                // Fallback to chapter with lowest numerical value
+                const sorted = [...processedChapters].sort((a: Chapter, b: Chapter) => 
+                    a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
+                );
+                setSelectedChapterId(sorted[0].id);
+            }
         }
 
         // Entities
@@ -71,6 +83,13 @@ const Writing: React.FC = () => {
         setIsLoading(false);
     });
   }, [storyId]);
+
+  // Save last viewed chapter
+  useEffect(() => {
+    if (storyId && selectedChapterId !== null) {
+        localStorage.setItem(`lastChapter_${storyId}`, selectedChapterId.toString());
+    }
+  }, [storyId, selectedChapterId]);
 
   // Derived state
   const selectedChapter = chapters.find(c => c.id === selectedChapterId);
