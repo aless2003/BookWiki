@@ -1,0 +1,129 @@
+/* Global Material Design 3 Styles */
+:root {
+  --md-sys-color-surface: #1e1e1e;
+  --md-sys-color-surface-container: #252525;
+  --md-sys-color-primary: #a8c7fa;
+  --md-sys-color-on-primary: #062e6f;
+  --md-sys-color-secondary-container: #004a77;
+  --md-sys-color-on-secondary-container: #c2e7ff;
+}
+
+body {
+  background-color: #121212; /* Material Dark Background */
+  color: #e3e3e3;
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+}
+
+/* Material Cards */
+.card {
+  background-color: var(--md-sys-color-surface-container);
+  border: none;
+  border-radius: 16px; /* Material 3 rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  color: #e3e3e3;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Material Buttons */
+.btn {
+  border-radius: 100px; /* Pill shape */
+  font-weight: 500;
+  text-transform: none; /* Material 3 uses sentence case */
+  padding: 0.5rem 1.5rem;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.btn-primary:hover {
+  background-color: #8ab4f8; /* Lighter tint */
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Navigation Drawer (Sidebar) Styles */
+.nav-drawer-item {
+  border: none;
+  background-color: transparent;
+  color: #e3e3e3;
+  border-radius: 100px; /* Pill shape for items */
+  margin-bottom: 4px;
+  padding: 12px 24px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.nav-drawer-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.nav-drawer-item.active {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.nav-drawer-item svg {
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Navbar overrides */
+.navbar {
+  background-color: var(--md-sys-color-surface-container) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Writing Studio Specifics - IMPROVED */
+.writing-container {
+  /* Gives the paper a subtle distinction from the background */
+  background-color: #1a1a1a; 
+  min-height: 100%;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Soft glow/shadow */
+}
+
+.writing-area {
+  /* Typography for "breathing room" */
+  font-family: 'Merriweather', 'Georgia', serif; /* Use a nicer serif if available, fallback to Georgia */
+  font-size: 1.25rem; /* Slightly larger */
+  line-height: 1.6; /* Reduced for better density */
+  color: #d6d6d6;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 5vh; /* Allow scrolling past the end without being excessive */
+}
+
+/* TipTap specific styles to remove outline */
+.ProseMirror {
+  outline: none !important;
+  min-height: inherit;
+}
+
+.ProseMirror p {
+  margin-bottom: 1rem; /* Reduced space between paragraphs */
+}
