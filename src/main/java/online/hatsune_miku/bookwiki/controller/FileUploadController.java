@@ -68,7 +68,7 @@ public class FileUploadController {
 
             try (var is = file.getInputStream()) {
                 //noinspection JvmTaintAnalysis -> Already validated the file type, and this is supposed to be used locally anyways.
-                Files.copy(is, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(is, targetPath, StandardCopyOption.REPLACE_EXISTING);
             }
 
             // Return the URL to access the file
