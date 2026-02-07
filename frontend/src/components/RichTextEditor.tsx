@@ -251,9 +251,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             color: #fff !important;
             border-bottom: 1px solid #90caf9 !important;
         }
-            background-color: #0b5ed7 !important;
-            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5) !important;
-        }
 
         .ql-mention-list-container {
             background-color: #252525 !important;
@@ -286,10 +283,10 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
           z-index: 1000;
         }
-        .ql-bubble .ql-stroke {
+        .ql-stroke {
           stroke: #ccc !important;
         }
-        .ql-bubble .ql-fill {
+        .ql-fill {
           fill: #ccc !important;
         }
         .ql-editor.ql-blank::before {

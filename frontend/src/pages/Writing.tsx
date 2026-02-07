@@ -201,7 +201,7 @@ const Writing: React.FC = () => {
       }));
   };
 
-  const handleAddNote = () => {
+  const handleNoteAdd = () => {
       if (selectedChapterId === null) return;
       setChapters(prev => prev.map(c => {
           if (c.id === selectedChapterId) {
@@ -374,7 +374,7 @@ const Writing: React.FC = () => {
                 variant="outline-secondary" 
                 size="sm" 
                 className="w-100 d-flex align-items-center justify-content-center gap-2 border-0"
-                onClick={handleAddNote}
+                onClick={handleNoteAdd}
                 style={{ borderRadius: '12px', padding: '10px', backgroundColor: 'rgba(255,255,255,0.05)' }}
              >
                  <MdAdd size={18} /> Add New Note

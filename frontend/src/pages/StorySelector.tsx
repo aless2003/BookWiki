@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, Dropdown } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { MdAdd, MdLibraryBooks, MdPublic } from 'react-icons/md';
+import { MdAdd, MdLibraryBooks, MdPublic, MdEdit, MdDelete } from 'react-icons/md';
 
 interface Story {
     id: number;
@@ -17,8 +17,16 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
     const navigate = useNavigate();
     const [stories, setStories] = useState<Story[]>([]);
     const [showModal, setShowModal] = useState(false);
-    const [newStoryTitle, setNewStoryTitle] = useState('');
-    const [newStoryDesc, setNewStoryDesc] = useState('');
+    const [editingStory, setEditingStory] = useState<Story | null>(null);
+    const [storyTitle, setStoryTitle] = useState('');
+    const [storyDesc, setStoryDesc] = useState('');
+
+    const [contextMenu, setContextMenu] = useState<{ show: boolean; x: number; y: number; storyId: number | null }>({
+        show: false,
+        x: 0,
+        y: 0,
+        storyId: null
+    });
 
     useEffect(() => {
         fetch('http://localhost:3906/api/stories')
@@ -27,18 +35,56 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
             .catch(err => console.error(err));
     }, []);
 
-    const handleCreateStory = () => {
-        fetch('http://localhost:3906/api/stories', {
-            method: 'POST',
+    const handleOpenCreateModal = () => {
+        setEditingStory(null);
+        setStoryTitle('');
+        setStoryDesc('');
+        setShowModal(true);
+    };
+
+    const handleOpenEditModal = (story: Story) => {
+        setEditingStory(story);
+        setStoryTitle(story.title);
+        setStoryDesc(story.description);
+        setShowModal(true);
+        setContextMenu({ ...contextMenu, show: false });
+    };
+
+    const handleSaveStory = () => {
+        const method = editingStory ? 'PUT' : 'POST';
+        const url = editingStory 
+            ? `http://localhost:3906/api/stories/${editingStory.id}` 
+            : 'http://localhost:3906/api/stories';
+
+        fetch(url, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: newStoryTitle, description: newStoryDesc })
+            body: JSON.stringify({ title: storyTitle, description: storyDesc })
         })
         .then(res => res.json())
-        .then(newStory => {
-            setStories([...stories, newStory]);
+        .then(savedStory => {
+            if (editingStory) {
+                setStories(stories.map(s => s.id === savedStory.id ? savedStory : s));
+            } else {
+                setStories([...stories, savedStory]);
+            }
             setShowModal(false);
-            setNewStoryTitle('');
-            setNewStoryDesc('');
+            setStoryTitle('');
+            setStoryDesc('');
+        });
+    };
+
+    const handleDeleteStory = (id: number) => {
+        if (!window.confirm('Are you sure you want to delete this story? All associated chapters and notes will be lost.')) return;
+
+        fetch(`http://localhost:3906/api/stories/${id}`, {
+            method: 'DELETE'
+        })
+        .then(res => {
+            if (res.ok) {
+                setStories(stories.filter(s => s.id !== id));
+                setContextMenu({ ...contextMenu, show: false });
+            }
         });
     };
 
@@ -49,6 +95,26 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
             navigate(`/write/${id}`);
         }
     };
+
+    const handleContextMenu = (e: React.MouseEvent, storyId: number) => {
+        e.preventDefault();
+        setContextMenu({
+            show: true,
+            x: e.pageX,
+            y: e.pageY,
+            storyId
+        });
+    };
+
+    const closeContextMenu = () => {
+        setContextMenu({ ...contextMenu, show: false });
+    };
+
+    useEffect(() => {
+        const handleClick = () => closeContextMenu();
+        window.addEventListener('click', handleClick);
+        return () => window.removeEventListener('click', handleClick);
+    }, [contextMenu]);
 
     return (
         <Container className="mt-5 text-light">
@@ -64,7 +130,7 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
                             : 'Select a story to continue writing'}
                     </p>
                 </div>
-                <Button variant="primary" onClick={() => setShowModal(true)}>
+                <Button variant="primary" onClick={handleOpenCreateModal}>
                     <MdAdd /> New Story
                 </Button>
             </div>
@@ -76,6 +142,7 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
                             className="h-100 bg-dark text-light border-secondary"
                             style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
                             onClick={() => handleStoryClick(story.id)}
+                            onContextMenu={(e) => handleContextMenu(e, story.id)}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
@@ -97,10 +164,42 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
                 )}
             </Row>
 
-            {/* Create Story Modal */}
+            {/* Context Menu */}
+            {contextMenu.show && (
+                <div 
+                    style={{ 
+                        position: 'absolute', 
+                        top: contextMenu.y, 
+                        left: contextMenu.x, 
+                        zIndex: 1000,
+                        minWidth: '150px'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <Dropdown.Menu show className="bg-dark border-secondary shadow">
+                        <Dropdown.Item 
+                            className="text-light" 
+                            onClick={() => {
+                                const story = stories.find(s => s.id === contextMenu.storyId);
+                                if (story) handleOpenEditModal(story);
+                            }}
+                        >
+                            <MdEdit className="me-2" /> Edit Story
+                        </Dropdown.Item>
+                        <Dropdown.Item 
+                            className="text-danger" 
+                            onClick={() => contextMenu.storyId && handleDeleteStory(contextMenu.storyId)}
+                        >
+                            <MdDelete className="me-2" /> Delete Story
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </div>
+            )}
+
+            {/* Create/Edit Story Modal */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered contentClassName="bg-dark text-light border-secondary">
                 <Modal.Header closeButton closeVariant="white" className="border-secondary">
-                    <Modal.Title>Create New Story</Modal.Title>
+                    <Modal.Title>{editingStory ? 'Edit Story' : 'Create New Story'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
@@ -110,8 +209,8 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
                                 type="text" 
                                 autoFocus
                                 className="bg-black text-light border-secondary"
-                                value={newStoryTitle}
-                                onChange={(e) => setNewStoryTitle(e.target.value)}
+                                value={storyTitle}
+                                onChange={(e) => setStoryTitle(e.target.value)}
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -120,15 +219,17 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
                                 as="textarea" 
                                 rows={3}
                                 className="bg-black text-light border-secondary"
-                                value={newStoryDesc}
-                                onChange={(e) => setNewStoryDesc(e.target.value)}
+                                value={storyDesc}
+                                onChange={(e) => setStoryDesc(e.target.value)}
                             />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer className="border-secondary">
                     <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
-                    <Button variant="primary" onClick={handleCreateStory}>Create Story</Button>
+                    <Button variant="primary" onClick={handleSaveStory}>
+                        {editingStory ? 'Save Changes' : 'Create Story'}
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </Container>

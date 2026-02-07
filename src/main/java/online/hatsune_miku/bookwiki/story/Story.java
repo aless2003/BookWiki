@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import online.hatsune_miku.bookwiki.chapter.Chapter;
+import online.hatsune_miku.bookwiki.character.Character;
+import online.hatsune_miku.bookwiki.item.Item;
+import online.hatsune_miku.bookwiki.location.Location;
+import online.hatsune_miku.bookwiki.lore.Lore;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
@@ -33,6 +37,26 @@ public class Story {
     @JsonManagedReference
     @ToString.Exclude
     private List<Chapter> chapters = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Character> characters = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Location> locations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Item> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Lore> lores = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
