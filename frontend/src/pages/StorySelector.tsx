@@ -117,7 +117,7 @@ const StorySelector: React.FC<StorySelectorProps> = ({ mode = 'write' }) => {
     }, [contextMenu]);
 
     return (
-        <Container className="mt-5 text-light">
+        <Container className="py-5 text-light h-100 overflow-auto">
             <div className="d-flex justify-content-between align-items-center mb-5">
                 <div>
                     <h1>

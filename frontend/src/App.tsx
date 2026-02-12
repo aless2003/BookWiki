@@ -14,16 +14,18 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className="vh-100 d-flex flex-column overflow-hidden">
       <Navigation />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/world/:storyId" element={<Worldbuilding />} />
-        <Route path="/world" element={<StorySelector mode="world" />} />
-        <Route path="/stories" element={<StorySelector mode="write" />} />
-        <Route path="/write/:storyId" element={<Writing />} />
-      </Routes>
-    </>
+      <div className="flex-grow-1 overflow-hidden position-relative">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/world/:storyId" element={<Worldbuilding />} />
+          <Route path="/world" element={<StorySelector mode="world" />} />
+          <Route path="/stories" element={<StorySelector mode="write" />} />
+          <Route path="/write/:storyId" element={<Writing />} />
+        </Routes>
+      </div>
+    </div>
   );
 }
 

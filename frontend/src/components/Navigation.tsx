@@ -14,7 +14,7 @@ const Navigation: React.FC = () => {
     if (location.pathname === '/write') return null;
 
     return (
-        <Navbar expand="lg" variant="dark" className="py-3 sticky-top">
+        <Navbar expand="lg" variant="dark" className="py-3">
             <Container fluid className="px-4">
                 <Navbar.Brand as={Link} to="/" className="d-flex align-items-center fw-bold">
                     <MdBook className="me-2 text-primary" size={24} />
