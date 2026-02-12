@@ -90,27 +90,22 @@ const TiptapPagedEditor = ({
     ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' }))
   ], [characters, items, locations, lore]);
 
-  const toBubbles = (text: string) => {
+  const toBubbles = useMemo(() => (text: string) => {
     if (!text) return '';
-    // Handle mentions
     let processed = text.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
       const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
       const name = entity ? entity.name : `Unknown ${type}`;
       return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}">${name}</span>`;
     });
-    // Handle page breaks
     processed = processed.replace(/#\{pagebreak\}/g, '<div data-type="page-break"></div>');
-    // Note: Images are stored as <img> tags in the database usually, so we don't need a shortcode for them 
-    // unless they were stored differently.
     return processed;
-  };
+  }, [allEntities]);
 
-  const toShortcodes = (html: string) => {
+  const toShortcodes = useMemo(() => (html: string) => {
     if (!html) return '';
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     
-    // Convert Tiptap mentions back to shortcodes
     const mentions = doc.querySelectorAll('span[data-type="mention"]');
     mentions.forEach(el => {
         const type = el.getAttribute('data-entity-type');
@@ -120,20 +115,16 @@ const TiptapPagedEditor = ({
         }
     });
 
-    // Convert Tiptap page breaks back to shortcodes
     const pageBreaks = doc.querySelectorAll('div[data-type="page-break"]');
     pageBreaks.forEach(el => {
         el.outerHTML = '#{pagebreak}';
     });
 
-    // Ensure images have proper styling attributes if needed, 
-    // but usually we just want the <img> tag preserved.
-
     let result = doc.body.innerHTML;
     result = result.replace(/\uFEFF/g, '');
     result = result.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
     return result;
-  };
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -148,7 +139,7 @@ const TiptapPagedEditor = ({
           allowBase64: true,
       }),
       FileHandler.configure({
-        onDrop: (currentEditor, files, _pos) => {
+        onDrop: (currentEditor, files) => {
           files.forEach(async (file) => {
             if (file.type.startsWith('image/')) {
               const formData = new FormData();
@@ -171,7 +162,7 @@ const TiptapPagedEditor = ({
             }
           });
         },
-        onPaste: (currentEditor, files, _htmlContent) => {
+        onPaste: (currentEditor, files) => {
           files.forEach(async (file) => {
             if (file.type.startsWith('image/')) {
               const formData = new FormData();
@@ -197,13 +188,19 @@ const TiptapPagedEditor = ({
       }),
       PageBreak,
       PaginationPlus.configure({
-        pageHeight: 1123, // A4 at 96 DPI approx
+        pageHeight: 1123,
         pageWidth: 794,
-        pageGap: 40,
+        pageGap: 50,
         pageGapBorderSize: 1,
         pageGapBorderColor: "#333",
         pageBreakBackground: "#000",
         footerRight: "Page {page}",
+        marginTop: 40,
+        marginBottom: 40,
+        marginLeft: 60,
+        marginRight: 60,
+        contentMarginTop: 40,
+        contentMarginBottom: 40,
       }),
       Mention.extend({
         addAttributes() {
@@ -332,14 +329,6 @@ const TiptapPagedEditor = ({
         lastSentContent.current = shortcodeVersion;
         onChangeRef.current(shortcodeVersion);
       }
-
-      // Update page count
-      setTimeout(() => {
-          const pages = document.querySelectorAll('.tiptap-page');
-          if (onPageCountChangeRef.current) {
-              onPageCountChangeRef.current(pages.length);
-          }
-      }, 100);
     },
     editorProps: {
         handleDOMEvents: {
@@ -375,6 +364,46 @@ const TiptapPagedEditor = ({
   });
 
   useEffect(() => {
+    if (!editor) return;
+
+    const targetNode = editor.view.dom;
+    const config = { childList: true, subtree: true };
+    let timeoutId: any = null;
+
+    const callback = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const pages = document.querySelectorAll('.rm-page-break');
+        const count = pages.length;
+        const hasContent = editor.getText().trim().length > 0;
+        
+        if (count > 100) {
+            console.error('[TiptapPagedEditor] Potential infinite pagination detected.');
+            return;
+        }
+
+        if (onPageCountChangeRef.current) {
+          if (count > 0 || !hasContent) {
+            onPageCountChangeRef.current(count);
+          } else if (hasContent && count === 0) {
+            onPageCountChangeRef.current(1);
+          }
+        }
+      }, 1000); // 1s debounce to be very safe
+    };
+
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+
+    callback();
+
+    return () => {
+        observer.disconnect();
+        if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [editor]);
+
+  useEffect(() => {
     if (content !== lastSentContent.current) {
       const nextValue = toBubbles(content);
       if (editor && nextValue !== editor.getHTML()) {
@@ -382,7 +411,7 @@ const TiptapPagedEditor = ({
         lastSentContent.current = content;
       }
     }
-  }, [content, editor, allEntities]);
+  }, [content, editor, toBubbles]);
 
   if (!editor) {
     return null;
@@ -415,45 +444,6 @@ const TiptapPagedEditor = ({
           >
             Page Break
           </button>
-          <button
-            onClick={() => {
-              const url = window.prompt('URL');
-              if (url) {
-                editor.chain().focus().setImage({ src: url }).run();
-              }
-            }}
-          >
-            Image URL
-          </button>
-          <button
-            onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = async () => {
-                    if (input.files && input.files[0]) {
-                        const file = input.files[0];
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        try {
-                            const response = await fetch('http://localhost:3906/api/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            if (response.ok) {
-                                const data = await response.json();
-                                editor.chain().focus().setImage({ src: data.url }).run();
-                            }
-                        } catch (err) {
-                            console.error('Failed to upload image:', err);
-                        }
-                    }
-                };
-                input.click();
-            }}
-          >
-            Upload Image
-          </button>
         </div>
       </BubbleMenu>
       
@@ -474,6 +464,9 @@ const TiptapPagedEditor = ({
           font-family: 'Inter', sans-serif;
           font-size: 1.1rem;
           line-height: 1.6;
+          background-color: #1e1e1e; /* Whole editor background */
+          box-shadow: 0 0 20px rgba(0,0,0,0.5);
+          min-height: 1123px;
         }
 
         .ProseMirror img {
@@ -482,20 +475,14 @@ const TiptapPagedEditor = ({
           display: block;
           margin: 1rem auto;
           border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        /* Pagination Styling */
-        .tiptap-page {
-          background-color: #1e1e1e;
-          box-shadow: 0 0 20px rgba(0,0,0,0.5);
-          margin-bottom: 40px;
-          padding: 80px 60px; /* Margins */
-          border: 1px solid #333;
+        /* Essential Pagination Styling - Do not add borders/paddings to these classes directly */
+        .rm-page-break {
           overflow: visible !important;
         }
 
-        .tiptap-page-content {
+        .page {
            overflow: visible !important;
         }
 
@@ -535,31 +522,12 @@ const TiptapPagedEditor = ({
           break-after: page;
         }
 
-        div[data-type="page-break"]::before {
-          content: "PAGE BREAK";
-          position: absolute;
-          top: -0.7em;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #000;
-          padding: 0 0.5em;
-          color: #666;
-          font-size: 0.7rem;
-          font-weight: bold;
-          letter-spacing: 1px;
-        }
-
-        .ProseMirror-selectednode[data-type="page-break"] {
-          outline: 2px solid #0d6efd;
-        }
-
         .bubble-menu {
           display: flex;
           background-color: #252525;
           padding: 0.2rem;
           border-radius: 0.5rem;
           border: 1px solid #444;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
         .bubble-menu button {
@@ -569,12 +537,6 @@ const TiptapPagedEditor = ({
           padding: 0.4rem 0.6rem;
           border-radius: 0.3rem;
           cursor: pointer;
-          font-size: 0.9rem;
-          font-weight: 500;
-        }
-
-        .bubble-menu button:hover {
-          background-color: #333;
         }
 
         .bubble-menu button.is-active {
