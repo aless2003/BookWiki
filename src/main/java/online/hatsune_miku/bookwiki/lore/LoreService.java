@@ -50,4 +50,8 @@ public class LoreService {
     public void deleteLore(Long id) {
         loreRepository.deleteById(id);
     }
+
+    public java.util.Optional<Lore> getLoreById(Long id) {
+        return loreRepository.findById(id);
+    }
 }

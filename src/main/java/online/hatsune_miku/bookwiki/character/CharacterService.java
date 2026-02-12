@@ -55,12 +55,15 @@ public class CharacterService {
         }).orElseThrow(() -> new RuntimeException("Character not found"));
     }
 
-    public void deleteCharacter(Long id) {
-        characterRepository.deleteById(id);
-    }
+        public void deleteCharacter(Long id) {
+            characterRepository.deleteById(id);
+        }
     
-    public Character getCharacter(Long id) {
-        return characterRepository.findById(id).orElseThrow(() -> new RuntimeException("Character not found"));
+        public java.util.Optional<Character> getCharacterById(Long id) {
+            return characterRepository.findById(id);
+        }
+    
+        public Character getCharacter(Long id) {        return characterRepository.findById(id).orElseThrow(() -> new RuntimeException("Character not found"));
     }
 
     public Character addSection(Long characterId, CharacterSection section) {
