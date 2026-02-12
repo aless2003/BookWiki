@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Mention from '@tiptap/extension-mention';
 import Image from '@tiptap/extension-image';
 import Underline from '@tiptap/extension-underline';
+import FileHandler from '@tiptap/extension-file-handler';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { PaginationPlus } from 'tiptap-pagination-plus';
 
@@ -91,12 +92,16 @@ const TiptapPagedEditor = ({
 
   const toBubbles = (text: string) => {
     if (!text) return '';
+    // Handle mentions
     let processed = text.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
       const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
       const name = entity ? entity.name : `Unknown ${type}`;
       return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}">${name}</span>`;
     });
+    // Handle page breaks
     processed = processed.replace(/#\{pagebreak\}/g, '<div data-type="page-break"></div>');
+    // Note: Images are stored as <img> tags in the database usually, so we don't need a shortcode for them 
+    // unless they were stored differently.
     return processed;
   };
 
@@ -105,6 +110,7 @@ const TiptapPagedEditor = ({
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     
+    // Convert Tiptap mentions back to shortcodes
     const mentions = doc.querySelectorAll('span[data-type="mention"]');
     mentions.forEach(el => {
         const type = el.getAttribute('data-entity-type');
@@ -114,10 +120,14 @@ const TiptapPagedEditor = ({
         }
     });
 
+    // Convert Tiptap page breaks back to shortcodes
     const pageBreaks = doc.querySelectorAll('div[data-type="page-break"]');
     pageBreaks.forEach(el => {
         el.outerHTML = '#{pagebreak}';
     });
+
+    // Ensure images have proper styling attributes if needed, 
+    // but usually we just want the <img> tag preserved.
 
     let result = doc.body.innerHTML;
     result = result.replace(/\uFEFF/g, '');
@@ -133,7 +143,58 @@ const TiptapPagedEditor = ({
         }
       }),
       Underline,
-      Image,
+      Image.configure({
+          inline: true,
+          allowBase64: true,
+      }),
+      FileHandler.configure({
+        onDrop: (currentEditor, files, _pos) => {
+          files.forEach(async (file) => {
+            if (file.type.startsWith('image/')) {
+              const formData = new FormData();
+              formData.append('file', file);
+              try {
+                const response = await fetch('http://localhost:3906/api/upload', {
+                  method: 'POST',
+                  body: formData
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
+                    type: 'image',
+                    attrs: { src: data.url },
+                  }).focus().run();
+                }
+              } catch (err) {
+                console.error('Failed to upload dropped image:', err);
+              }
+            }
+          });
+        },
+        onPaste: (currentEditor, files, _htmlContent) => {
+          files.forEach(async (file) => {
+            if (file.type.startsWith('image/')) {
+              const formData = new FormData();
+              formData.append('file', file);
+              try {
+                const response = await fetch('http://localhost:3906/api/upload', {
+                  method: 'POST',
+                  body: formData
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
+                    type: 'image',
+                    attrs: { src: data.url },
+                  }).focus().run();
+                }
+              } catch (err) {
+                console.error('Failed to upload pasted image:', err);
+              }
+            }
+          });
+        },
+      }),
       PageBreak,
       PaginationPlus.configure({
         pageHeight: 1123, // A4 at 96 DPI approx
@@ -415,6 +476,15 @@ const TiptapPagedEditor = ({
           line-height: 1.6;
         }
 
+        .ProseMirror img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 1rem auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
         /* Pagination Styling */
         .tiptap-page {
           background-color: #1e1e1e;
@@ -422,6 +492,11 @@ const TiptapPagedEditor = ({
           margin-bottom: 40px;
           padding: 80px 60px; /* Margins */
           border: 1px solid #333;
+          overflow: visible !important;
+        }
+
+        .tiptap-page-content {
+           overflow: visible !important;
         }
 
         .mention {
