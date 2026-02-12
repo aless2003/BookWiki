@@ -51,8 +51,6 @@ public class ExportController {
                 } else {
                     // Export all chapters of the story
                     chaptersToExport.addAll(chapterService.getChaptersByStoryId(request.getStoryId()));
-                    // Basic sort for now
-                    chaptersToExport.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
                 }
             }
         } else if (request.getChapterIds() != null && !request.getChapterIds().isEmpty()) {
@@ -60,6 +58,9 @@ public class ExportController {
                 chapterService.getChapterById(id).ifPresent(chaptersToExport::add);
             }
         }
+
+        // Always apply natural sort to the final list to ensure correct document order
+        chaptersToExport.sort((a, b) -> compareNaturally(a.getTitle(), b.getTitle()));
 
         byte[] content = service.export(title, chaptersToExport);
 
@@ -73,5 +74,29 @@ public class ExportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(mediaType)
                 .body(content);
+    }
+
+    private int compareNaturally(String s1, String s2) {
+        if (s1 == null || s2 == null) return 0;
+        
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+)|(\\D+)");
+        java.util.regex.Matcher m1 = pattern.matcher(s1);
+        java.util.regex.Matcher m2 = pattern.matcher(s2);
+        
+        while (m1.find() && m2.find()) {
+            String g1 = m1.group();
+            String g2 = m2.group();
+            
+            int result;
+            if (Character.isDigit(g1.charAt(0)) && Character.isDigit(g2.charAt(0))) {
+                result = Long.compare(Long.parseLong(g1), Long.parseLong(g2));
+            } else {
+                result = g1.compareToIgnoreCase(g2);
+            }
+            
+            if (result != 0) return result;
+        }
+        
+        return s1.length() - s2.length();
     }
 }
