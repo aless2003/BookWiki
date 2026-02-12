@@ -52,4 +52,18 @@ class ExportServiceTests {
         assertNotNull(result);
         assertTrue(result.length > 0);
     }
+
+    @Test
+    void testAdvancedExport() throws IOException {
+        Chapter c1 = new Chapter();
+        c1.setTitle("Advanced Chapter");
+        c1.setContent("<p>First segment #{pagebreak} Second segment with <b>bold</b> and <img src=\"http://localhost:3906/uploads/test.jpg\"></p>");
+        
+        // Note: Images will fail silently in test if file doesn't exist, which is fine for basic verification
+        byte[] docxResult = docxExportService.export("Advanced Story", List.of(c1));
+        assertNotNull(docxResult);
+        
+        byte[] pdfResult = pdfExportService.export("Advanced Story", List.of(c1));
+        assertNotNull(pdfResult);
+    }
 }
