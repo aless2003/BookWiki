@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { MdArrowBack, MdSave, MdPublish, MdOutlineDescription, MdFolderOpen, MdSettings, MdMoreVert, MdAdd, MdDelete } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
-import RichTextEditor from '../components/RichTextEditor';
+import TiptapPagedEditor from '../components/TiptapPagedEditor';
 
 interface Entity {
     id: number;
@@ -28,6 +28,7 @@ const Writing: React.FC = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pageCount, setPageCount] = useState(1);
   
   // Worldbuilding entities state
   const [characters, setCharacters] = useState<Entity[]>([]);
@@ -253,7 +254,11 @@ const Writing: React.FC = () => {
                         }
                     }}
                 />
-                <small className="text-secondary">Last edited just now</small>
+                <div className="d-flex gap-2 align-items-center">
+                    <small className="text-secondary">Last edited just now</small>
+                    <span className="text-secondary" style={{ fontSize: '0.8rem' }}>•</span>
+                    <small className="text-info fw-bold">{pageCount} {pageCount === 1 ? 'Page' : 'Pages'}</small>
+                </div>
               </div>
           </div>
           <div className="d-flex gap-2">
@@ -304,18 +309,18 @@ const Writing: React.FC = () => {
           </Col>
 
           <Col md={8} className="d-flex justify-content-center overflow-auto position-relative bg-black">
-            <div className="writing-container w-100 my-4 px-5 py-5 rounded" style={{ maxWidth: '900px', height: 'fit-content', minHeight: '90%' }}>
+            <div className="writing-container w-100 my-4 px-2" style={{ height: 'fit-content' }}>
                 {selectedChapter ? (
-                    <RichTextEditor 
+                    <TiptapPagedEditor 
                       content={selectedChapter.content} 
                       characters={characters}
                       items={items}
                       locations={locations}
                       lore={lore}
                       onChange={updateChapterContent} 
+                      onPageCountChange={setPageCount}
                       onSave={() => handleSave()}
                       onMentionClick={handleMentionClick}
-                      minHeight="60vh"
                     />
                 ) : (
                     <div className="text-center text-secondary mt-5">
