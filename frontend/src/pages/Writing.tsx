@@ -227,7 +227,7 @@ const Writing: React.FC = () => {
   if (isLoading) return <div className="text-light p-5">Loading studio...</div>;
 
   return (
-    <Container fluid className="vh-100 d-flex flex-column p-0 bg-black text-light">
+    <Container fluid className="h-100 d-flex flex-column p-0 bg-black text-light">
       {/* Top AppBar */}
       <div className="px-4 py-2 border-bottom border-secondary d-flex justify-content-between align-items-center" style={{ backgroundColor: '#1e1e1e', zIndex: 10 }}>
           <div className="d-flex align-items-center">
@@ -274,65 +274,64 @@ const Writing: React.FC = () => {
           </div>
       </div>
 
-      <Row className="flex-grow-1 g-0">
-          <Col md={2} className="d-none d-md-block p-3" style={{ backgroundColor: '#1e1e1e', borderRight: '1px solid #333' }}>
-            <div className="mb-4">
-                <div className="d-flex justify-content-between align-items-center px-3 mb-2">
-                    <small className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Manuscript</small>
-                    <Button variant="link" className="p-0 text-secondary" size="sm" onClick={handleCreateChapter} title="New Chapter">
-                        <MdAdd size={18} />
-                    </Button>
-                </div>
-                <div className="mt-2">
-                    {sortedChapters.map(chapter => (
-                        <div 
-                            key={chapter.id}
-                            className={`nav-drawer-item ${selectedChapterId === chapter.id ? 'active' : ''}`}
-                            onClick={() => handleChapterSwitch(chapter.id)}
-                        >
-                            <MdOutlineDescription /> {chapter.title}
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div>
-                <small className="text-secondary fw-bold text-uppercase px-3" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Planning</small>
-                <div className="mt-2">
-                    <div className="nav-drawer-item">
-                        <MdFolderOpen /> Notes & Ideas
-                    </div>
-                    <div className="nav-drawer-item">
-                        <MdSettings /> Document Settings
-                    </div>
-                </div>
-            </div>
-          </Col>
-
-          <Col md={8} className="d-flex justify-content-center overflow-auto position-relative bg-black">
-            <div className="writing-container w-100 my-4 px-2" style={{ height: 'fit-content' }}>
-                {selectedChapter ? (
-                    <TiptapPagedEditor 
-                      content={selectedChapter.content} 
-                      characters={characters}
-                      items={items}
-                      locations={locations}
-                      lore={lore}
-                      onChange={updateChapterContent} 
-                      onPageCountChange={setPageCount}
-                      onSave={() => handleSave()}
-                      onMentionClick={handleMentionClick}
-                    />
-                ) : (
-                    <div className="text-center text-secondary mt-5">
-                        <p>No chapters found. Create one to start writing.</p>
-                        <Button variant="outline-primary" onClick={handleCreateChapter}>Create First Chapter</Button>
-                    </div>
-                )}
-            </div>
-          </Col>
-
-          <Col md={2} className="d-none d-lg-block p-3 border-start border-secondary overflow-auto" style={{ backgroundColor: '#121212', height: '100%' }}>
-             <div className="mb-3">
+            <Row className="flex-grow-1 g-0 overflow-hidden" style={{ minHeight: 0 }}>
+                <Col md={2} className="d-none d-md-block p-3 overflow-auto h-100" style={{ backgroundColor: '#1e1e1e', borderRight: '1px solid #333' }}>
+                  <div className="mb-4">
+                      <div className="d-flex justify-content-between align-items-center px-3 mb-2">
+                          <small className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Manuscript</small>
+                          <Button variant="link" className="p-0 text-secondary" size="sm" onClick={handleCreateChapter} title="New Chapter">
+                              <MdAdd size={18} />
+                          </Button>
+                      </div>
+                      <div className="mt-2">
+                          {sortedChapters.map(chapter => (
+                              <div
+                                  key={chapter.id}
+                                  className={`nav-drawer-item ${selectedChapterId === chapter.id ? 'active' : ''}`}      
+                                  onClick={() => handleChapterSwitch(chapter.id)}
+                              >
+                                  <MdOutlineDescription /> {chapter.title}
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+                  <div>
+                      <small className="text-secondary fw-bold text-uppercase px-3" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Planning</small>
+                      <div className="mt-2">
+                          <div className="nav-drawer-item">
+                              <MdFolderOpen /> Notes & Ideas
+                          </div>
+                          <div className="nav-drawer-item">
+                              <MdSettings /> Document Settings
+                          </div>
+                      </div>
+                  </div>
+                </Col>
+      
+                <Col md={8} className="d-flex justify-content-center overflow-auto h-100 position-relative bg-black">
+                  <div className="writing-container w-100 my-4 px-2" style={{ height: 'fit-content' }}>
+                      {selectedChapter ? (
+                          <TiptapPagedEditor
+                            content={selectedChapter.content}
+                            characters={characters}
+                            items={items}
+                            locations={locations}
+                            lore={lore}
+                            onChange={updateChapterContent}
+                            onPageCountChange={setPageCount}
+                            onSave={() => handleSave()}
+                            onMentionClick={handleMentionClick}
+                          />
+                      ) : (
+                          <div className="text-center text-secondary mt-5">
+                              <p>No chapters found. Create one to start writing.</p>
+                              <Button variant="outline-primary" onClick={handleCreateChapter}>Create First Chapter</Button>
+                          </div>
+                      )}
+                  </div>
+                </Col>
+      
+                <Col md={2} className="d-none d-lg-block p-3 border-start border-secondary overflow-auto h-100" style={{ backgroundColor: '#121212' }}>             <div className="mb-3">
                  <small className="text-secondary fw-bold text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Quick Notes</small>
              </div>
              {selectedChapter?.notes.map((note, index) => (

@@ -712,7 +712,7 @@ const Worldbuilding: React.FC = () => {
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
-            <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+            <Box sx={{ display: 'flex', height: '100%', bgcolor: 'background.default', overflow: 'hidden' }}>
                 <Drawer
                     variant="permanent"
                     sx={{
@@ -722,7 +722,9 @@ const Worldbuilding: React.FC = () => {
                             width: drawerWidth,
                             boxSizing: 'border-box',
                             bgcolor: 'background.paper',
-                            borderRight: '1px solid rgba(255,255,255,0.1)'
+                            borderRight: '1px solid rgba(255,255,255,0.1)',
+                            position: 'relative',
+                            height: '100%'
                         },
                     }}
                 >
@@ -761,7 +763,7 @@ const Worldbuilding: React.FC = () => {
                     </List>
                 </Drawer>
 
-                <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', position: 'relative' }}>
+                <Box component="main" sx={{ flexGrow: 1, height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <AppBar position="sticky" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                         <Toolbar>
                             <Grid container alignItems="center" spacing={2} sx={{ width: '100%' }}>
@@ -803,7 +805,7 @@ const Worldbuilding: React.FC = () => {
                         </Toolbar>
                     </AppBar>
 
-                    <Box sx={{ p: 4 }}>
+                    <Box sx={{ p: 4, flexGrow: 1, overflowY: 'auto' }}>
                         {isLoading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
                                 <CircularProgress />

@@ -7,7 +7,7 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Container className="mt-5">
+    <Container className="py-5 h-100 overflow-auto">
       <div className="text-center mb-5">
         <h1 className="display-4 fw-bold">BookWiki</h1>
         <p className="lead text-secondary">Your universe, organized and written.</p>
