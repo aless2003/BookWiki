@@ -1,6 +1,6 @@
 # Implementation Plan: Move to H2 File-Based Database
 
-## Phase 1: Infrastructure & Dependency Management [checkpoint: d25deb4]
+## Phase 1: Infrastructure & Dependency Management [checkpoint: 66278a4] [checkpoint: d25deb4]
 - [x] Task: Update `build.gradle` dependencies
     - [ ] Add `runtimeOnly 'com.h2database:h2'`
     - [ ] Keep `postgresql` for now (to facilitate migration) but remove `spring-boot-docker-compose` or disable it in properties.
