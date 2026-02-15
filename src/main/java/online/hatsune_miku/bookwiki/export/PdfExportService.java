@@ -177,25 +177,22 @@ public class PdfExportService implements ExportService {
                 // Get attributes from HTML tag if available
                 String attrWidth = imgElement.attr("width");
                 String attrHeight = imgElement.attr("height");
+                String styleAttr = imgElement.attr("style");
+
+                if (!styleAttr.isEmpty()) {
+                    java.util.Map<String, String> styles = HtmlUtils.parseStyle(styleAttr);
+                    if (attrWidth.isEmpty()) attrWidth = styles.getOrDefault("width", "");
+                    if (attrHeight.isEmpty()) attrHeight = styles.getOrDefault("height", "");
+                }
+
+                Double parsedWidth = HtmlUtils.parseDimension(attrWidth);
+                Double parsedHeight = HtmlUtils.parseDimension(attrHeight);
                 
-                if (!attrWidth.isEmpty() && !attrHeight.isEmpty()) {
-                    try {
-                        float targetWidth = Float.parseFloat(attrWidth.replaceAll("[^0-9.]", ""));
-                        float targetHeight = Float.parseFloat(attrHeight.replaceAll("[^0-9.]", ""));
-                        
-                        // Respect aspect ratio if only one is provided? No, user provided both.
-                        img.scaleAbsolute(targetWidth, targetHeight);
-                    } catch (NumberFormatException e) {
-                        img.scaleToFit(pageWidth, pageHeight);
-                    }
-                } else if (!attrWidth.isEmpty()) {
-                    try {
-                        float targetWidth = Float.parseFloat(attrWidth.replaceAll("[^0-9.]", ""));
-                        float ratio = targetWidth / img.getWidth();
-                        img.scaleAbsolute(targetWidth, img.getHeight() * ratio);
-                    } catch (NumberFormatException e) {
-                        img.scaleToFit(pageWidth, pageHeight);
-                    }
+                if (parsedWidth != null && parsedHeight != null) {
+                    img.scaleAbsolute(parsedWidth.floatValue(), parsedHeight.floatValue());
+                } else if (parsedWidth != null) {
+                    float ratio = parsedWidth.floatValue() / img.getWidth();
+                    img.scaleAbsolute(parsedWidth.floatValue(), img.getHeight() * ratio);
                 } else {
                     img.scaleToFit(pageWidth, pageHeight);
                 }

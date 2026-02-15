@@ -26,6 +26,7 @@
   - React Quill (Standardized robust editor)
 - **Editor Extensions:**
   - `tiptap-pagination-plus`: For A4 paged layout and automatic pagination.
+- `Custom ResizableImage`: Custom Tiptap extension for handle-based image resizing with A4 constraints and aspect ratio lock.
 - **Routing:** React Router DOM
 
 ## Infrastructure & DevOps

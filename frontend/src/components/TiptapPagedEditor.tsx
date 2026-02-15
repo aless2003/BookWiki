@@ -3,7 +3,7 @@ import { useEditor, EditorContent, ReactRenderer } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Mention from '@tiptap/extension-mention';
-import Image from '@tiptap/extension-image';
+import { ResizableImage } from './ResizableImage';
 import Underline from '@tiptap/extension-underline';
 import FileHandler from '@tiptap/extension-file-handler';
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -134,10 +134,7 @@ const TiptapPagedEditor = ({
         }
       }),
       Underline,
-      Image.configure({
-          inline: true,
-          allowBase64: true,
-      }),
+      ResizableImage,
       FileHandler.configure({
         onDrop: (currentEditor, files) => {
           files.forEach(async (file) => {
@@ -152,7 +149,7 @@ const TiptapPagedEditor = ({
                 if (response.ok) {
                   const data = await response.json();
                   currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
-                    type: 'image',
+                    type: 'resizableImage',
                     attrs: { src: data.url },
                   }).focus().run();
                 }
@@ -175,7 +172,7 @@ const TiptapPagedEditor = ({
                 if (response.ok) {
                   const data = await response.json();
                   currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
-                    type: 'image',
+                    type: 'resizableImage',
                     attrs: { src: data.url },
                   }).focus().run();
                 }
@@ -470,11 +467,11 @@ const TiptapPagedEditor = ({
         }
 
         .ProseMirror img {
-          max-width: 100%;
+          /* max-width: 100%;
           height: auto;
           display: block;
           margin: 1rem auto;
-          border-radius: 8px;
+          border-radius: 8px; */
         }
 
         /* Essential Pagination Styling - Do not add borders/paddings to these classes directly */
