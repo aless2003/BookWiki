@@ -1,0 +1,8 @@
+{
+  "track_id": "export-system_20260212",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-02-12T22:46:00Z",
+  "updated_at": "2026-02-12T22:46:00Z",
+  "description": "Feature: The ability to export a chapter or entire story into an external file format, for now just pdf and docx, but more being possible in the future"
+}

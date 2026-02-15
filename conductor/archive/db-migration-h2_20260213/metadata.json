@@ -1,0 +1,8 @@
+{
+  "track_id": "db-migration-h2_20260213",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-02-13T21:16:00Z",
+  "updated_at": "2026-02-13T21:16:00Z",
+  "description": "Feature: Move from PostgreSQL to a one file database solution (H2 File-based)"
+}

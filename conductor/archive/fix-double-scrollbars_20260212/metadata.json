@@ -1,0 +1,8 @@
+{
+  "track_id": "fix-double-scrollbars_20260212",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-02-12T02:45:00Z",
+  "updated_at": "2026-02-12T02:45:00Z",
+  "description": "bug fix: inside the writing module, there's two scrollbars, one outside of the writing container, one within. There should either only be the inner one for just the writing part, or just the outer one to scroll the writing part, but not both"
+}

@@ -1,0 +1,8 @@
+{
+  "track_id": "paged-writing_20260212",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-02-12T01:09:00Z",
+  "updated_at": "2026-02-12T01:09:00Z",
+  "description": "Make the Writing module Paged, e.g. having it render like a word processor over multiple pages, including support for images and text being within those pages."
+}

@@ -1,0 +1,8 @@
+{
+  "track_id": "image_resizing_20260215",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-02-15T12:00:00Z",
+  "updated_at": "2026-02-15T12:00:00Z",
+  "description": "feature: I want to be able to resize images to any arbritrary size inside the document as long as it fits in width and height on the page"
+}

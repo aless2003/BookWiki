@@ -1,0 +1,8 @@
+{
+  "track_id": "fix-page-counter_20260212",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-02-12T02:36:00Z",
+  "updated_at": "2026-02-12T02:36:00Z",
+  "description": "bug fix: Page counter is not tracking correctly, usually staying at 0 and 1"
+}
