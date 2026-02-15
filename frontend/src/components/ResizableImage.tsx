@@ -1,25 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
+import { ReactNodeViewRenderer, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { EDITOR_MAX_WIDTH, EDITOR_MAX_HEIGHT } from '../constants/editor';
 
-interface ResizableImageProps {
-  node: {
-    attrs: {
-      src: string;
-      alt?: string;
-      title?: string;
-      width: string;
-      height: string;
-    };
-  };
-  updateAttributes: (attrs: Record<string, any>) => void;
-  selected: boolean;
-  editor: any;
-  getPos: () => number;
-}
-
-const ResizableImageComponent = ({ node, updateAttributes, selected, editor, getPos }: ResizableImageProps) => {
+const ResizableImageComponent = ({ node, updateAttributes, selected, editor, getPos }: ReactNodeViewProps) => {
   const { src, alt, title, width, height } = node.attrs;
   const containerRef = useRef<HTMLDivElement>(null);
   const [resizing, setResizing] = useState(false);
@@ -150,7 +134,10 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
     e.preventDefault();
     e.stopPropagation();
     if (typeof getPos === 'function') {
-      editor.commands.setNodeSelection(getPos());
+      const pos = getPos();
+      if (typeof pos === 'number') {
+        editor.commands.setNodeSelection(pos);
+      }
     }
   };
 

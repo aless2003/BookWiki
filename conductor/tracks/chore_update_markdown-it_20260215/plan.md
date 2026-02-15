@@ -2,15 +2,15 @@
 
 ## Phase 1: Update Dependency and Verify
 
-- [ ] **Task:** Update `markdown-it` version
+- [x] **Task:** Update `markdown-it` version
     - [ ] Sub-task: Add `overrides` for `markdown-it: "14.1.1"` to `frontend/package.json`.
     - [ ] Sub-task: Run `bun install` in the `frontend` directory to apply the override.
 
-- [ ] **Task:** Verify the update
+- [x] **Task:** Verify the update
     - [ ] Sub-task: Run `bun why markdown-it` in the `frontend` directory and confirm the version is `14.1.1`.
 
-- [ ] **Task:** Manual Verification
+- [x] **Task:** Manual Verification
     - [ ] Sub-task: Start the frontend development server using `bun run dev`.
     - [ ] Sub-task: Manually test the Tiptap editor's markdown features as outlined in the `spec.md` (links, bold, lists, etc.).
 
-- [ ] **Task:** Conductor - User Manual Verification 'Phase 1: Update Dependency and Verify' (Protocol in workflow.md)
+- [~] **Task:** Conductor - User Manual Verification 'Phase 1: Update Dependency and Verify' (Protocol in workflow.md)
