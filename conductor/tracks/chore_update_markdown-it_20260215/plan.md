@@ -1,6 +1,6 @@
 # Implementation Plan: Update markdown-it to 14.1.1
 
-## Phase 1: Update Dependency and Verify
+## Phase 1: Update Dependency and Verify [checkpoint: 31d7c42]
 
 - [x] **Task:** Update `markdown-it` version
     - [ ] Sub-task: Add `overrides` for `markdown-it: "14.1.1"` to `frontend/package.json`.
