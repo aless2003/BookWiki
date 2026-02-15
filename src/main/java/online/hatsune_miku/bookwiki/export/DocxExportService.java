@@ -142,23 +142,27 @@ public class DocxExportService implements ExportService {
                     width = bimg.getWidth();
                     height = bimg.getHeight();
                     
-                    String attrWidth = imgElement.attr("width");
-                    String attrHeight = imgElement.attr("height");
+                                        String attrWidth = imgElement.attr("width");
+                                        String attrHeight = imgElement.attr("height");
+                                        String styleAttr = imgElement.attr("style");
                     
-                    if (!attrWidth.isEmpty() && !attrHeight.isEmpty()) {
-                        try {
-                            width = Double.parseDouble(attrWidth.replaceAll("[^0-9.]", ""));
-                            height = Double.parseDouble(attrHeight.replaceAll("[^0-9.]", ""));
-                        } catch (NumberFormatException e) { /* fallback to natural */ }
-                    } else if (!attrWidth.isEmpty()) {
-                        try {
-                            double targetWidth = Double.parseDouble(attrWidth.replaceAll("[^0-9.]", ""));
-                            height = height * (targetWidth / width);
-                            width = targetWidth;
-                        } catch (NumberFormatException e) { /* fallback to natural */ }
-                    }
-
-                    // Standard DOCX printable width is ~450 points (6.25 inches)
+                                        if (!styleAttr.isEmpty()) {
+                                            java.util.Map<String, String> styles = HtmlUtils.parseStyle(styleAttr);
+                                            if (attrWidth.isEmpty()) attrWidth = styles.getOrDefault("width", "");
+                                            if (attrHeight.isEmpty()) attrHeight = styles.getOrDefault("height", "");
+                                        }
+                    
+                                        Double parsedWidth = HtmlUtils.parseDimension(attrWidth);
+                                        Double parsedHeight = HtmlUtils.parseDimension(attrHeight);
+                    
+                                        if (parsedWidth != null && parsedHeight != null) {
+                                            width = parsedWidth;
+                                            height = parsedHeight;
+                                        } else if (parsedWidth != null) {
+                                            height = height * (parsedWidth / width);
+                                            width = parsedWidth;
+                                        }
+                                        // Standard DOCX printable width is ~450 points (6.25 inches)
                     double maxWidth = 450; 
                     if (width > maxWidth) {
                         height = height * (maxWidth / width);
