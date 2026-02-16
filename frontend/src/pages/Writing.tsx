@@ -334,6 +334,7 @@ const Writing: React.FC = () => {
                       onPageCountChange={setPageCount}
                       onSave={() => handleSave()}
                       onMentionClick={handleMentionClick}
+                      storyId={storyId}
                     />
                 ) : (
                     <div className="text-center text-secondary mt-5">

@@ -1,17 +1,32 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useState } from 'react';
+
+interface MentionItem {
+  id: string | number;
+  label: string;
+  type: string;
+  icon?: string;
+  imageUrl?: string;
+}
 
 interface MentionListProps {
-  items: any[];
-  command: (item: any) => void;
+  items: MentionItem[];
+  command: (item: MentionItem) => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Reset selected index when items change
+  const [prevItems, setPrevItems] = useState(props.items);
+  if (props.items !== prevItems) {
+    setPrevItems(props.items);
+    setSelectedIndex(0);
+  }
+
   const selectItem = (index: number) => {
     const item = props.items[index];
     if (item) {
-      props.command({ id: item.id, label: item.label, 'entity-type': item.type });
+      props.command({ id: item.id, label: item.label, type: item.type });
     }
   };
 
@@ -26,8 +41,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const enterHandler = () => {
     selectItem(selectedIndex);
   };
-
-  useEffect(() => setSelectedIndex(0), [props.items]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }: { event: KeyboardEvent }) => {
@@ -56,7 +69,11 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
             key={index}
             onClick={() => selectItem(index)}
           >
-            {item.icon} {item.label} ({item.type})
+            {item.type === 'emote' ? (
+              <img src={item.imageUrl} alt={item.label} style={{ height: '1.5em', width: '1.5em', verticalAlign: 'middle', marginRight: '5px', objectFit: 'cover' }} />
+            ) : (
+              item.icon
+            )} {item.label} ({item.type})
           </button>
         ))
         : <div className="mention-list-no-result">No result</div>

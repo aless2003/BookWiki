@@ -1,4 +1,4 @@
-# Track chore_update_markdown-it_20260215 Context
+# Track inline_image_emotes_20260215 Context
 
 - [Specification](./spec.md)
 - [Implementation Plan](./plan.md)

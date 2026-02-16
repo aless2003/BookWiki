@@ -1,0 +1,62 @@
+Starting a Gradle Daemon, 8 busy and 2 incompatible and 5 stopped Daemons could not be reused, use --status for details
+> Task :compileJava UP-TO-DATE
+> Task :installFrontend UP-TO-DATE
+> Task :buildFrontend UP-TO-DATE
+> Task :copyFrontend UP-TO-DATE
+> Task :processResources
+> Task :classes
+> Task :resolveMainClassName
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.2)
+
+2026-02-14T03:39:44.314+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.h.bookwiki.BookWikiApplication         : Starting BookWikiApplication using Java 25.0.2 with PID 52908 (V:\BookWiki\build\classes\java\main started by aless in V:\BookWiki)
+2026-02-14T03:39:44.317+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.h.bookwiki.BookWikiApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-02-14T03:39:44.348+01:00  INFO 52908 --- [BookWiki] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-14T03:39:44.348+01:00  INFO 52908 --- [BookWiki] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-14T03:39:44.767+01:00  INFO 52908 --- [BookWiki] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-14T03:39:44.813+01:00  INFO 52908 --- [BookWiki] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 40 ms. Found 6 JPA repository interfaces.
+2026-02-14T03:39:45.368+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 3906 (http)
+2026-02-14T03:39:45.377+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-14T03:39:45.378+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-02-14T03:39:45.441+01:00  INFO 52908 --- [BookWiki] [  restartedMain] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1093 ms
+2026-02-14T03:39:45.554+01:00  INFO 52908 --- [BookWiki] [  restartedMain] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-02-14T03:39:45.597+01:00  INFO 52908 --- [BookWiki] [  restartedMain] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.1.Final
+2026-02-14T03:39:46.016+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-14T03:39:46.043+01:00  INFO 52908 --- [BookWiki] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-02-14T03:39:46.199+01:00  INFO 52908 --- [BookWiki] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:file:./data/bookwiki user=SA
+2026-02-14T03:39:46.201+01:00  INFO 52908 --- [BookWiki] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-02-14T03:39:46.220+01:00  WARN 52908 --- [BookWiki] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-14T03:39:46.242+01:00  INFO 52908 --- [BookWiki] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:h2:file:./data/bookwiki]
+	Database driver: H2 JDBC Driver
+	Database dialect: H2Dialect
+	Database version: 2.4.240
+	Default catalog/schema: bookwiki/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: 100
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-02-14T03:39:47.095+01:00  INFO 52908 --- [BookWiki] [  restartedMain] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-14T03:39:47.145+01:00  INFO 52908 --- [BookWiki] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-14T03:39:47.208+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-02-14T03:39:47.790+01:00  WARN 52908 --- [BookWiki] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-02-14T03:39:47.803+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-02-14T03:39:48.028+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 3906 (http) with context path '/'
+2026-02-14T03:39:48.031+01:00  INFO 52908 --- [BookWiki] [  restartedMain] o.h.bookwiki.BookWikiApplication         : Started BookWikiApplication in 3.973 seconds (process running for 4.495)
+Hibernate: select count(*) from stories s1_0
+Hibernate: select s1_0.id,s1_0.created_at,s1_0.description,s1_0.title,s1_0.updated_at from stories s1_0
+Hibernate: select c1_0.id,c1_0.content,c1_0.created_at,c1_0.story_id,c1_0.title,c1_0.updated_at from chapters c1_0
+2026-02-14T03:40:00.357+01:00  INFO 52908 --- [BookWiki] [nio-3906-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-14T03:40:00.358+01:00  INFO 52908 --- [BookWiki] [nio-3906-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-02-14T03:40:00.358+01:00  INFO 52908 --- [BookWiki] [nio-3906-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms

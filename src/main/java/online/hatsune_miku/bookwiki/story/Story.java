@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import online.hatsune_miku.bookwiki.chapter.Chapter;
 import online.hatsune_miku.bookwiki.character.Character;
+import online.hatsune_miku.bookwiki.emote.Emote;
 import online.hatsune_miku.bookwiki.item.Item;
 import online.hatsune_miku.bookwiki.location.Location;
 import online.hatsune_miku.bookwiki.lore.Lore;
@@ -57,6 +58,11 @@ public class Story {
     @JsonManagedReference
     @ToString.Exclude
     private List<Lore> lores = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
+    private List<Emote> emotes = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

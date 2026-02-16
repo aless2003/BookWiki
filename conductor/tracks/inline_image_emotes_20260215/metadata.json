@@ -1,0 +1,8 @@
+{
+  "track_id": "inline_image_emotes_20260215",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-02-15T00:00:00Z",
+  "updated_at": "2026-02-15T00:00:00Z",
+  "description": "feature: Allow the conversion of an image into an emoji like thing. E.g. You can insert it into the text like a text character, but cannot be resized in return and text flows around it rather than having it's own line/Block like normal images"
+}

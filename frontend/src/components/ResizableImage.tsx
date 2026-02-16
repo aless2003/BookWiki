@@ -2,8 +2,12 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { EDITOR_MAX_WIDTH, EDITOR_MAX_HEIGHT } from '../constants/editor';
+import EmoteNamingModal from './EmoteNamingModal'; // Import modal
 
-const ResizableImageComponent = ({ node, updateAttributes, selected, editor, getPos }: ReactNodeViewProps) => {
+
+import { API_BASE_URL } from '../constants/api'; // Import constant
+
+const ResizableImageComponent = ({ node, updateAttributes, selected, editor, getPos, storyId, onEmoteCreated }: ReactNodeViewProps & { storyId: string, onEmoteCreated: () => void }) => {
   const { src, alt, title, width, height } = node.attrs;
   const containerRef = useRef<HTMLDivElement>(null);
   const [resizing, setResizing] = useState(false);
@@ -12,9 +16,16 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
   const [initialPos, setInitialPos] = useState({ x: 0, y: 0 });
   const [currentHandle, setCurrentHandle] = useState<string | null>(null);
   const [lockedHeight, setLockedHeight] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // New state for modal
 
   // Local state for the size during the drag to avoid document-wide layout shifts
   const [displayedSize, setDisplayedSize] = useState({ width: width || 'auto', height: height || 'auto' });        
+  const [prevAttrs, setPrevAttrs] = useState({ width, height });
+
+  if (!resizing && (prevAttrs.width !== width || prevAttrs.height !== height)) {
+    setPrevAttrs({ width, height });
+    setDisplayedSize({ width: width || 'auto', height: height || 'auto' });
+  }
 
   useEffect(() => {
     const img = new Image();
@@ -23,13 +34,6 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
       setAspectRatio(img.width / img.height);
     };
   }, [src]);
-
-  // Sync displayedSize with node attributes when not resizing
-  useEffect(() => {
-    if (!resizing) {
-      setDisplayedSize({ width: width || 'auto', height: height || 'auto' });
-    }
-  }, [width, height, resizing]);
 
   const onMouseDown = (event: React.MouseEvent, handle: string) => {
     event.preventDefault();
@@ -63,7 +67,7 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
 
     const isShiftPressed = event.shiftKey;
     const isCorner = currentHandle.includes('-');
-    let lockAspectRatio = isCorner ? !isShiftPressed : isShiftPressed;
+    const lockAspectRatio = isCorner ? !isShiftPressed : isShiftPressed;
 
     if (lockAspectRatio) {
       const ratioX = newWidth / initialSize.width;
@@ -141,6 +145,35 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
     }
   };
 
+  const handleConvert = async (emoteName: string | null) => {
+    const currentPos = getPos(); // Get the position once
+    if (typeof currentPos === 'number') { // Ensure it's a number
+        editor.chain().focus().setNodeSelection(currentPos).insertContent({
+            type: 'inlineImage',
+            attrs: { src: src, emoteName: emoteName },
+        }).run();
+
+        setIsModalOpen(false);
+
+        if (emoteName && storyId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stories/${storyId}/emotes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: emoteName, imageUrl: src })
+                });
+                if (response.ok) {
+                    if (onEmoteCreated) onEmoteCreated();
+                } else {
+                    console.error('Failed to save emote:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error saving emote:', error);
+            }
+        }
+    }
+  };
+
   return (
     <NodeViewWrapper 
       className={`resizable-image-container ${selected ? 'is-selected' : ''}`} 
@@ -213,9 +246,37 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
             <div className="resize-handle bottom-right" onMouseDown={(e) => onMouseDown(e, 'bottom-right')} style={{ pointerEvents: 'auto' }} />
             <div className="resize-handle right" onMouseDown={(e) => onMouseDown(e, 'right')} style={{ pointerEvents: 'auto' }} />
             <div className="resize-handle bottom" onMouseDown={(e) => onMouseDown(e, 'bottom')} style={{ pointerEvents: 'auto' }} />
+            <button
+              className="convert-to-inline-button"
+              onClick={() => setIsModalOpen(true)}
+              style={{
+                position: 'absolute',
+                bottom: '-30px', // Position below the image
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#90caf9',
+                color: '#1e1e1e',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '5px 10px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'auto',
+                zIndex: 11, // Above selection-overlay
+              }}
+            >
+              Convert to Inline Image
+            </button>
           </div>
         )}
       </div>
+
+      <EmoteNamingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConvert}
+      />
 
       <style>{`
         .resizable-image-container {
@@ -288,6 +349,13 @@ export const ResizableImage = Node.create({
   selectable: true,
   atom: true,
 
+  addOptions() {
+    return {
+      storyId: null,
+      onEmoteCreated: null,
+    };
+  },
+
   addAttributes() {
     return {
       src: { default: null },
@@ -311,6 +379,12 @@ export const ResizableImage = Node.create({
     return [
       {
         tag: 'img[src]',
+        getAttrs: (element: HTMLElement) => {
+          if (element.classList.contains('inline-image-emote')) {
+            return false;
+          }
+          return null;
+        },
       },
     ];
   },
@@ -320,6 +394,6 @@ export const ResizableImage = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ResizableImageComponent);
+    return ReactNodeViewRenderer(props => <ResizableImageComponent {...props} storyId={this.options.storyId} onEmoteCreated={this.options.onEmoteCreated} />);
   },
 });
