@@ -1,4 +1,4 @@
-# Implementation Plan: Fix Emote Suggestion Menu in Writing Studio
+# Implementation Plan: Fix Emote Suggestion Menu in Writing Studio [checkpoint: 78f7579]
 
 ## Phase 1: Diagnosis & Reproduction
 - [x] Task: Locate and inspect the suggestion configuration for emotes in `Writing.tsx` and `TiptapPagedEditor.tsx`

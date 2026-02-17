@@ -16,5 +16,5 @@
 
 ---
 
-- [ ] **Track: bug fix, the suggestion menu does not display any emotes when using a ":" instead just showing No result**
+- [x] **Track: bug fix, the suggestion menu does not display any emotes when using a ":" instead just showing No result**
 *Link: [./tracks/fix_emote_suggestion_20260217/](./tracks/fix_emote_suggestion_20260217/)*
