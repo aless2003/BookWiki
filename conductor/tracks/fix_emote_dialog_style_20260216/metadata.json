@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_emote_dialog_style_20260216",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-02-17T03:02:00Z",
+  "updated_at": "2026-02-17T03:02:00Z",
+  "description": "bugfix: the convert image to inline image dialogue is not correctly styled"
+}
