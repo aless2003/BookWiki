@@ -10,9 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmoteServiceTest {
@@ -44,5 +44,59 @@ class EmoteServiceTest {
     void getEmotesByStory() {
         emoteService.getEmotesByStory(1L);
         verify(emoteRepository).findByStoryId(1L);
+    }
+
+    @Test
+    void updateEmote_Success() {
+        Story story = new Story();
+        story.setId(1L);
+        Emote emote = new Emote();
+        emote.setId(10L);
+        emote.setName("oldName");
+        emote.setStory(story);
+
+        when(emoteRepository.findById(10L)).thenReturn(Optional.of(emote));
+        when(emoteRepository.existsByStoryIdAndName(1L, "newName")).thenReturn(false);
+        when(emoteRepository.save(any(Emote.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Emote updated = emoteService.updateEmote(10L, "newName");
+
+        assertEquals("newName", updated.getName());
+        verify(emoteRepository).save(emote);
+    }
+
+    @Test
+    void updateEmote_DuplicateName() {
+        Story story = new Story();
+        story.setId(1L);
+        Emote emote = new Emote();
+        emote.setId(10L);
+        emote.setName("oldName");
+        emote.setStory(story);
+
+        when(emoteRepository.findById(10L)).thenReturn(Optional.of(emote));
+        when(emoteRepository.existsByStoryIdAndName(1L, "duplicate")).thenReturn(true);
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> {
+            emoteService.updateEmote(10L, "duplicate");
+        });
+    }
+
+    @Test
+    void deleteEmote_Success() {
+        when(emoteRepository.existsById(10L)).thenReturn(true);
+
+        emoteService.deleteEmote(10L);
+
+        verify(emoteRepository).deleteById(10L);
+    }
+
+    @Test
+    void deleteEmote_NotFound() {
+        when(emoteRepository.existsById(10L)).thenReturn(false);
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> {
+            emoteService.deleteEmote(10L);
+        });
     }
 }

@@ -30,4 +30,25 @@ public class EmoteService {
     public List<Emote> getEmotesByStory(Long storyId) {
         return emoteRepository.findByStoryId(storyId);
     }
+
+    public Emote updateEmote(Long id, String newName) {
+        Emote emote = emoteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Emote not found"));
+
+        if (!emote.getName().equals(newName)) {
+            if (emoteRepository.existsByStoryIdAndName(emote.getStory().getId(), newName)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Emote name already exists in this story");
+            }
+            emote.setName(newName);
+        }
+
+        return emoteRepository.save(emote);
+    }
+
+    public void deleteEmote(Long id) {
+        if (!emoteRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Emote not found");
+        }
+        emoteRepository.deleteById(id);
+    }
 }

@@ -23,4 +23,21 @@ public class EmoteController {
         List<Emote> emotes = emoteService.getEmotesByStory(storyId);
         return ResponseEntity.ok(emotes);
     }
+
+    @PatchMapping("/{emoteId}")
+    public ResponseEntity<Emote> updateEmote(
+            @PathVariable Long storyId,
+            @PathVariable Long emoteId,
+            @RequestBody CreateEmoteRequest request) {
+        Emote updated = emoteService.updateEmote(emoteId, request.getName());
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{emoteId}")
+    public ResponseEntity<Void> deleteEmote(
+            @PathVariable Long storyId,
+            @PathVariable Long emoteId) {
+        emoteService.deleteEmote(emoteId);
+        return ResponseEntity.noContent().build();
+    }
 }

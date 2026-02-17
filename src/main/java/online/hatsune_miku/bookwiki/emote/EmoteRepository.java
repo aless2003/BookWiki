@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface EmoteRepository extends JpaRepository<Emote, Long> {
     List<Emote> findByStoryId(Long storyId);
+    boolean existsByStoryIdAndName(Long storyId, String name);
 }
