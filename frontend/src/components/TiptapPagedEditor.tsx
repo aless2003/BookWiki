@@ -99,7 +99,7 @@ const TiptapPagedEditor = ({
       ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
       ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
       ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
-      ...emotes.map((e: any) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: e.imageUrl }))
+      ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: e.imageUrl }))
     ], [characters, items, locations, lore, emotes]);
   
     const allEntitiesRef = useRef(allEntities);
@@ -269,9 +269,9 @@ const TiptapPagedEditor = ({
               suggestion: {
                 char: '#',
                 items: ({ query }) => {
-                  const values = allEntitiesRef.current
-                    .filter((e: any) => e.type !== 'emote')
-                    .map((e: any) => ({
+                  const values = (allEntitiesRef.current as any[])
+                    .filter((e) => e.type !== 'emote')
+                    .map((e) => ({
                       id: e.id,
                       label: e.name,
                       name: e.name,
@@ -282,7 +282,7 @@ const TiptapPagedEditor = ({
                   if (query.length === 0) {
                     return values;
                   } else {
-                    return values.filter((item: any) =>
+                    return values.filter((item) =>
                       item.label.toLowerCase().includes(query.toLowerCase())
                     );
                   }
@@ -348,9 +348,9 @@ const TiptapPagedEditor = ({
                       suggestion: {
                         char: ':',
                         items: ({ query }) => {
-                          const values = allEntitiesRef.current
-                            .filter((e: any) => e.type === 'emote')
-                            .map((e: any) => ({
+                          const values = (allEntitiesRef.current as any[])
+                            .filter((e) => e.type === 'emote')
+                            .map((e) => ({
                               id: e.id,
                               label: e.name,
                               name: e.name, // Ensure name is available for command
@@ -361,7 +361,7 @@ const TiptapPagedEditor = ({
                   if (query.length === 0) {
                     return values;
                   } else {
-                    return values.filter((item: any) =>
+                    return values.filter((item) =>
                       item.label.toLowerCase().includes(query.toLowerCase())
                     );
                   }

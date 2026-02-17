@@ -37,7 +37,7 @@ const Writing: React.FC = () => {
   const [items, setItems] = useState<Entity[]>([]);
   const [locations, setLocations] = useState<Entity[]>([]);
   const [lore, setLore] = useState<Entity[]>([]);
-  const [emotes, setEmotes] = useState<any[]>([]);
+  const [emotes, setEmotes] = useState<Entity[]>([]);
 
   const fetchEmotes = React.useCallback(async () => {
     if (!storyId) return;
