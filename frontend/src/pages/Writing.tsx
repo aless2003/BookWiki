@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
-import { MdArrowBack, MdSave, MdPublish, MdOutlineDescription, MdFolderOpen, MdSettings, MdMoreVert, MdAdd, MdDelete } from 'react-icons/md';
+import { MdArrowBack, MdSave, MdPublish, MdOutlineDescription, MdSettings, MdMoreVert, MdAdd, MdDelete, MdEmojiEmotions } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import TiptapPagedEditor from '../components/TiptapPagedEditor';
 import ExportModal from '../components/ExportModal';
+import EmoteManagementModal from '../components/EmoteManagementModal';
 
 interface Entity {
     id: number;
@@ -31,6 +32,7 @@ const Writing: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pageCount, setPageCount] = useState(1);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showEmoteModal, setShowEmoteModal] = useState(false);
 
   // Worldbuilding entities state
   const [characters, setCharacters] = useState<Entity[]>([]);
@@ -303,6 +305,13 @@ const Writing: React.FC = () => {
         currentChapterId={selectedChapterId}
       />
 
+      <EmoteManagementModal
+        isOpen={showEmoteModal}
+        onClose={() => setShowEmoteModal(false)}
+        storyId={storyId!}
+        onEmotesChanged={fetchEmotes}
+      />
+
       <Row className="flex-grow-1 g-0 overflow-hidden" style={{ minHeight: 0 }}>
           <Col md={2} className="d-none d-md-block p-3 overflow-auto h-100" style={{ backgroundColor: '#1e1e1e', borderRight: '1px solid #333' }}>
             <div className="mb-4">
@@ -325,10 +334,10 @@ const Writing: React.FC = () => {
                 </div>
             </div>
             <div>
-                <small className="text-secondary fw-bold text-uppercase px-3" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Planning</small>
+                <small className="text-secondary fw-bold text-uppercase px-3" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Story Assets</small>
                 <div className="mt-2">
-                    <div className="nav-drawer-item">
-                        <MdFolderOpen /> Notes & Ideas
+                    <div className="nav-drawer-item" onClick={() => setShowEmoteModal(true)}>
+                        <MdEmojiEmotions /> Emotes
                     </div>
                     <div className="nav-drawer-item">
                         <MdSettings /> Document Settings
