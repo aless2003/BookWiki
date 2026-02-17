@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useEditor, EditorContent, ReactRenderer } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -60,6 +60,8 @@ interface TiptapPagedEditorProps {
   items?: Entity[];
   locations?: Entity[];
   lore?: Entity[];
+  emotes?: Entity[];
+  onRefreshEmotes?: () => void;
   onChange: (html: string) => void;
   onPageCountChange?: (count: number) => void;
   onSave?: () => void;
@@ -73,6 +75,8 @@ const TiptapPagedEditor = ({
   items = [],
   locations = [],
   lore = [],
+  emotes = [],
+  onRefreshEmotes,
   onChange,
   onPageCountChange,
   onSave,
@@ -83,22 +87,6 @@ const TiptapPagedEditor = ({
   const onChangeRef = useRef(onChange);
   const onPageCountChangeRef = useRef(onPageCountChange);
   const lastSentContent = useRef(content);
-    const [emotes, setEmotes] = useState<Entity[]>([]); // New state for emotes
-  
-    const fetchEmotes = useCallback(async () => {
-      if (!storyId) return;
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/stories/${storyId}/emotes`);
-        if (response.ok) {
-          const data = await response.json();
-          setEmotes(data.map((e: Entity) => ({ ...e, type: 'emote', icon: '😁' })));
-        } else {
-          console.error('Failed to fetch emotes:', await response.text());
-        }
-      } catch (error) {
-        console.error('Error fetching emotes:', error);
-      }
-    }, [storyId]);
   
     useEffect(() => {
       onSaveRef.current = onSave;
@@ -111,7 +99,7 @@ const TiptapPagedEditor = ({
       ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
       ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
       ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
-      ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: e.imageUrl }))
+      ...emotes.map((e: any) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: e.imageUrl }))
     ], [characters, items, locations, lore, emotes]);
   
     const allEntitiesRef = useRef(allEntities);
@@ -165,7 +153,7 @@ const TiptapPagedEditor = ({
         Underline,
         ResizableImage.configure({ 
           storyId: storyId,
-          onEmoteCreated: fetchEmotes
+          onEmoteCreated: onRefreshEmotes
         }),
         InlineImage, // Add InlineImage extension
         FileHandler.configure({
@@ -281,11 +269,12 @@ const TiptapPagedEditor = ({
               suggestion: {
                 char: '#',
                 items: ({ query }) => {
-                  const values = allEntities
-                    .filter(e => e.type !== 'emote')
-                    .map(e => ({
+                  const values = allEntitiesRef.current
+                    .filter((e: any) => e.type !== 'emote')
+                    .map((e: any) => ({
                       id: e.id,
                       label: e.name,
+                      name: e.name,
                       type: e.type,
                       icon: e.icon
                     }));
@@ -293,7 +282,7 @@ const TiptapPagedEditor = ({
                   if (query.length === 0) {
                     return values;
                   } else {
-                    return values.filter(item =>
+                    return values.filter((item: any) =>
                       item.label.toLowerCase().includes(query.toLowerCase())
                     );
                   }
@@ -359,9 +348,9 @@ const TiptapPagedEditor = ({
                       suggestion: {
                         char: ':',
                         items: ({ query }) => {
-                          const values = allEntities
-                            .filter(e => e.type === 'emote')
-                            .map(e => ({
+                          const values = allEntitiesRef.current
+                            .filter((e: any) => e.type === 'emote')
+                            .map((e: any) => ({
                               id: e.id,
                               label: e.name,
                               name: e.name, // Ensure name is available for command
@@ -372,7 +361,7 @@ const TiptapPagedEditor = ({
                   if (query.length === 0) {
                     return values;
                   } else {
-                    return values.filter(item =>
+                    return values.filter((item: any) =>
                       item.label.toLowerCase().includes(query.toLowerCase())
                     );
                   }
@@ -493,11 +482,6 @@ const TiptapPagedEditor = ({
         }
     }
   }, [storyId]);
-
-  useEffect(() => {
-    if (!editor || !storyId) return;
-    fetchEmotes();
-  }, [editor, storyId, fetchEmotes]);
 
   useEffect(() => {
     if (!editor) return;

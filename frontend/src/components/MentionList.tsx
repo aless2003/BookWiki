@@ -26,7 +26,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const selectItem = (index: number) => {
     const item = props.items[index];
     if (item) {
-      props.command({ id: item.id, label: item.label, type: item.type });
+      props.command(item);
     }
   };
 

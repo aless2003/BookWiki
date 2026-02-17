@@ -37,6 +37,20 @@ const Writing: React.FC = () => {
   const [items, setItems] = useState<Entity[]>([]);
   const [locations, setLocations] = useState<Entity[]>([]);
   const [lore, setLore] = useState<Entity[]>([]);
+  const [emotes, setEmotes] = useState<any[]>([]);
+
+  const fetchEmotes = React.useCallback(async () => {
+    if (!storyId) return;
+    try {
+      const response = await fetch(`http://localhost:3906/api/stories/${storyId}/emotes`);
+      if (response.ok) {
+        const data = await response.json();
+        setEmotes(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch emotes:", err);
+    }
+  }, [storyId]);
 
   // Fetch chapters and entities on load
   useEffect(() => {
@@ -51,9 +65,10 @@ const Writing: React.FC = () => {
         fetchJson(`http://localhost:3906/api/stories/${storyId}/characters`),
         fetchJson(`http://localhost:3906/api/stories/${storyId}/items`),
         fetchJson(`http://localhost:3906/api/stories/${storyId}/locations`),
-        fetchJson(`http://localhost:3906/api/stories/${storyId}/lore`)
+        fetchJson(`http://localhost:3906/api/stories/${storyId}/lore`),
+        fetchJson(`http://localhost:3906/api/stories/${storyId}/emotes`)
     ])
-    .then(([chaptersData, chars, its, locs, lr]) => {
+    .then(([chaptersData, chars, its, locs, lr, ems]) => {
         // Chapters
         const processedChapters = (chaptersData || []).map((c: any) => ({ ...c, notes: c.notes || [] }));
         setChapters(processedChapters);
@@ -78,6 +93,7 @@ const Writing: React.FC = () => {
         setItems(its);
         setLocations(locs);
         setLore(lr);
+        setEmotes(ems || []);
 
         setIsLoading(false);
     })
@@ -330,6 +346,8 @@ const Writing: React.FC = () => {
                       items={items}
                       locations={locations}
                       lore={lore}
+                      emotes={emotes}
+                      onRefreshEmotes={fetchEmotes}
                       onChange={updateChapterContent}
                       onPageCountChange={setPageCount}
                       onSave={() => handleSave()}
