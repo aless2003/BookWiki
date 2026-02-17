@@ -13,6 +13,12 @@ import java.io.IOException;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    private final PathProvider pathProvider;
+
+    public WebConfig(PathProvider pathProvider) {
+        this.pathProvider = pathProvider;
+    }
+
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index.html");
@@ -21,8 +27,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Map /uploads/** to the uploads directory
+        String uploadLocation = "file:" + pathProvider.getUploadPath().toString().replace("\\", "/") + "/";
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/");
+                .addResourceLocations(uploadLocation);
 
         // SPA Routing: Forward all non-API, non-static paths to index.html
         registry.addResourceHandler("/**")

@@ -20,18 +20,12 @@ import java.util.UUID;
 @CrossOrigin(origins = "http://localhost:5173")
 public class FileUploadController {
 
-    private final Path uploadDir = Paths.get("uploads").toAbsolutePath().normalize();
+    private final Path uploadDir;
     private final Tika tika;
 
-    public FileUploadController() {
-        try {
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-            }
-            tika = new Tika();
-        } catch (IOException e) {
-            throw new RuntimeException("Could not initialize upload folder", e);
-        }
+    public FileUploadController(online.hatsune_miku.bookwiki.config.PathProvider pathProvider) {
+        this.uploadDir = pathProvider.getUploadPath();
+        this.tika = new Tika();
     }
 
     @PostMapping("/upload")
