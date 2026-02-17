@@ -15,6 +15,6 @@ BookWiki is a platform designed to empower writers and worldbuilders by providin
 ## Core Features
 - **Advanced Worldbuilding Modules:** Implementation of specialized systems for managing Items, Lore, and other generic worldbuilding categories.
 - **Enhanced Writing Studio:** A feature-rich editor utilizing Tiptap with custom extensions (including arbitrary image resizing with aspect ratio control), ensuring a high-quality writing experience.
-- **Inline Emote System:** Support for converting images into inline, non-resizable "emotes" that can be reused via a colon-prefixed shortcut.
+- **Inline Emote System:** Support for converting images into inline, non-resizable "emotes" with a dedicated management interface for renaming and deleting them.
 - **Manuscript Export:** Ability to export chapters or full stories into standard PDF and DOCX formats with high-fidelity formatting.
 - **Deep Integration:** Bi-directional navigation and deep-linking between the writing studio and the worldbuilding wiki to facilitate an efficient creative workflow.
