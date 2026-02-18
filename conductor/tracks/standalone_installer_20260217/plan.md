@@ -15,7 +15,7 @@ Focus on preparing the build environment and ensuring the Spring Boot backend ca
     - [x] **Implement:** Update `FileUploadController` and DataSource configuration to use the resolved paths from the `PathProvider`.
 - [x] **Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Backend Adaptation' (Protocol in workflow.md)**
 
-## Phase 2: JRE Bundling & Sidecar Preparation
+## Phase 2: JRE Bundling & Sidecar Preparation [checkpoint: e596ad5]
 Create the portable Java environment and prepare the JAR for distribution.
 
 - [x] **Task: Create Minimal JRE Bundle**
