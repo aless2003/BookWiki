@@ -7,6 +7,6 @@
 
 ---
 
-- [ ] **Track: Database-Backed Media Storage and Orphan Cleanup**
+- [~] **Track: Database-Backed Media Storage and Orphan Cleanup**
 *Link: [./tracks/db_media_storage_20260218/](./tracks/db_media_storage_20260218/)*
 

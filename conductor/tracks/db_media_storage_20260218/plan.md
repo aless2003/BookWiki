@@ -5,14 +5,14 @@ This plan outlines the steps to move media storage to the database, implement a 
 ## Phase 1: Core Media Infrastructure
 Goal: Establish the database schema and services for storing and serving media.
 
-- [ ] Task: Create `Media` Entity and Repository
-    - [ ] Write tests for `MediaRepository` (CRUD operations with Blobs).
-    - [ ] Implement `Media` entity with `id` (UUID), `filename`, `contentType`, `data` (Blob), and `createdAt`.
-    - [ ] Implement `MediaRepository`.
-- [ ] Task: Implement `MediaService` for Storage and Streaming
-    - [ ] Write tests for `MediaService` (saving files, retrieving as stream).
-    - [ ] Implement `save(MultipartFile)` and `getStream(UUID)` in `MediaService`.
-- [ ] Task: Implement `MediaController`
+- [x] Task: Create `Media` Entity and Repository
+    - [x] Write tests for `MediaRepository` (CRUD operations with Blobs).
+    - [x] Implement `Media` entity with `id` (UUID), `filename`, `contentType`, `data` (Blob), and `createdAt`.
+    - [x] Implement `MediaRepository`.
+- [x] Task: Implement `MediaService` for Storage and Streaming
+    - [x] Write tests for `MediaService` (saving files, retrieving as stream).
+    - [x] Implement `save(MultipartFile)` and `getStream(UUID)` in `MediaService`.
+- [~] Task: Implement `MediaController`
     - [ ] Write tests for `GET /api/media/{uuid}` and `POST /api/media/upload`.
     - [ ] Implement endpoint to serve media with correct content-type and streaming.
     - [ ] Update upload endpoint to return the new media ID.
