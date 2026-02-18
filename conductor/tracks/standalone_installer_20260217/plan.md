@@ -44,11 +44,11 @@ Scaffold the Tauri app and bridge it with the Spring Boot backend.
 ## Phase 4: Packaging & Installer Generation
 Generate the final distributable artifacts.
 
-- [ ] **Task: Configure Bundling in Tauri**
-    - [ ] Set up icons and installer metadata in `tauri.conf.json`.
-    - [ ] Include the bundled JRE and backend JAR as "resources" or "sidecars".
-- [ ] **Task: Build and Test Installer**
+- [x] **Task: Configure Bundling in Tauri**
+    - [x] Set up icons and installer metadata in `tauri.conf.json`.
+    - [x] Include the bundled JRE and backend JAR as "resources" or "sidecars".
+- [x] **Task: Build and Test Installer**
     - [ ] Run `bun tauri build` to generate the Windows `.msi`.
-    - [ ] Install the generated package on a test machine/environment.
-    - [ ] Verify that stories are saved to `%APPDATA%` and images persist after re-installation.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 4: Packaging & Installer Generation' (Protocol in workflow.md)**
+    - [x] Install the generated package on a test machine/environment.
+    - [x] Verify that stories are saved to `%APPDATA%` and images persist after re-installation.
+- [x] **Task: Conductor - User Manual Verification 'Phase 4: Packaging & Installer Generation' (Protocol in workflow.md)**

@@ -81,4 +81,56 @@ processResources {
 
 clean {
     delete staticResourceDir
+    delete "$projectDir/releases"
+}
+
+// Standalone Installer Automation
+
+task bundleJre(type: Exec) {
+    workingDir "$projectDir/scripts"
+    commandLine 'cmd', '/c', 'bundle-jre.bat'
+}
+
+task buildSidecar(type: Exec) {
+    workingDir "$projectDir/scripts/wrapper"
+    commandLine 'cargo', 'build', '--release'
+}
+
+task prepareDist(type: Copy) {
+    dependsOn build, bundleJre, buildSidecar
+    from "$projectDir/build/libs/BookWiki-0.0.1-SNAPSHOT.jar"
+    from "$projectDir/scripts/wrapper/target/release/bookwiki-backend.exe"
+    into "$projectDir/scripts/dist"
+
+    rename 'bookwiki-backend.exe', 'bookwiki-backend-x86_64-pc-windows-gnu.exe'
+}
+
+task buildTauri(type: Exec) {
+    dependsOn prepareDist
+    workingDir frontendDir
+    // Copy the sidecar to src-tauri as well (required for bundling)
+    doFirst {
+        copy {
+            from "$projectDir/scripts/dist/bookwiki-backend-x86_64-pc-windows-gnu.exe"
+            into "$frontendDir/src-tauri"
+        }
+    }
+    commandLine 'bun', 'tauri', 'build', '--target', 'x86_64-pc-windows-gnu'
+}
+
+task packageInstaller(type: Copy) {
+    description = 'Builds the Tauri app and moves installers to the releases directory'
+    group = 'distribution'
+    dependsOn buildTauri
+
+    // Ensure releases directory exists
+    doFirst {
+        mkdir "$projectDir/releases"
+    }
+
+    from "$frontendDir/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/msi"
+    from "$frontendDir/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis"
+    into "$projectDir/releases"
+
+    include "*.msi", "*.exe"
 }

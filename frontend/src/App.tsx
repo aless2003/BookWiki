@@ -14,6 +14,7 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
+    let isMounted = true;
     
     const checkBackend = async () => {
       try {
@@ -21,20 +22,25 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
           method: 'GET',
           headers: { 'Accept': 'application/json' }
         });
-        if (response.ok) {
+        if (response.ok && isMounted) {
           setIsReady(true);
           return;
         }
       } catch (err) {
         // Not ready yet
       }
-      setAttempts(prev => prev + 1);
+      if (isMounted) {
+        setAttempts(prev => prev + 1);
+      }
     };
 
     checkBackend();
     interval = setInterval(checkBackend, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   if (!isReady) {

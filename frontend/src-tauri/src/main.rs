@@ -12,7 +12,7 @@ fn main() {
         .setup(|app| {
             let shell = app.shell();
             let sidecar_command = shell.sidecar("bookwiki-backend").unwrap();
-            let (_rx, child) = sidecar_command.spawn().expect("Failed to spawn sidecar");
+            let (_, child) = sidecar_command.spawn().expect("Failed to spawn sidecar");
 
             let state = app.state::<SidecarState>();
             let mut lock = state.0.lock().unwrap();
@@ -27,7 +27,7 @@ fn main() {
                     let mut lock = state.0.lock().unwrap();
                     lock.take()
                 };
-                
+
                 if let Some(child) = maybe_child {
                     let _ = child.kill();
                 }

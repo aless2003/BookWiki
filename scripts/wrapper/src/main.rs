@@ -7,14 +7,9 @@ use winapi::um::winnt::{
     JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
 };
 use winapi::um::winbase::CreateJobObjectA;
-use winapi::um::processthreadsapi::{GetCurrentProcessId, OpenProcess};
-use winapi::um::winnt::PROCESS_QUERY_INFORMATION;
-use winapi::um::handleapi::CloseHandle;
 use std::ptr::null_mut;
 use std::mem::size_of;
 use std::fs::File;
-use std::thread;
-use std::time::Duration;
 
 fn main() {
     let exe_path = env::current_exe().expect("Failed to get current exe path");
@@ -31,7 +26,7 @@ fn main() {
 
     let args: Vec<String> = env::args().skip(1).collect();
     
-    // Create job object for cleanup
+    // Create job object for cleanup (ensures child process dies if this wrapper is killed)
     let job = unsafe { CreateJobObjectA(null_mut(), null_mut()) };
     if job != null_mut() {
         let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
@@ -47,7 +42,7 @@ fn main() {
         }
     }
 
-    // Redirect logs
+    // Redirect logs for standalone debugging
     let log_file = File::create(app_dir.join("backend.log")).ok();
     let err_file = File::create(app_dir.join("backend.err")).ok();
 
@@ -56,35 +51,21 @@ fn main() {
     cmd.arg("-jar").arg(jar_path);
     cmd.args(&args);
     cmd.arg("--spring.profiles.active=standalone");
-    
+
     if let Some(f) = log_file {
         cmd.stdout(Stdio::from(f));
     }
     if let Some(f) = err_file {
         cmd.stderr(Stdio::from(f));
     }
-    
+
     let mut child = cmd.spawn().expect("Failed to start backend process");
-    
+
     if job != null_mut() {
         unsafe {
             AssignProcessToJobObject(job, child.as_raw_handle() as *mut _);
         }
     }
-
-    // Watchdog thread: If the parent (Tauri) dies, we should die.
-    // Tauri v2 passes the parent PID or we can try to find it.
-    // But since Tauri kills the sidecar wrapper directly, we just need to ensure 
-    // that if this wrapper process is gone, Java is gone.
-    // The Job Object should do this, but if it doesn't, we'll stay alive waiting for the child.
-    // Let's check if our parent is still alive every 2 seconds.
-    
-    thread::spawn(move || {
-        // This is a simple way: if the wrapper process is orphaned (parent is 1 or changed),
-        // or just wait until the wrapper is killed by Tauri.
-        // Actually, child.wait() blocks the main thread.
-        // If Tauri kills us, this thread dies too.
-    });
 
     let status = child.wait().expect("Failed to wait on child process");
     std::process::exit(status.code().unwrap_or(1));
