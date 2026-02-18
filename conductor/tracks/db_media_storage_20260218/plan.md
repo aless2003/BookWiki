@@ -34,24 +34,24 @@ Goal: Implement the logic to track media usage via shortcodes and identify orpha
     - [x] Ensure entity deletion triggers an orphan check for all associated media.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Reference Tracking and Shortcode Integration' (Protocol in workflow.md)
 
-## Phase 3: Migration System
+## Phase 3: Migration System [checkpoint: 1c7af46]
 Goal: Migrate existing files and Base64 strings to the new database system.
 
-- [ ] Task: Implement File System Migration
-    - [ ] Write tests for migrating files from `uploads/` to the database.
-    - [ ] Implement a one-time migration task that handles file moving and updating `pictureUrl` fields.
-- [ ] Task: Implement Base64 and Attribute Migration
-    - [ ] Write tests for extracting Base64 strings from HTML/TipTap JSON while preserving `width`, `height`, and styles.
-    - [ ] Implement regex/parser to find Base64 images, save them as `Media`, and replace with `#{image:uuid}`.
-- [ ] Task: Migration Orchestrator
-    - [ ] Implement a `DataInitializer` or startup component to run migration safely.
-    - [ ] Add logic to backup/clear `uploads/` only after successful migration.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Migration System' (Protocol in workflow.md)
+- [x] Task: Implement File System Migration
+    - [x] Write tests for migrating files from `uploads/` to the database.
+    - [x] Implement a one-time migration task that handles file moving and updating `pictureUrl` fields.
+- [x] Task: Implement Base64 and Attribute Migration
+    - [x] Write tests for extracting Base64 strings from HTML/TipTap JSON while preserving `width`, `height`, and styles.
+    - [x] Implement regex/parser to find Base64 images, save them as `Media`, and replace with `#{image:uuid}`.
+- [x] Task: Migration Orchestrator
+    - [x] Implement a `DataInitializer` or startup component to run migration safely.
+    - [x] Add logic to backup/clear `uploads/` only after successful migration.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Migration System' (Protocol in workflow.md)
 
 ## Phase 4: Frontend and Final Integration
 Goal: Update the UI to support the new system, update project versioning, and perform final verification.
 
-- [ ] Task: Update Frontend Media Handling
+- [~] Task: Update Frontend Media Handling
     - [ ] Update `Writing.tsx` and Worldbuilding components to use the new `/api/media` endpoints.
     - [ ] Update TipTap extensions (`ResizableImage`, `InlineImage`) to resolve `#{image:uuid}` to URLs.
 - [ ] Task: Bump Project Version to 0.2.0

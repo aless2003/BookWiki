@@ -15,14 +15,24 @@ public class DataInitializer implements CommandLineRunner {
 
     private final StoryRepository storyRepository;
     private final ChapterRepository chapterRepository;
+    private final online.hatsune_miku.bookwiki.media.MigrationService migrationService;
 
-    public DataInitializer(StoryRepository storyRepository, ChapterRepository chapterRepository) {
+    public DataInitializer(StoryRepository storyRepository, ChapterRepository chapterRepository, online.hatsune_miku.bookwiki.media.MigrationService migrationService) {
         this.storyRepository = storyRepository;
         this.chapterRepository = chapterRepository;
+        this.migrationService = migrationService;
     }
 
     @Override
     public void run(String @NonNull ... args) {
+        // Run media migration first
+        try {
+            migrationService.migrateFileSystem();
+            migrationService.migrateAllBase64();
+        } catch (Exception e) {
+            System.err.println("Media migration failed: " + e.getMessage());
+        }
+
         Story defaultStory;
         if (storyRepository.count() == 0) {
             defaultStory = new Story();

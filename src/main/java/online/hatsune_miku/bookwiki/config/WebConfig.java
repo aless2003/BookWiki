@@ -14,12 +14,6 @@ import java.io.IOException;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final PathProvider pathProvider;
-
-    public WebConfig(PathProvider pathProvider) {
-        this.pathProvider = pathProvider;
-    }
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
@@ -35,12 +29,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Map /uploads/** to the uploads directory
-        // Use normalized path string for consistency
-        String uploadLocation = "file:" + pathProvider.getUploadPath().toAbsolutePath().normalize().toString().replace("\\", "/") + "/";        
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadLocation);
-
         // SPA Routing: Forward all non-API, non-static paths to index.html
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")
@@ -54,8 +42,8 @@ public class WebConfig implements WebMvcConfigurer {
                             return requestedResource;
                         }
 
-                        // Do not intercept API or uploads
-                        if (resourcePath.startsWith("api") || resourcePath.startsWith("uploads")) {
+                        // Do not intercept API
+                        if (resourcePath.startsWith("api")) {
                             return null;
                         }
 
