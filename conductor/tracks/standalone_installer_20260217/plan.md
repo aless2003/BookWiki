@@ -27,7 +27,7 @@ Create the portable Java environment and prepare the JAR for distribution.
     - [x] Ensure the Spring Boot JAR can be executed by the bundled JRE via a simple wrapper script or direct binary execution if possible.
 - [x] **Task: Conductor - User Manual Verification 'Phase 2: JRE Bundling & Sidecar Preparation' (Protocol in workflow.md)**
 
-## Phase 3: Tauri Integration
+## Phase 3: Tauri Integration [checkpoint: 098cc2c]
 Scaffold the Tauri app and bridge it with the Spring Boot backend.
 
 - [x] **Task: Initialize Tauri**
