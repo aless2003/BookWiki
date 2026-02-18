@@ -15,10 +15,14 @@ public class CharacterService {
     @Autowired
     private StoryRepository storyRepository;
 
+    @Autowired
+    private online.hatsune_miku.bookwiki.media.ReferenceTrackingService referenceTrackingService;
+
     public List<Character> getCharactersByStory(Long storyId) {
         return characterRepository.findByStoryId(storyId);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public Character createCharacter(Long storyId, Character character) {
         Story story = storyRepository.findById(storyId).orElseThrow(() -> new RuntimeException("Story not found"));
         character.setStory(story);
@@ -27,9 +31,12 @@ public class CharacterService {
             character.getCustomSections().forEach(section -> section.setCharacter(character));
         }
         
-        return characterRepository.save(character);
+        Character saved = characterRepository.save(character);
+        trackReferences(saved);
+        return saved;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public Character updateCharacter(Long id, Character updated) {
         return characterRepository.findById(id).map(c -> {
             c.setName(updated.getName());
@@ -51,13 +58,30 @@ public class CharacterService {
                 c.getCustomSections().forEach(section -> section.setCharacter(c));
             }
             
-            return characterRepository.save(c);
+            Character saved = characterRepository.save(c);
+            trackReferences(saved);
+            return saved;
         }).orElseThrow(() -> new RuntimeException("Character not found"));
     }
 
-        public void deleteCharacter(Long id) {
-            characterRepository.deleteById(id);
+    private void trackReferences(Character character) {
+        StringBuilder content = new StringBuilder();
+        if (character.getPictureUrl() != null) content.append(character.getPictureUrl());
+        if (character.getAppearance() != null) content.append(character.getAppearance());
+        if (character.getDescription() != null) content.append(character.getDescription());
+        if (character.getCustomSections() != null) {
+            for (CharacterSection section : character.getCustomSections()) {
+                if (section.getContent() != null) content.append(section.getContent());
+            }
         }
+        referenceTrackingService.updateReferences(content.toString(), "CHARACTER", character.getId());
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteCharacter(Long id) {
+        characterRepository.deleteById(id);
+        referenceTrackingService.deleteReferences("CHARACTER", id);
+    }
     
         public java.util.Optional<Character> getCharacterById(Long id) {
             return characterRepository.findById(id);

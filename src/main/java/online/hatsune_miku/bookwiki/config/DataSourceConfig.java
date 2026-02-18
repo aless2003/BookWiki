@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Primary;
 import javax.sql.DataSource;
 
 @Configuration
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "bookwiki.custom-datasource", havingValue = "true", matchIfMissing = true)
 public class DataSourceConfig {
 
     private final PathProvider pathProvider;

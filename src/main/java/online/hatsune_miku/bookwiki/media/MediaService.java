@@ -19,6 +19,7 @@ public class MediaService {
 
     private final MediaRepository mediaRepository;
     private final EntityManager entityManager;
+    private final MediaReferenceRepository referenceRepository;
 
     @Transactional
     public Media saveMedia(MultipartFile file) throws IOException {
@@ -42,6 +43,13 @@ public class MediaService {
         media.setData(blob);
 
         return mediaRepository.save(media);
+    }
+
+    @Transactional
+    public void deleteIfOrphaned(UUID id) {
+        if (referenceRepository.findByMediaId(id).isEmpty()) {
+            mediaRepository.deleteById(id);
+        }
     }
 
     @Transactional

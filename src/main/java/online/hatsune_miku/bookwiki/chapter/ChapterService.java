@@ -10,9 +10,11 @@ import java.util.Optional;
 public class ChapterService {
 
     private final ChapterRepository chapterRepository;
+    private final online.hatsune_miku.bookwiki.media.ReferenceTrackingService referenceTrackingService;
 
-    public ChapterService(ChapterRepository chapterRepository) {
+    public ChapterService(ChapterRepository chapterRepository, online.hatsune_miku.bookwiki.media.ReferenceTrackingService referenceTrackingService) {
         this.chapterRepository = chapterRepository;
+        this.referenceTrackingService = referenceTrackingService;
     }
 
     public List<Chapter> getChaptersByStoryId(Long storyId) {
@@ -23,11 +25,26 @@ public class ChapterService {
         return chapterRepository.findById(id);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public Chapter saveChapter(Chapter chapter) {
-        return chapterRepository.save(chapter);
+        Chapter saved = chapterRepository.save(chapter);
+        
+        // Track references in content and notes
+        StringBuilder content = new StringBuilder();
+        if (saved.getContent() != null) content.append(saved.getContent());
+        if (saved.getNotes() != null) {
+            for (ChapterNote note : saved.getNotes()) {
+                if (note.getContent() != null) content.append(note.getContent());
+            }
+        }
+        
+        referenceTrackingService.updateReferences(content.toString(), "CHAPTER", saved.getId());
+        return saved;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteChapter(Long id) {
         chapterRepository.deleteById(id);
+        referenceTrackingService.deleteReferences("CHAPTER", id);
     }
 }

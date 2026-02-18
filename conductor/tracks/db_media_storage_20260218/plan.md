@@ -12,16 +12,16 @@ Goal: Establish the database schema and services for storing and serving media.
 - [x] Task: Implement `MediaService` for Storage and Streaming
     - [x] Write tests for `MediaService` (saving files, retrieving as stream).
     - [x] Implement `save(MultipartFile)` and `getStream(UUID)` in `MediaService`.
-- [~] Task: Implement `MediaController`
-    - [ ] Write tests for `GET /api/media/{uuid}` and `POST /api/media/upload`.
-    - [ ] Implement endpoint to serve media with correct content-type and streaming.
-    - [ ] Update upload endpoint to return the new media ID.
+- [x] Task: Implement `MediaController`
+    - [x] Write tests for `GET /api/media/{uuid}` and `POST /api/media/upload`.
+    - [x] Implement endpoint to serve media with correct content-type and streaming.
+    - [x] Update upload endpoint to return the new media ID.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Core Media Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Reference Tracking and Shortcode Integration
 Goal: Implement the logic to track media usage via shortcodes and identify orphans.
 
-- [ ] Task: Extend Shortcode System for Media
+- [~] Task: Extend Shortcode System for Media
     - [ ] Write tests for parsing and resolving `#{image:uuid}` shortcodes.
     - [ ] Update backend shortcode utility to recognize and validate media shortcodes.
 - [ ] Task: Implement Reference Tracking Logic
