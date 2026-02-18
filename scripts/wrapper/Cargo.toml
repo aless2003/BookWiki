@@ -1,6 +1,7 @@
 [package]
 name = "bookwiki-backend"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+winapi = { version = "0.3", features = ["jobapi", "jobapi2", "winbase", "processthreadsapi", "handleapi", "winnt", "winuser"] }

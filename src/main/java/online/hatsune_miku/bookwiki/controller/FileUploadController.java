@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class FileUploadController {
 
     private final Path uploadDir;
@@ -53,7 +53,7 @@ public class FileUploadController {
             }
 
             String filename = UUID.randomUUID() + extension;
-            Path destinationPath = this.uploadDir.toRealPath();
+            Path destinationPath = this.uploadDir.toAbsolutePath().normalize();
             Path targetPath = destinationPath.resolve(filename).normalize().toAbsolutePath();
 
             if (!targetPath.startsWith(destinationPath)) {

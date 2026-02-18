@@ -3,6 +3,7 @@ package online.hatsune_miku.bookwiki.config;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -20,6 +21,14 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:5173", "tauri://localhost", "http://tauri.localhost")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*");
+    }
+
+    @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index.html");
     }
@@ -27,7 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Map /uploads/** to the uploads directory
-        String uploadLocation = "file:" + pathProvider.getUploadPath().toString().replace("\\", "/") + "/";
+        String uploadLocation = "file:" + pathProvider.getUploadPath().toString().replace("", "/") + "/";        
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadLocation);
 

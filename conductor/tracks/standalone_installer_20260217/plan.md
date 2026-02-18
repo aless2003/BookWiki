@@ -20,7 +20,7 @@ Create the portable Java environment and prepare the JAR for distribution.
 
 - [x] **Task: Create Minimal JRE Bundle**
     - [x] Identify required Java modules using `jdeps` on the backend JAR.
-    - [ ] Use `jlink` to generate a stripped-down JRE.
+    - [x] Use `jlink` to generate a stripped-down JRE.
     - [x] Create a script (e.g., `bundle-jre.sh/bat`) to automate this for the build process.
 - [x] **Task: Configure Sidecar Metadata**
     - [x] Define the naming convention for the sidecar binary (Tauri requires `<name>-<target-triple>`).
@@ -30,16 +30,16 @@ Create the portable Java environment and prepare the JAR for distribution.
 ## Phase 3: Tauri Integration
 Scaffold the Tauri app and bridge it with the Spring Boot backend.
 
-- [ ] **Task: Initialize Tauri**
-    - [ ] Run `bun tauri init` in the `frontend` directory.
-    - [ ] Configure `tauri.conf.json` (window title, dimensions, etc.).
-- [ ] **Task: Implement Sidecar Orchestration**
-    - [ ] Update `src-tauri/src/main.rs` to launch the Spring Boot JAR (using the bundled JRE) on app startup.
-    - [ ] Pass the "Standalone Mode" flag/profile to the Spring Boot process via command-line arguments.
-    - [ ] Ensure the backend process is killed when the Tauri window is closed.
-- [ ] **Task: Frontend Port Synchronization**
-    - [ ] Ensure the Tauri frontend correctly proxies or points to the Spring Boot port.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 3: Tauri Integration' (Protocol in workflow.md)**
+- [x] **Task: Initialize Tauri**
+    - [x] Run `bun tauri init` in the `frontend` directory.
+    - [x] Configure `tauri.conf.json` (window title, dimensions, etc.).
+- [x] **Task: Implement Sidecar Orchestration**
+    - [x] Update `src-tauri/src/main.rs` to launch the Spring Boot JAR (using the bundled JRE) on app startup.     
+    - [x] Pass the "Standalone Mode" flag/profile to the Spring Boot process via command-line arguments.
+    - [x] Ensure the backend process is killed when the Tauri window is closed.
+- [x] **Task: Frontend Port Synchronization**
+    - [x] Ensure the Tauri frontend correctly proxies or points to the Spring Boot port.
+- [x] **Task: Conductor - User Manual Verification 'Phase 3: Tauri Integration' (Protocol in workflow.md)**        
 
 ## Phase 4: Packaging & Installer Generation
 Generate the final distributable artifacts.

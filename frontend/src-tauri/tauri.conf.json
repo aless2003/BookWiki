@@ -1,0 +1,36 @@
+{
+  "productName": "BookWiki",
+  "version": "0.1.0",
+  "identifier": "com.bookwiki.app",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "BookWiki",
+        "width": 1280,
+        "height": 800
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "externalBin": [
+      "bookwiki-backend"
+    ],
+    "resources": [
+      "../../scripts/dist/jre/**/*",
+      "../../scripts/dist/BookWiki-0.0.1-SNAPSHOT.jar"
+    ]
+  },
+  "plugins": {
+  }
+}
