@@ -28,9 +28,11 @@ public class DocxExportService implements ExportService {
     @Autowired
     private ShortcodeResolver shortcodeResolver;
 
-    private final Path uploadDir = Paths.get("uploads").toAbsolutePath().normalize();
+    @Autowired
+    private online.hatsune_miku.bookwiki.media.MediaService mediaService;
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public byte[] export(String title, List<Chapter> chapters) throws IOException {
         try (XWPFDocument document = new XWPFDocument();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -117,20 +119,25 @@ public class DocxExportService implements ExportService {
                 else if (header.contains("image/jpeg") || header.contains("image/jpg")) format = XWPFDocument.PICTURE_TYPE_JPEG;
                 else if (header.contains("image/gif")) format = XWPFDocument.PICTURE_TYPE_GIF;
                 else return;
-            } else {
-                filename = src.substring(src.lastIndexOf('/') + 1);
-                if (filename.contains("?")) {
-                    filename = filename.substring(0, filename.indexOf('?'));
+            } else if (src.contains("/api/media/")) {
+                String idStr = src.substring(src.lastIndexOf('/') + 1);
+                try {
+                    java.util.UUID uuid = java.util.UUID.fromString(idStr);
+                    online.hatsune_miku.bookwiki.media.Media media = mediaService.getMedia(uuid);
+                    imageData = media.getData().getBinaryStream().readAllBytes();
+                    filename = media.getFilename();
+                    
+                    String ct = media.getContentType();
+                    if (ct.contains("png")) format = XWPFDocument.PICTURE_TYPE_PNG;
+                    else if (ct.contains("jpeg") || ct.contains("jpg")) format = XWPFDocument.PICTURE_TYPE_JPEG;
+                    else if (ct.contains("gif")) format = XWPFDocument.PICTURE_TYPE_GIF;
+                    else return;
+                } catch (Exception e) {
+                    System.err.println("Failed to load media for DOCX: " + e.getMessage());
+                    return;
                 }
-                Path imagePath = uploadDir.resolve(filename);
-                if (!Files.exists(imagePath)) return;
-                imageData = Files.readAllBytes(imagePath);
-                
-                String lowerName = filename.toLowerCase();
-                if (lowerName.endsWith(".png")) format = XWPFDocument.PICTURE_TYPE_PNG;
-                else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) format = XWPFDocument.PICTURE_TYPE_JPEG;
-                else if (lowerName.endsWith(".gif")) format = XWPFDocument.PICTURE_TYPE_GIF;
-                else return;
+            } else {
+                return;
             }
 
             try (InputStream is = new ByteArrayInputStream(imageData)) {
@@ -139,8 +146,9 @@ public class DocxExportService implements ExportService {
                 double height = 300;
                 
                 if (bimg != null) {
-                    width = bimg.getWidth();
-                    height = bimg.getHeight();
+                    // Scale native pixels to points
+                    width = bimg.getWidth() * 0.75;
+                    height = bimg.getHeight() * 0.75;
                     
                                         String attrWidth = imgElement.attr("width");
                                         String attrHeight = imgElement.attr("height");
@@ -152,8 +160,12 @@ public class DocxExportService implements ExportService {
                                             if (attrHeight.isEmpty()) attrHeight = styles.getOrDefault("height", "");
                                         }
                     
-                                        Double parsedWidth = HtmlUtils.parseDimension(attrWidth);
-                                        Double parsedHeight = HtmlUtils.parseDimension(attrHeight);
+                                        // Standard DOCX printable width is ~450 points (6.25 inches)
+                                        double maxWidth = 450; 
+                                        double maxHeight = 700;
+
+                                        Double parsedWidth = HtmlUtils.parseDimension(attrWidth, maxWidth);
+                                        Double parsedHeight = HtmlUtils.parseDimension(attrHeight, maxHeight);
                     
                                         if (parsedWidth != null && parsedHeight != null) {
                                             width = parsedWidth;
@@ -162,12 +174,11 @@ public class DocxExportService implements ExportService {
                                             height = height * (parsedWidth / width);
                                             width = parsedWidth;
                                         }
-                                        // Standard DOCX printable width is ~450 points (6.25 inches)
-                    double maxWidth = 450; 
-                    if (width > maxWidth) {
-                        height = height * (maxWidth / width);
-                        width = maxWidth;
-                    }
+                                        
+                                        if (width > maxWidth) {
+                                            height = height * (maxWidth / width);
+                                            width = maxWidth;
+                                        }
                 }
 
                 XWPFParagraph imagePara = document.createParagraph();

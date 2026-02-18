@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'online.hatsune_miku'
-version = '0.0.1-SNAPSHOT'
+version = '0.2.0'
 description = 'BookWiki'
 
 java {
@@ -101,7 +101,7 @@ task buildSidecar(type: Exec) {
 
 task prepareDist(type: Copy) {
     dependsOn build, bundleJre, buildSidecar
-    from "$projectDir/build/libs/BookWiki-0.0.1-SNAPSHOT.jar"
+    from "$projectDir/build/libs/BookWiki-0.2.0.jar"
     from "$projectDir/scripts/wrapper/target/release/bookwiki-backend.exe"
     into "$projectDir/scripts/dist"
 

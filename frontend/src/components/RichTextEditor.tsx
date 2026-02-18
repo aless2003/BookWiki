@@ -11,6 +11,7 @@ QuillInstance.register({
 
 import 'react-quill-new/dist/quill.bubble.css';
 import 'quill-mention/dist/quill.mention.css';
+import { API_BASE_URL } from '../constants/media';
 
 interface Entity {
   id: number;
@@ -58,12 +59,41 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
   const toBubbles = (text: string) => {
     if (!text) return '';
-    // Convert #{type:id} -> HTML Bubble
-    return text.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+
+    // 1. Resolve images in src attributes
+    const images = doc.querySelectorAll('img');
+    images.forEach(img => {
+        const src = img.getAttribute('src');
+        if (src?.startsWith('#{image:') || src?.startsWith('#{emote:')) {
+            const uuid = src.substring(src.indexOf(':') + 1, src.indexOf('}'));
+            img.setAttribute('src', `${API_BASE_URL}/api/media/${uuid}`);
+            img.setAttribute('data-id', uuid);
+            img.setAttribute('data-type', src.startsWith('#{image:') ? 'image' : 'emote');
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+        }
+    });
+
+    // 2. Resolve mentions in the resulting HTML string
+    let processed = doc.body.innerHTML;
+    processed = processed.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
         const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
         const name = entity ? entity.name : `Unknown ${type}`;
         return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}">${name}</span>`;
     });
+
+    // 3. Fallback for raw image shortcodes
+    processed = processed.replace(/#\{image:([\w\-]+)\}/g, (_match, id) => {
+        return `<img src="${API_BASE_URL}/api/media/${id}" data-id="${id}" data-type="image" style="max-width: 100%; height: auto;" />`;
+    });
+    processed = processed.replace(/#\{emote:([\w\-]+)\}/g, (_match, id) => {
+        return `<img src="${API_BASE_URL}/api/media/${id}" data-id="${id}" data-type="emote" style="max-width: 100%; height: auto;" />`;
+    });
+
+    return processed;
   };
 
   const toShortcodes = (html: string) => {
@@ -78,9 +108,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         const type = el.getAttribute('data-type');
         const id = el.getAttribute('data-id');
         if (type && id) {
-            const shortcode = `#{${type.toLowerCase()}:${id}}`;
-            // Replace the entire element with the shortcode string
-            el.outerHTML = shortcode;
+            if (el.tagName === 'IMG') {
+                el.setAttribute('src', `#{${type.toLowerCase()}:${id}}`);
+            } else {
+                const shortcode = `#{${type.toLowerCase()}:${id}}`;
+                // Replace the entire element with the shortcode string
+                el.outerHTML = shortcode;
+            }
         }
     });
 

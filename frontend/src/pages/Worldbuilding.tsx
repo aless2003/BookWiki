@@ -42,6 +42,7 @@ import {
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { darkTheme } from '../theme';
+import { resolveShortcodes } from '../constants/media';
 
 const drawerWidth = 240;
 
@@ -297,8 +298,8 @@ const Worldbuilding: React.FC = () => {
         })
         .then(res => res.json())
         .then(data => {
-            if (data.url && editEntry) {
-                setEditEntry((prev: any) => ({ ...prev, pictureUrl: data.url }));
+            if (data.id && editEntry) {
+                setEditEntry((prev: any) => ({ ...prev, pictureUrl: `#{image:${data.id}}` }));
             }
         })
         .catch(err => console.error('Upload failed', err))
@@ -373,7 +374,7 @@ const Worldbuilding: React.FC = () => {
                                 <CardMedia
                                     component="img"
                                     height="200"
-                                    image={entry.pictureUrl}
+                                    image={resolveShortcodes(entry.pictureUrl)}
                                     alt={entry.name}
                                     sx={{ objectFit: 'cover' }}
                                 />
@@ -449,7 +450,7 @@ const Worldbuilding: React.FC = () => {
                             >
                                 {editEntry.pictureUrl ? (
                                     <img 
-                                        src={editEntry.pictureUrl} 
+                                        src={resolveShortcodes(editEntry.pictureUrl)} 
                                         alt="Preview" 
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                                     />

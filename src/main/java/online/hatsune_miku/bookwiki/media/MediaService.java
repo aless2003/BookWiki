@@ -53,6 +53,13 @@ public class MediaService {
     }
 
     @Transactional
+    public byte[] getMediaContent(UUID id) throws Exception {
+        Media media = mediaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Media not found"));
+        return media.getData().getBinaryStream().readAllBytes();
+    }
+
+    @Transactional
     public InputStream getMediaStream(UUID id) throws Exception {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Media not found"));

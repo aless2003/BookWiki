@@ -27,18 +27,35 @@ public class HtmlUtils {
     }
 
     /**
-     * Extracts a numeric value from a dimension string (e.g., "100px" -> 100.0)
+     * Extracts a numeric value from a dimension string (e.g., "100px" -> 100.0, "50%" -> 0.5)
      * @param dimension The dimension string.
-     * @return The numeric value, or null if it cannot be parsed.
+     * @param total The total size to use for percentage calculation (e.g. page width).
+     * @return The calculated value in points, or null if it cannot be parsed.
      */
-    public static Double parseDimension(String dimension) {
+    public static Double parseDimension(String dimension, double total) {
         if (dimension == null || dimension.isEmpty() || dimension.equals("auto")) {
             return null;
         }
+        
+        String cleanValue = dimension.replaceAll("[^0-9.%]", "");
+        if (cleanValue.isEmpty()) return null;
+
         try {
-            return Double.parseDouble(dimension.replaceAll("[^0-9.]", ""));
+            if (cleanValue.endsWith("%")) {
+                double percent = Double.parseDouble(cleanValue.substring(0, cleanValue.length() - 1));
+                return total * (percent / 100.0);
+            } else {
+                // Convert pixels (standard in web/editor) to points (standard in PDF/Docx).
+                // 1px = 0.75pt (based on 96 DPI vs 72 DPI)
+                double val = Double.parseDouble(cleanValue.replaceAll("[^0-9.]", ""));
+                return val * 0.75;
+            }
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    public static Double parseDimension(String dimension) {
+        return parseDimension(dimension, 0);
     }
 }

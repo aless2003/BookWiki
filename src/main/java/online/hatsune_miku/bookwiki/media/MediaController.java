@@ -32,13 +32,13 @@ public class MediaController {
     }
 
     @GetMapping("/media/{id}")
-    public ResponseEntity<InputStreamResource> getMedia(@PathVariable UUID id) {
+    public ResponseEntity<byte[]> getMedia(@PathVariable UUID id) {
         try {
             Media media = mediaService.getMedia(id);
-            InputStream is = mediaService.getMediaStream(id);
+            byte[] content = mediaService.getMediaContent(id);
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(media.getContentType()))
-                    .body(new InputStreamResource(is));
+                    .body(content);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }

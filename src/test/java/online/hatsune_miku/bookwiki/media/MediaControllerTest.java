@@ -52,7 +52,7 @@ class MediaControllerTest {
         media.setContentType("image/png");
         
         when(mediaService.getMedia(id)).thenReturn(media);
-        when(mediaService.getMediaStream(id)).thenReturn(new ByteArrayInputStream("test data".getBytes()));
+        when(mediaService.getMediaContent(id)).thenReturn("test data".getBytes());
 
         mockMvc.perform(get("/api/media/{id}", id))
                 .andExpect(status().isOk())

@@ -156,11 +156,17 @@ const ResizableImageComponent = ({ node, updateAttributes, selected, editor, get
         setIsModalOpen(false);
 
         if (emoteName && storyId) {
+            let savedSrc = src;
+            if (src.includes('/api/media/')) {
+                const uuid = src.split('/').pop();
+                savedSrc = `#{image:${uuid}}`;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/stories/${storyId}/emotes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: emoteName, imageUrl: src })
+                    body: JSON.stringify({ name: emoteName, imageUrl: savedSrc })
                 });
                 if (response.ok) {
                     if (onEmoteCreated) onEmoteCreated();

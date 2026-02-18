@@ -14,14 +14,13 @@ class ShortcodeResolverTest {
     private ShortcodeResolver shortcodeResolver;
 
     @Test
-    void resolveImageShortcode() {
+    void resolveImageInTag() {
         UUID id = UUID.randomUUID();
-        String content = "Check this out: #{image:" + id + "}";
+        String content = "<img src=\"#{image:" + id + "}\" width=\"100\" style=\"border: 1px solid red;\" />";
         String resolved = shortcodeResolver.resolve(content);
         
-        // For now, let's decide what it should resolve to. 
-        // During export, it should probably be an <img> tag.
-        assertTrue(resolved.contains("<img"));
-        assertTrue(resolved.contains("/api/media/" + id));
+        assertTrue(resolved.contains("src=\"/api/media/" + id + "\""));
+        assertTrue(resolved.contains("width=\"100\""));
+        assertTrue(resolved.contains("style=\"border: 1px solid red;\""));
     }
 }

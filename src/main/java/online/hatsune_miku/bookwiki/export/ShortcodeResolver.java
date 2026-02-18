@@ -25,19 +25,39 @@ public class ShortcodeResolver {
     }
 
     public String resolve(String content) {
-        if (content == null) return "";
+        if (content == null || content.isEmpty()) return "";
         
-        // Resolve mentions: #{type:id}
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parseBodyFragment(content);
+        
+        // 1. Resolve images in src attributes
+        org.jsoup.select.Elements images = doc.select("img");
+        for (org.jsoup.nodes.Element img : images) {
+            String src = img.attr("src");
+            if (src.startsWith("#{image:") || src.startsWith("#{emote:")) {
+                String uuid = src.substring(src.indexOf(":") + 1, src.indexOf("}"));
+                img.attr("src", "/api/media/" + uuid);
+            }
+        }
+
+        // 2. Resolve other shortcodes (mentions) in text nodes
+        // We use a regex for this as it's simpler for text-wide replacement
+        String processedHtml = doc.body().html();
         Pattern pattern = Pattern.compile("#\\{(\\w+):([\\w\\-]+)\\}");
-        Matcher matcher = pattern.matcher(content);
+        Matcher matcher = pattern.matcher(processedHtml);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
             String type = matcher.group(1);
             String idStr = matcher.group(2);
             
             String replacement;
-            if (type.equalsIgnoreCase("image")) {
-                replacement = String.format("<img src=\"/api/media/%s\" alt=\"Media\" style=\"max-width: 100%%; height: auto;\" />", idStr);
+            // Skip image/emote as they should be in <img> tags now
+            if (type.equalsIgnoreCase("image") || type.equalsIgnoreCase("emote")) {
+                // If it's a raw shortcode not in an <img> tag, we can still resolve it to one
+                if (type.equalsIgnoreCase("image")) {
+                    replacement = String.format("<img src=\"/api/media/%s\" alt=\"Media\" style=\"max-width: 100%%; height: auto;\" />", idStr);
+                } else {
+                    replacement = String.format("<img src=\"/api/media/%s\" class=\"inline-image-emote\" style=\"height: 1.5em; vertical-align: middle;\" />", idStr);
+                }
             } else {
                 try {
                     Long id = Long.parseLong(idStr);

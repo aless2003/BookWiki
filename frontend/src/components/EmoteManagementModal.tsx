@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import { MdEdit, MdDelete, MdCheck, MdClose } from 'react-icons/md';
 import { darkTheme } from '../theme';
+import { resolveShortcodes } from '../constants/media';
 
 interface Emote {
   id: number;
@@ -183,7 +184,7 @@ const EmoteManagementModal: React.FC<EmoteManagementModalProps> = ({ isOpen, onC
                   <ListItemAvatar>
                     <Avatar 
                       variant="square" 
-                      src={emote.imageUrl} 
+                      src={resolveShortcodes(emote.imageUrl)} 
                       alt={emote.name}
                       sx={{ width: 40, height: 40, borderRadius: 1 }}
                     />

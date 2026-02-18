@@ -31,9 +31,11 @@ public class PdfExportService implements ExportService {
     @Autowired
     private ShortcodeResolver shortcodeResolver;
 
-    private final Path uploadDir = Paths.get("uploads").toAbsolutePath().normalize();
+    @Autowired
+    private online.hatsune_miku.bookwiki.media.MediaService mediaService;
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public byte[] export(String title, List<Chapter> chapters) throws IOException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document();
@@ -159,14 +161,18 @@ public class PdfExportService implements ExportService {
                 String base64Data = src.substring(src.indexOf(",") + 1);
                 byte[] decodedData = Base64.getDecoder().decode(base64Data);
                 img = Image.getInstance(decodedData);
-            } else {
-                String filename = src.substring(src.lastIndexOf('/') + 1);
-                if (filename.contains("?")) {
-                    filename = filename.substring(0, filename.indexOf('?'));
+            } else if (src.contains("/api/media/")) {
+                String idStr = src.substring(src.lastIndexOf('/') + 1);
+                try {
+                    java.util.UUID uuid = java.util.UUID.fromString(idStr);
+                    byte[] data = mediaService.getMedia(uuid).getData().getBinaryStream().readAllBytes();
+                    img = Image.getInstance(data);
+                } catch (Exception e) {
+                    System.err.println("Failed to load media for PDF: " + e.getMessage());
+                    return;
                 }
-                Path imagePath = uploadDir.resolve(filename);
-                if (!Files.exists(imagePath)) return;
-                img = Image.getInstance(imagePath.toString());
+            } else {
+                return;
             }
 
             if (img != null) {
@@ -174,6 +180,10 @@ public class PdfExportService implements ExportService {
                 float pageWidth = document.getPageSize().getWidth() - document.leftMargin() - document.rightMargin();
                 float pageHeight = document.getPageSize().getHeight() - document.topMargin() - document.bottomMargin() - 40;
                 
+                // Scale native pixels to points
+                float width = img.getWidth() * 0.75f;
+                float height = img.getHeight() * 0.75f;
+
                 // Get attributes from HTML tag if available
                 String attrWidth = imgElement.attr("width");
                 String attrHeight = imgElement.attr("height");
@@ -185,22 +195,35 @@ public class PdfExportService implements ExportService {
                     if (attrHeight.isEmpty()) attrHeight = styles.getOrDefault("height", "");
                 }
 
-                Double parsedWidth = HtmlUtils.parseDimension(attrWidth);
-                Double parsedHeight = HtmlUtils.parseDimension(attrHeight);
+                Double parsedWidth = HtmlUtils.parseDimension(attrWidth, pageWidth);
+                Double parsedHeight = HtmlUtils.parseDimension(attrHeight, pageHeight);
                 
                 if (parsedWidth != null && parsedHeight != null) {
-                    img.scaleAbsolute(parsedWidth.floatValue(), parsedHeight.floatValue());
+                    width = parsedWidth.floatValue();
+                    height = parsedHeight.floatValue();
                 } else if (parsedWidth != null) {
-                    float ratio = parsedWidth.floatValue() / img.getWidth();
-                    img.scaleAbsolute(parsedWidth.floatValue(), img.getHeight() * ratio);
-                } else {
-                    img.scaleToFit(pageWidth, pageHeight);
+                    float ratio = parsedWidth.floatValue() / width;
+                    width = parsedWidth.floatValue();
+                    height = height * ratio;
+                } else if (parsedHeight != null) {
+                    float ratio = parsedHeight.floatValue() / height;
+                    height = parsedHeight.floatValue();
+                    width = width * ratio;
                 }
 
-                // Final safety check: ensure scaled image doesn't exceed page bounds
-                if (img.getScaledWidth() > pageWidth || img.getScaledHeight() > pageHeight) {
-                    img.scaleToFit(pageWidth, pageHeight);
+                // Ensure it doesn't exceed page bounds (scale down only)
+                if (width > pageWidth) {
+                    float ratio = pageWidth / width;
+                    width = pageWidth;
+                    height = height * ratio;
                 }
+                if (height > pageHeight) {
+                    float ratio = pageHeight / height;
+                    height = pageHeight;
+                    width = width * ratio;
+                }
+
+                img.scaleAbsolute(width, height);
                 
                 PdfPTable table = new PdfPTable(1);
                 table.setWidthPercentage(100);

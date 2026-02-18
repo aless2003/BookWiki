@@ -10,6 +10,7 @@ import Underline from '@tiptap/extension-underline';
 import FileHandler from '@tiptap/extension-file-handler';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { PaginationPlus } from 'tiptap-pagination-plus';
+import { resolveShortcodes } from '../constants/media';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -99,7 +100,7 @@ const TiptapPagedEditor = ({
       ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
       ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
       ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
-      ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: e.imageUrl }))
+      ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: resolveShortcodes(e.imageUrl) }))
     ], [characters, items, locations, lore, emotes]);
   
     const allEntitiesRef = useRef(allEntities);
@@ -109,12 +110,40 @@ const TiptapPagedEditor = ({
 
     const toBubbles = useMemo(() => (text: string) => {
       if (!text) return '';
-      let processed = text.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
-        const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
+      
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+
+      // 1. Resolve images in src attributes
+      const images = doc.querySelectorAll('img');
+      images.forEach(img => {
+          const src = img.getAttribute('src');
+          if (src?.startsWith('#{image:') || src?.startsWith('#{emote:')) {
+              const uuid = src.substring(src.indexOf(':') + 1, src.indexOf('}'));
+              img.setAttribute('src', `${API_BASE_URL}/api/media/${uuid}`);
+              if (src.startsWith('#{emote:')) {
+                  img.classList.add('inline-image-emote');
+              }
+          }
+      });
+
+      // 2. Resolve mentions and pagebreaks in the resulting HTML string
+      let processed = doc.body.innerHTML;
+      processed = processed.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
+        const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id.toString() === id);
         const name = entity ? entity.name : `Unknown ${type}`;
         return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}">${name}</span>`;
       });
       processed = processed.replace(/#\{pagebreak\}/g, '<div data-type="page-break"></div>');
+      
+      // 3. Fallback for raw image shortcodes not in img tags
+      processed = processed.replace(/#\{image:([\w\-]+)\}/g, (_match, id) => {
+          return `<img src="${API_BASE_URL}/api/media/${id}" />`;
+      });
+      processed = processed.replace(/#\{emote:([\w\-]+)\}/g, (_match, id) => {
+          return `<img src="${API_BASE_URL}/api/media/${id}" class="inline-image-emote" />`;
+      });
+
       return processed;
     }, [allEntities]);
 
@@ -135,6 +164,16 @@ const TiptapPagedEditor = ({
       const pageBreaks = doc.querySelectorAll('div[data-type="page-break"]');
       pageBreaks.forEach(el => {
           el.outerHTML = '#{pagebreak}';
+      });
+
+      const images = doc.querySelectorAll('img');
+      images.forEach(img => {
+          const src = img.getAttribute('src');
+          if (src?.includes('/api/media/')) {
+              const uuid = src.split('/').pop();
+              const isEmote = img.classList.contains('inline-image-emote') || img.getAttribute('data-type') === 'emote';
+              img.setAttribute('src', `#{${isEmote ? 'emote' : 'image'}:${uuid}}`);
+          }
       });
   
       let result = doc.body.innerHTML;
@@ -171,7 +210,7 @@ const TiptapPagedEditor = ({
                   const data = await response.json();
                   currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
                     type: 'resizableImage',
-                    attrs: { src: data.url },
+                    attrs: { src: `${API_BASE_URL}${data.url}` },
                   }).focus().run();
                 }
               } catch (err) {
@@ -194,7 +233,7 @@ const TiptapPagedEditor = ({
                   const data = await response.json();
                   currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
                     type: 'resizableImage',
-                    attrs: { src: data.url },
+                    attrs: { src: `${API_BASE_URL}${data.url}` },
                   }).focus().run();
                 }
               } catch (err) {
