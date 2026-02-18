@@ -17,17 +17,22 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
     let isMounted = true;
     
     const checkBackend = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/stories`, {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         if (response.ok && isMounted) {
           setIsReady(true);
           return;
         }
       } catch (err) {
-        // Not ready yet
+        // Not ready yet or timeout
       }
       if (isMounted) {
         setAttempts(prev => prev + 1);
@@ -35,7 +40,7 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
     };
 
     checkBackend();
-    interval = setInterval(checkBackend, 1000);
+    interval = setInterval(checkBackend, 3000); // Poll every 3 seconds to be less aggressive
 
     return () => {
       isMounted = false;

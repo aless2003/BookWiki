@@ -94,6 +94,9 @@ task bundleJre(type: Exec) {
 task buildSidecar(type: Exec) {
     workingDir "$projectDir/scripts/wrapper"
     commandLine 'cargo', 'build', '--release'
+    inputs.dir "$projectDir/scripts/wrapper/src"
+    inputs.file "$projectDir/scripts/wrapper/Cargo.toml"
+    outputs.dir "$projectDir/scripts/wrapper/target/release"
 }
 
 task prepareDist(type: Copy) {

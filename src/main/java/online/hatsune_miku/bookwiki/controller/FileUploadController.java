@@ -53,7 +53,7 @@ public class FileUploadController {
             }
 
             String filename = UUID.randomUUID() + extension;
-            Path destinationPath = this.uploadDir.toAbsolutePath().normalize();
+            Path destinationPath = this.uploadDir.toAbsolutePath();
             Path targetPath = destinationPath.resolve(filename).normalize().toAbsolutePath();
 
             if (!targetPath.startsWith(destinationPath)) {

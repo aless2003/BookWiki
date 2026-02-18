@@ -9,7 +9,7 @@ use winapi::um::winnt::{
 use winapi::um::winbase::CreateJobObjectA;
 use std::ptr::null_mut;
 use std::mem::size_of;
-use std::fs::File;
+use std::fs::OpenOptions;
 
 fn main() {
     let exe_path = env::current_exe().expect("Failed to get current exe path");
@@ -42,9 +42,9 @@ fn main() {
         }
     }
 
-    // Redirect logs for standalone debugging
-    let log_file = File::create(app_dir.join("backend.log")).ok();
-    let err_file = File::create(app_dir.join("backend.err")).ok();
+    // Redirect logs for standalone debugging (append mode)
+    let log_file = OpenOptions::new().create(true).append(true).open(app_dir.join("backend.log")).ok();
+    let err_file = OpenOptions::new().create(true).append(true).open(app_dir.join("backend.err")).ok();
 
     let mut cmd = Command::new(jre_path);
     cmd.arg("-Dbookwiki.standalone=true");

@@ -25,13 +25,14 @@ public class PathProvider {
     public Path getBaseDataPath() {
         Path path;
         if (standalone) {
-            String appData = System.getenv("APPDATA");
-            if (appData == null) {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                String appData = System.getenv("APPDATA");
+                path = Paths.get(appData, "BookWiki");
+            } else {
                 // For Mac/Linux:
                 String userHome = System.getProperty("user.home");
                 path = Paths.get(userHome, "BookWiki");
-            } else {
-                path = Paths.get(appData, "BookWiki");
             }
             path = path.toAbsolutePath().normalize();
             ensureDirectoryExists(path);
