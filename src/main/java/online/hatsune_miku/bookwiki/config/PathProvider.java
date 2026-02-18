@@ -56,10 +56,11 @@ public class PathProvider {
         Path dbPath = getBaseDataPath().resolve("data").resolve("bookwiki").toAbsolutePath().normalize();
         ensureDirectoryExists(dbPath.getParent());
         
-        // H2 URL format: jdbc:h2:file:/path/to/file
-        // We replace backslashes with forward slashes for cross-platform compatibility in H2 URLs
+        // H2 URL format: jdbc:h2:file:/path/to/file (or C:/path/on/windows)
         String pathStr = dbPath.toString().replace("\\", "/");
-        if (!pathStr.startsWith("/")) {
+        // On Windows, if the path starts with a drive letter (e.g., C:/), don't add a leading slash.
+        // On Unix-like systems, the absolute path already starts with /.
+        if (!pathStr.startsWith("/") && !pathStr.contains(":")) {
             pathStr = "/" + pathStr;
         }
         return "jdbc:h2:file:" + pathStr + ";MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";

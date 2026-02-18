@@ -37,4 +37,4 @@ out/
 .vscode/
 
 src/main/resources/static
-uploads
+uploads`nscripts/dist/`nscripts/wrapper/target/
