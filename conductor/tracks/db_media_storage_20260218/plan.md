@@ -16,7 +16,7 @@ Goal: Establish the database schema and services for storing and serving media.
     - [ ] Write tests for `GET /api/media/{uuid}` and `POST /api/media/upload`.
     - [ ] Implement endpoint to serve media with correct content-type and streaming.
     - [ ] Update upload endpoint to return the new media ID.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Core Media Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Core Media Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Reference Tracking and Shortcode Integration
 Goal: Implement the logic to track media usage via shortcodes and identify orphans.
