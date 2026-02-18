@@ -2,7 +2,7 @@
 
 This plan outlines the steps to move media storage to the database, implement a shortcode-based reference tracking system, and automate the cleanup of orphaned files.
 
-## Phase 1: Core Media Infrastructure
+## Phase 1: Core Media Infrastructure [checkpoint: c0935b0]
 Goal: Establish the database schema and services for storing and serving media.
 
 - [x] Task: Create `Media` Entity and Repository
