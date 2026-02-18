@@ -18,21 +18,21 @@ Goal: Establish the database schema and services for storing and serving media.
     - [x] Update upload endpoint to return the new media ID.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Core Media Infrastructure' (Protocol in workflow.md)
 
-## Phase 2: Reference Tracking and Shortcode Integration
+## Phase 2: Reference Tracking and Shortcode Integration [checkpoint: 3613559]
 Goal: Implement the logic to track media usage via shortcodes and identify orphans.
 
-- [~] Task: Extend Shortcode System for Media
-    - [ ] Write tests for parsing and resolving `#{image:uuid}` shortcodes.
-    - [ ] Update backend shortcode utility to recognize and validate media shortcodes.
-- [ ] Task: Implement Reference Tracking Logic
-    - [ ] Write tests for reference counting (tracking usage across Chapters, Characters, and Locations).
-    - [ ] Implement a `MediaReference` system (e.g., a join table or a reference counter service).
-    - [ ] Add hooks to `Chapter`, `Character`, and `Location` save operations to parse content and update references.
-- [ ] Task: Implement Orphan Deletion Service
-    - [ ] Write tests for orphan identification (deleting media when ref count hits zero).
-    - [ ] Implement `deleteIfOrphaned(UUID)` logic.
-    - [ ] Ensure entity deletion triggers an orphan check for all associated media.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Reference Tracking and Shortcode Integration' (Protocol in workflow.md)
+- [x] Task: Extend Shortcode System for Media
+    - [x] Write tests for parsing and resolving `#{image:uuid}` shortcodes.
+    - [x] Update backend shortcode utility to recognize and validate media shortcodes.
+- [x] Task: Implement Reference Tracking Logic
+    - [x] Write tests for reference counting (tracking usage across Chapters, Characters, and Locations).
+    - [x] Implement a `MediaReference` system (e.g., a join table or a reference counter service).
+    - [x] Add hooks to `Chapter`, `Character`, and `Location` save operations to parse content and update references.
+- [x] Task: Implement Orphan Deletion Service
+    - [x] Write tests for orphan identification (deleting media when ref count hits zero).
+    - [x] Implement `deleteIfOrphaned(UUID)` logic.
+    - [x] Ensure entity deletion triggers an orphan check for all associated media.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Reference Tracking and Shortcode Integration' (Protocol in workflow.md)
 
 ## Phase 3: Migration System
 Goal: Migrate existing files and Base64 strings to the new database system.
