@@ -48,16 +48,16 @@ Goal: Migrate existing files and Base64 strings to the new database system.
     - [x] Add logic to backup/clear `uploads/` only after successful migration.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Migration System' (Protocol in workflow.md)
 
-## Phase 4: Frontend and Final Integration
+## Phase 4: Frontend and Final Integration [checkpoint: b3253e5]
 Goal: Update the UI to support the new system, update project versioning, and perform final verification.
 
-- [~] Task: Update Frontend Media Handling
-    - [ ] Update `Writing.tsx` and Worldbuilding components to use the new `/api/media` endpoints.
-    - [ ] Update TipTap extensions (`ResizableImage`, `InlineImage`) to resolve `#{image:uuid}` to URLs.
-- [ ] Task: Bump Project Version to 0.2.0
-    - [ ] Update version in `build.gradle`, `frontend/package.json`, `frontend/src-tauri/tauri.conf.json`, and `frontend/src-tauri/Cargo.toml`.
-- [ ] Task: Final System Verification
-    - [ ] Verify migration of existing data.
-    - [ ] Verify that new uploads are correctly tracked and deleted when orphaned.
-    - [ ] Ensure image dimensions are preserved post-migration.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Frontend and Final Integration' (Protocol in workflow.md)
+- [x] Task: Update Frontend Media Handling
+    - [x] Update `Writing.tsx` and Worldbuilding components to use the new `/api/media` endpoints.
+    - [x] Update TipTap extensions (`ResizableImage`, `InlineImage`) to resolve `#{image:uuid}` to URLs.
+- [x] Task: Bump Project Version to 0.2.0
+    - [x] Update version in `build.gradle`, `frontend/package.json`, `frontend/src-tauri/tauri.conf.json`, and `frontend/src-tauri/Cargo.toml`.
+- [x] Task: Final System Verification
+    - [x] Verify migration of existing data.
+    - [x] Verify that new uploads are correctly tracked and deleted when orphaned.
+    - [x] Ensure image dimensions are preserved post-migration.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Frontend and Final Integration' (Protocol in workflow.md)
