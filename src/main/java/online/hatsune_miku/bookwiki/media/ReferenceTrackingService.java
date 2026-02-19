@@ -74,7 +74,7 @@ public class ReferenceTrackingService {
         Set<UUID> uuids = new HashSet<>();
         if (content == null) return uuids;
 
-        Pattern pattern = Pattern.compile("#\\{image:([\\w\\-]+)\\}");
+        Pattern pattern = Pattern.compile("#\\{(?:image|emote):([\\w\\-]+)\\}");
         Matcher matcher = pattern.matcher(content);
         while (matcher.find()) {
             try {

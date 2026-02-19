@@ -31,6 +31,9 @@ class MediaServiceTest {
     private EntityManager entityManager;
 
     @Mock
+    private MediaReferenceRepository referenceRepository;
+
+    @Mock
     private Session session;
 
     @Mock

@@ -24,7 +24,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Blob;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -52,10 +54,14 @@ public class MigrationService {
             return;
         }
 
+        Map<String, String> migrations = new HashMap<>();
+
         try (Stream<Path> files = Files.list(uploadDir)) {
             files.filter(Files::isRegularFile).forEach(path -> {
                 try {
-                    migrateFile(path);
+                    UUID mediaId = migrateFileToDb(path);
+                    String filename = path.getFileName().toString();
+                    migrations.put("/uploads/" + filename, "#{image:" + mediaId + "}");
                 } catch (Exception e) {
                     log.error("Failed to migrate file {}: {}", path, e.getMessage());
                 }
@@ -63,13 +69,16 @@ public class MigrationService {
         } catch (IOException e) {
             log.error("Could not list upload directory: {}", e.getMessage());
         }
+
+        if (!migrations.isEmpty()) {
+            applyMigrations(migrations);
+        }
     }
 
-    private void migrateFile(Path path) throws IOException {
+    private UUID migrateFileToDb(Path path) throws IOException {
         String filename = path.getFileName().toString();
-        log.info("Migrating file: {}", filename);
+        log.info("Migrating file to DB: {}", filename);
 
-        // Save to database
         Media media = new Media();
         media.setFilename(filename);
         media.setContentType(Files.probeContentType(path));
@@ -89,32 +98,33 @@ public class MigrationService {
         });
         media.setData(blob);
         media = mediaRepository.save(media);
-        UUID mediaId = media.getId();
-
-        // Update references in all fields
-        String oldUrlPart = "/uploads/" + filename;
-        String newShortcode = "#{image:" + mediaId + "}";
-
-        updateAllReferences(oldUrlPart, newShortcode);
+        return media.getId();
     }
 
-    private void updateAllReferences(String oldUrlPart, String newShortcode) {
+    private void applyMigrations(Map<String, String> migrations) {
+        log.info("Applying {} file-to-database migrations across all entities...", migrations.size());
+
         // Characters
         for (Character c : characterRepository.findAll()) {
             boolean changed = false;
-            if (c.getPictureUrl() != null && c.getPictureUrl().contains(oldUrlPart)) {
-                c.setPictureUrl(newShortcode);
-                changed = true;
-            }
-            String newAppearance = replaceUrl(c.getAppearance(), oldUrlPart, newShortcode);
-            if (!newAppearance.equals(c.getAppearance())) {
-                c.setAppearance(newAppearance);
-                changed = true;
-            }
-            String newDesc = replaceUrl(c.getDescription(), oldUrlPart, newShortcode);
-            if (!newDesc.equals(c.getDescription())) {
-                c.setDescription(newDesc);
-                changed = true;
+            for (Map.Entry<String, String> entry : migrations.entrySet()) {
+                String oldUrl = entry.getKey();
+                String newShortcode = entry.getValue();
+
+                if (c.getPictureUrl() != null && c.getPictureUrl().contains(oldUrl)) {
+                    c.setPictureUrl(newShortcode);
+                    changed = true;
+                }
+                String newAppearance = replaceUrl(c.getAppearance(), oldUrl, newShortcode);
+                if (!newAppearance.equals(c.getAppearance())) {
+                    c.setAppearance(newAppearance);
+                    changed = true;
+                }
+                String newDesc = replaceUrl(c.getDescription(), oldUrl, newShortcode);
+                if (!newDesc.equals(c.getDescription())) {
+                    c.setDescription(newDesc);
+                    changed = true;
+                }
             }
             if (changed) {
                 characterRepository.save(c);
@@ -124,9 +134,17 @@ public class MigrationService {
 
         // Chapters
         for (Chapter ch : chapterRepository.findAll()) {
-            String newContent = replaceUrl(ch.getContent(), oldUrlPart, newShortcode);
-            if (!newContent.equals(ch.getContent())) {
-                ch.setContent(newContent);
+            boolean changed = false;
+            String content = ch.getContent();
+            for (Map.Entry<String, String> entry : migrations.entrySet()) {
+                String newContent = replaceUrl(content, entry.getKey(), entry.getValue());
+                if (!newContent.equals(content)) {
+                    content = newContent;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                ch.setContent(content);
                 chapterRepository.save(ch);
                 referenceTrackingService.updateReferences(ch.getContent(), "CHAPTER", ch.getId());
             }
@@ -135,14 +153,19 @@ public class MigrationService {
         // Locations
         for (Location l : locationRepository.findAll()) {
             boolean changed = false;
-            if (l.getPictureUrl() != null && l.getPictureUrl().contains(oldUrlPart)) {
-                l.setPictureUrl(newShortcode);
-                changed = true;
-            }
-            String newDesc = replaceUrl(l.getDescription(), oldUrlPart, newShortcode);
-            if (!newDesc.equals(l.getDescription())) {
-                l.setDescription(newDesc);
-                changed = true;
+            for (Map.Entry<String, String> entry : migrations.entrySet()) {
+                String oldUrl = entry.getKey();
+                String newShortcode = entry.getValue();
+
+                if (l.getPictureUrl() != null && l.getPictureUrl().contains(oldUrl)) {
+                    l.setPictureUrl(newShortcode);
+                    changed = true;
+                }
+                String newDesc = replaceUrl(l.getDescription(), oldUrl, newShortcode);
+                if (!newDesc.equals(l.getDescription())) {
+                    l.setDescription(newDesc);
+                    changed = true;
+                }
             }
             if (changed) {
                 locationRepository.save(l);
@@ -153,14 +176,19 @@ public class MigrationService {
         // Items
         for (Item i : itemRepository.findAll()) {
             boolean changed = false;
-            if (i.getPictureUrl() != null && i.getPictureUrl().contains(oldUrlPart)) {
-                i.setPictureUrl(newShortcode);
-                changed = true;
-            }
-            String newDesc = replaceUrl(i.getDescription(), oldUrlPart, newShortcode);
-            if (!newDesc.equals(i.getDescription())) {
-                i.setDescription(newDesc);
-                changed = true;
+            for (Map.Entry<String, String> entry : migrations.entrySet()) {
+                String oldUrl = entry.getKey();
+                String newShortcode = entry.getValue();
+
+                if (i.getPictureUrl() != null && i.getPictureUrl().contains(oldUrl)) {
+                    i.setPictureUrl(newShortcode);
+                    changed = true;
+                }
+                String newDesc = replaceUrl(i.getDescription(), oldUrl, newShortcode);
+                if (!newDesc.equals(i.getDescription())) {
+                    i.setDescription(newDesc);
+                    changed = true;
+                }
             }
             if (changed) {
                 itemRepository.save(i);
@@ -171,14 +199,19 @@ public class MigrationService {
         // Lore
         for (Lore lore : loreRepository.findAll()) {
             boolean changed = false;
-            if (lore.getPictureUrl() != null && lore.getPictureUrl().contains(oldUrlPart)) {
-                lore.setPictureUrl(newShortcode);
-                changed = true;
-            }
-            String newDesc = replaceUrl(lore.getDescription(), oldUrlPart, newShortcode);
-            if (!newDesc.equals(lore.getDescription())) {
-                lore.setDescription(newDesc);
-                changed = true;
+            for (Map.Entry<String, String> entry : migrations.entrySet()) {
+                String oldUrl = entry.getKey();
+                String newShortcode = entry.getValue();
+
+                if (lore.getPictureUrl() != null && lore.getPictureUrl().contains(oldUrl)) {
+                    lore.setPictureUrl(newShortcode);
+                    changed = true;
+                }
+                String newDesc = replaceUrl(lore.getDescription(), oldUrl, newShortcode);
+                if (!newDesc.equals(lore.getDescription())) {
+                    lore.setDescription(newDesc);
+                    changed = true;
+                }
             }
             if (changed) {
                 loreRepository.save(lore);
