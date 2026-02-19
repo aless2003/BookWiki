@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_partial_pagination_20260219",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-02-19T19:58:00Z",
+  "updated_at": "2026-02-19T19:58:00Z",
+  "description": "bug fix: when loading a chapter sometimes only part of the chapter is paged until it is edited or clicked into."
+}
