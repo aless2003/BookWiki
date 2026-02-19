@@ -61,3 +61,6 @@ Goal: Update the UI to support the new system, update project versioning, and pe
     - [x] Verify that new uploads are correctly tracked and deleted when orphaned.
     - [x] Ensure image dimensions are preserved post-migration.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Frontend and Final Integration' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 1444f09
