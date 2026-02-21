@@ -101,7 +101,7 @@ task buildSidecar(type: Exec) {
 
 task prepareDist(type: Copy) {
     dependsOn build, bundleJre, buildSidecar
-    from "$projectDir/build/libs/BookWiki-0.2.0.jar"
+    from "$projectDir/build/libs/BookWiki-${version}.jar"
     from "$projectDir/scripts/wrapper/target/release/bookwiki-backend.exe"
     into "$projectDir/scripts/dist"
 
@@ -136,4 +136,62 @@ task packageInstaller(type: Copy) {
     into "$projectDir/releases"
 
     include "*.msi", "*.exe"
+}
+
+// Version Management
+
+task updateVersion {
+    group = 'versioning'
+    description = 'Updates the version of the project in all relevant files.'
+
+    doLast {
+        def newVersion = project.hasProperty('newVersion') ? project.getProperty('newVersion') : null
+
+        if (newVersion == null) {
+            println "Current version: ${project.version}"
+            def console = System.console()
+            if (console != null) {
+                newVersion = console.readLine('> Enter new version: ')
+            } else {
+                // Fallback if console is not available (e.g. in some IDE terminals)
+                println "Enter new version: "
+                newVersion = new Scanner(System.in).nextLine()
+            }
+        }
+
+        if (newVersion == null || newVersion.trim().isEmpty()) {
+            throw new GradleException("New version cannot be empty.")
+        }
+
+        newVersion = newVersion.trim()
+        println "Updating version to: ${newVersion}"
+
+        // 1. build.gradle
+        def buildFile = file('build.gradle')
+        def buildContent = buildFile.text
+        buildContent = buildContent.replaceFirst(/version\s*=\s*['"][^'"]*['"]/, "version = '${newVersion}'")
+        buildFile.text = buildContent
+        println "Updated build.gradle"
+
+        // 2. package.json
+        def packageFile = file('frontend/package.json')
+        if (packageFile.exists()) {
+            def packageContent = packageFile.text
+            packageContent = packageContent.replaceFirst(/"version":\s*"[^"]*"/, "\"version\": \"${newVersion}\"")
+            packageFile.text = packageContent
+            println "Updated frontend/package.json"
+        }
+
+        // 3. tauri.conf.json
+        def tauriFile = file('frontend/src-tauri/tauri.conf.json')
+        if (tauriFile.exists()) {
+            def tauriContent = tauriFile.text
+            // Update version field
+            tauriContent = tauriContent.replaceFirst(/"version":\s*"[^"]*"/, "\"version\": \"${newVersion}\"")
+            // Update resources JAR path
+            tauriContent = tauriContent.replaceAll(/BookWiki-[^"]*\.jar/, "BookWiki-${newVersion}.jar")
+            tauriFile.text = tauriContent
+            println "Updated frontend/src-tauri/tauri.conf.json"
+        }
+    }
 }

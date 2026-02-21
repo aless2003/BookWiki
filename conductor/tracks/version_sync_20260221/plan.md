@@ -14,7 +14,7 @@ Identify the exact string patterns in the target files to ensure surgical update
 ## Phase 2: Implementation of Gradle Task
 Development of the custom Gradle task in `build.gradle`.
 
-- [ ] **Task: Create Version Update Logic**
+- [x] **Task: Create Version Update Logic**
     - [ ] Define the `updateVersion` task in `build.gradle`
     - [ ] Implement input logic (Property check followed by Interactive Prompt fallback)
     - [ ] Implement file reading and regex replacement logic for the three target files
