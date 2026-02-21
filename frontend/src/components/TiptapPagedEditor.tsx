@@ -481,6 +481,13 @@ const TiptapPagedEditor = ({
             }),
       ],
       content: toBubbles(content),
+      onCreate: ({ editor }) => {
+        // Trigger a re-pagination after a short delay to account for Tauri initialization
+        setTimeout(() => {
+            editor.commands.focus();
+            editor.view.dispatch(editor.state.tr);
+        }, 1000);
+      },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const shortcodeVersion = toShortcodes(html);
@@ -532,10 +539,32 @@ const TiptapPagedEditor = ({
     const callback = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        const pages = document.querySelectorAll('.rm-page-break');
+        const editorDom = editor.view.dom;
+        const pages = editorDom.querySelectorAll('.rm-page-break');
         const count = pages.length;
         const hasContent = editor.getText().trim().length > 0;
         
+        // Check for "stalled" pagination:
+        // If there are nodes in the editor that are not .rm-page-break, it might be stalled.
+        // The extension usually moves everything into .rm-page-break.
+        const rootNodes = Array.from(editorDom.childNodes);
+        const unpaginatedNodes = rootNodes.filter(node => {
+            if (node instanceof HTMLElement) {
+                return !node.classList.contains('rm-page-break') && 
+                       !node.classList.contains('page') && 
+                       !node.classList.contains('tippy-content') && // Ignore tippy
+                       node.tagName !== 'BR'; // Ignore trailing BRs
+            }
+            return false;
+        });
+
+        if (unpaginatedNodes.length > 0 && hasContent) {
+            // Nudge the editor to force a re-pagination pass
+            editor.commands.focus();
+            // Also try a no-op transaction
+            editor.view.dispatch(editor.state.tr);
+        }
+
         if (count > 100) {
             console.error('[TiptapPagedEditor] Potential infinite pagination detected.');
             return;
@@ -548,7 +577,7 @@ const TiptapPagedEditor = ({
             onPageCountChangeRef.current(1);
           }
         }
-      }, 1000); // 1s debounce to be very safe
+      }, 500); // Reduced debounce to 500ms for better responsiveness
     };
 
     const observer = new MutationObserver(callback);
@@ -568,6 +597,13 @@ const TiptapPagedEditor = ({
       if (editor && nextValue !== editor.getHTML()) {
         editor.commands.setContent(nextValue);
         lastSentContent.current = content;
+        
+        // Nudge after setting content to ensure pagination starts
+        setTimeout(() => {
+            if (editor && !editor.isDestroyed) {
+                editor.view.dispatch(editor.state.tr);
+            }
+        }, 100);
       }
     }
   }, [content, editor, toBubbles]);

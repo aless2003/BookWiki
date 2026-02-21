@@ -7,6 +7,6 @@
 
 ---
 
-- [ ] **Track: bug fix: when loading a chapter sometimes only part of the chapter is paged until it is edited or clicked into.**
+- [x] **Track: bug fix: when loading a chapter sometimes only part of the chapter is paged until it is edited or clicked into.**
 *Link: [./tracks/fix_partial_pagination_20260219/](./tracks/fix_partial_pagination_20260219/)*
 
