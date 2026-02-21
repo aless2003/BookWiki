@@ -11,14 +11,14 @@ Identify the exact string patterns in the target files to ensure surgical update
     - [x] Locate `version` in `frontend/src-tauri/tauri.conf.json`
 - [x] **Task: Conductor - User Manual Verification 'Phase 1: Research and Pattern Definition' (Protocol in workflow.md)**
 
-## Phase 2: Implementation of Gradle Task
+## Phase 2: Implementation of Gradle Task [checkpoint: fb6354e]
 Development of the custom Gradle task in `build.gradle`.
 
 - [x] **Task: Create Version Update Logic**
-    - [ ] Define the `updateVersion` task in `build.gradle`
-    - [ ] Implement input logic (Property check followed by Interactive Prompt fallback)
-    - [ ] Implement file reading and regex replacement logic for the three target files
-- [ ] **Task: Conductor - User Manual Verification 'Phase 2: Implementation of Gradle Task' (Protocol in workflow.md)**
+    - [x] Define the `updateVersion` task in `build.gradle`
+    - [x] Implement input logic (Property check followed by Interactive Prompt fallback)
+    - [x] Implement file reading and regex replacement logic for the three target files
+- [x] **Task: Conductor - User Manual Verification 'Phase 2: Implementation of Gradle Task' (Protocol in workflow.md)**
 
 ## Phase 3: Verification and Quality Gate
 Ensuring the task works correctly across different scenarios.
