@@ -1,0 +1,43 @@
+{
+  "productName": "BookWiki",
+  "version": "0.2.1",
+  "identifier": "online.hatsune_miku.bookwiki",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "BookWiki",
+        "width": 1280,
+        "height": 800
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "bookwiki-backend"
+    ],
+    "resources": [
+      "../../scripts/dist/jre/**/*",
+      "../../scripts/dist/BookWiki-0.2.1.jar"
+    ]
+  },
+  "plugins": {
+  }
+}

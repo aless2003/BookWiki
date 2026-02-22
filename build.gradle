@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'online.hatsune_miku'
-version = '0.2.0'
+version = '0.2.1'
 description = 'BookWiki'
 
 java {
@@ -192,6 +192,45 @@ task updateVersion {
             tauriContent = tauriContent.replaceAll(/BookWiki-[^"]*\.jar/, "BookWiki-${newVersion}.jar")
             tauriFile.text = tauriContent
             println "Updated frontend/src-tauri/tauri.conf.json"
+        }
+
+        // 4. Cargo.toml
+        def cargoFile = file('frontend/src-tauri/Cargo.toml')
+        if (cargoFile.exists()) {
+            def cargoContent = cargoFile.text
+            cargoContent = cargoContent.replaceFirst(/version\s*=\s*"[^"]*"/, "version = \"${newVersion}\"")
+            cargoFile.text = cargoContent
+            println "Updated frontend/src-tauri/Cargo.toml"
+        }
+
+        // 5. scripts/tauri.conf.json
+        def scriptsTauriFile = file('scripts/tauri.conf.json')
+        if (scriptsTauriFile.exists()) {
+            def scriptsTauriContent = scriptsTauriFile.text
+            // Update version field
+            scriptsTauriContent = scriptsTauriContent.replaceFirst(/"version":\s*"[^"]*"/, "\"version\": \"${newVersion}\"")
+            // Update resources JAR path
+            scriptsTauriContent = scriptsTauriContent.replaceAll(/BookWiki-[^"]*\.jar/, "BookWiki-${newVersion}.jar")
+            scriptsTauriFile.text = scriptsTauriContent
+            println "Updated scripts/tauri.conf.json"
+        }
+
+        // 6. scripts/Cargo.toml
+        def scriptsCargoFile = file('scripts/Cargo.toml')
+        if (scriptsCargoFile.exists()) {
+            def scriptsCargoContent = scriptsCargoFile.text
+            scriptsCargoContent = scriptsCargoContent.replaceFirst(/version\s*=\s*"[^"]*"/, "version = \"${newVersion}\"")
+            scriptsCargoFile.text = scriptsCargoContent
+            println "Updated scripts/Cargo.toml"
+        }
+
+        // 7. scripts/wrapper/Cargo.toml
+        def wrapperCargoFile = file('scripts/wrapper/Cargo.toml')
+        if (wrapperCargoFile.exists()) {
+            def wrapperCargoContent = wrapperCargoFile.text
+            wrapperCargoContent = wrapperCargoContent.replaceFirst(/version\s*=\s*"[^"]*"/, "version = \"${newVersion}\"")
+            wrapperCargoFile.text = wrapperCargoContent
+            println "Updated scripts/wrapper/Cargo.toml"
         }
     }
 }

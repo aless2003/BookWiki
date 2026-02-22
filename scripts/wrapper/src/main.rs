@@ -15,13 +15,16 @@ fn main() {
     let exe_path = env::current_exe().expect("Failed to get current exe path");
     let app_dir = exe_path.parent().expect("Failed to get parent dir");
     
+    const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+    let jar_filename = format!("BookWiki-{}.jar", APP_VERSION);
+
     let mut jre_path = app_dir.join("jre").join("bin").join("java.exe");
-    let mut jar_path = app_dir.join("BookWiki-0.0.1-SNAPSHOT.jar");
+    let mut jar_path = app_dir.join(&jar_filename);
 
     if !jre_path.exists() {
         let tauri_resources = app_dir.join("_up_").join("_up_").join("scripts").join("dist");
         jre_path = tauri_resources.join("jre").join("bin").join("java.exe");
-        jar_path = tauri_resources.join("BookWiki-0.0.1-SNAPSHOT.jar");
+        jar_path = tauri_resources.join(&jar_filename);
     }
 
     let args: Vec<String> = env::args().skip(1).collect();
