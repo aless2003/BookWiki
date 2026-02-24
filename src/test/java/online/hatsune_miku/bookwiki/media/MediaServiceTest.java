@@ -50,7 +50,7 @@ class MediaServiceTest {
     void saveMedia() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "test data".getBytes());
 
-        when(entityManager.unwrap(Session.class)).thenReturn(session);
+        doReturn(session).when(entityManager).unwrap(any());
         when(session.doReturningWork(any(ReturningWork.class))).thenAnswer(invocation -> {
             ReturningWork<Blob> work = invocation.getArgument(0);
             return work.execute(connection);
