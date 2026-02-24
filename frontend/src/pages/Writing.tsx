@@ -33,6 +33,7 @@ const Writing: React.FC = () => {
   const [pageCount, setPageCount] = useState(1);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showEmoteModal, setShowEmoteModal] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; chapterId: number } | null>(null);
 
   // Worldbuilding entities state
   const [characters, setCharacters] = useState<Entity[]>([]);
@@ -112,6 +113,13 @@ const Writing: React.FC = () => {
     }
   }, [storyId, selectedChapterId]);
 
+  // Close context menu on click
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
   // Derived state
   const selectedChapter = chapters.find(c => c.id === selectedChapterId);
 
@@ -167,6 +175,30 @@ const Writing: React.FC = () => {
           }
       } catch (err) {
           console.error('Error creating chapter:', err);
+      }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, chapterId: number) => {
+      e.preventDefault();
+      setContextMenu({ x: e.clientX, y: e.clientY, chapterId });
+  };
+
+  const handleDeleteChapter = async (chapterId: number) => {
+      if (!window.confirm('Are you sure you want to delete this chapter?')) return;
+      
+      try {
+          const response = await fetch(`http://localhost:3906/api/chapters/${chapterId}`, {
+              method: 'DELETE'
+          });
+
+          if (response.ok) {
+              setChapters(prev => prev.filter(c => c.id !== chapterId));
+              if (selectedChapterId === chapterId) {
+                  setSelectedChapterId(null);
+              }
+          }
+      } catch (err) {
+          console.error('Error deleting chapter:', err);
       }
   };
 
@@ -327,6 +359,7 @@ const Writing: React.FC = () => {
                             key={chapter.id}
                             className={`nav-drawer-item ${selectedChapterId === chapter.id ? 'active' : ''}`}
                             onClick={() => handleChapterSwitch(chapter.id)}
+                            onContextMenu={(e) => handleContextMenu(e, chapter.id)}
                         >
                             <MdOutlineDescription /> {chapter.title}
                         </div>
@@ -427,6 +460,33 @@ const Writing: React.FC = () => {
              </Button>
           </Col>
       </Row>
+      
+      {contextMenu && (
+        <div
+            style={{
+                position: 'fixed',
+                top: contextMenu.y,
+                left: contextMenu.x,
+                backgroundColor: '#2d2d2d',
+                border: '1px solid #444',
+                borderRadius: '4px',
+                zIndex: 1000,
+                padding: '4px 0',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                minWidth: '150px'
+            }}
+        >
+            <div
+                className="px-3 py-2 text-light d-flex align-items-center gap-2"
+                style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+                onClick={() => handleDeleteChapter(contextMenu.chapterId)}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d3d3d'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+                <MdDelete size={18} /> Delete Chapter
+            </div>
+        </div>
+      )}
     </Container>
   );
 };
