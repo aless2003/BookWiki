@@ -15,18 +15,18 @@
     - [x] Update `CharacterDTO` and `CharacterService` accordingly.
 - [x] Task: Conductor - User Manual Verification 'Backend Setup' (Protocol in workflow.md)
 
-## Phase 2: Frontend API and UI Setup
-- [ ] Task: Generate/Update Frontend Types and API Client
-    - [ ] Add `Species` type definitions.
-    - [ ] Create API functions for Species CRUD.
-    - [ ] Update `Character` type to include `speciesId`.
-- [ ] Task: Create "Species & Nature" UI Module
-    - [ ] Adapt `Worldbuilding.tsx` to handle the new `Species` module alongside `Character` and `Location`.
-    - [ ] Add a Dropdown for Category (Species, Race, Flora, Fauna).
-    - [ ] Add Parent Species selection dropdown.
-    - [ ] Add Habitat selection dropdown (fetching Locations).
-    - [ ] Add Physical Traits input fields.
-- [ ] Task: Conductor - User Manual Verification 'Frontend API and UI Setup' (Protocol in workflow.md)
+## Phase 2: Frontend API and UI Setup [checkpoint: c27230a]
+- [x] Task: Generate/Update Frontend Types and API Client
+    - [x] Add `Species` type definitions.
+    - [x] Create API functions for Species CRUD. (Handled via generic fetch in Worldbuilding.tsx)
+    - [x] Update `Character` type to include `speciesId`.
+- [x] Task: Create "Species & Nature" UI Module
+    - [x] Adapt `Worldbuilding.tsx` to handle the new `Species` module alongside `Character` and `Location`.
+    - [x] Add a Dropdown for Category (Species, Race, Flora, Fauna).
+    - [x] Add Parent Species selection dropdown.
+    - [x] Add Habitat selection dropdown (fetching Locations).
+    - [x] Add Physical Traits input fields.
+- [x] Task: Conductor - User Manual Verification 'Frontend API and UI Setup' (Protocol in workflow.md)
 
 ## Phase 3: Integration and Mentions
 - [ ] Task: Update Character UI
