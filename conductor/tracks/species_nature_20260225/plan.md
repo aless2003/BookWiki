@@ -1,19 +1,19 @@
 # Implementation Plan: Species & Nature Worldbuilding Module
 
-## Phase 1: Backend Setup
-- [ ] Task: Create Species entity
-    - [ ] Create `Species` class with JPA annotations (name, description, pictureUrl, customSections, category (ENUM: SPECIES, RACE, FLORA, FAUNA)).
-    - [ ] Add `parentId` (Long) for hierarchical relationships.
-    - [ ] Add `physicalTraits` (String) or individual fields (lifespan, size, diet).
-    - [ ] Add `habitatId` (Long) linking to a Location.
-- [ ] Task: Create Repository, Service, and Controller for Species
-    - [ ] Implement `SpeciesRepository`.
-    - [ ] Implement `SpeciesService` with CRUD operations and hierarchical fetching logic.
-    - [ ] Implement `SpeciesController` with REST endpoints.
-- [ ] Task: Update Character Entity
-    - [ ] Add `speciesId` (Long) to `Character` entity.
-    - [ ] Update `CharacterDTO` and `CharacterService` accordingly.
-- [ ] Task: Conductor - User Manual Verification 'Backend Setup' (Protocol in workflow.md)
+## Phase 1: Backend Setup [checkpoint: 72e151c]
+- [x] Task: Create Species entity
+    - [x] Create `Species` class with JPA annotations (name, description, pictureUrl, customSections, category (ENUM: SPECIES, RACE, FLORA, FAUNA)).
+    - [x] Add `parentId` (Long) for hierarchical relationships.
+    - [x] Add `physicalTraits` (String) or individual fields (lifespan, size, diet).
+    - [x] Add `habitatId` (Long) linking to a Location.
+- [x] Task: Create Repository, Service, and Controller for Species
+    - [x] Implement `SpeciesRepository`.
+    - [x] Implement `SpeciesService` with CRUD operations and hierarchical fetching logic.
+    - [x] Implement `SpeciesController` with REST endpoints.
+- [x] Task: Update Character Entity
+    - [x] Add `speciesId` (Long) to `Character` entity.
+    - [x] Update `CharacterDTO` and `CharacterService` accordingly.
+- [x] Task: Conductor - User Manual Verification 'Backend Setup' (Protocol in workflow.md)
 
 ## Phase 2: Frontend API and UI Setup
 - [ ] Task: Generate/Update Frontend Types and API Client
