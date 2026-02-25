@@ -16,6 +16,7 @@ import {
     ListItemIcon, 
     ListItemText, 
     Divider,
+    MenuItem,
     ThemeProvider,
     CssBaseline,
     Paper,
@@ -37,7 +38,8 @@ import {
     ArrowBack as ArrowBackIcon, 
     Delete as DeleteIcon, 
     Save as SaveIcon, 
-    CloudUpload as CloudUploadIcon
+    CloudUpload as CloudUploadIcon,
+    Pets as SpeciesIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -49,6 +51,7 @@ const drawerWidth = 240;
 const categories = [
     { name: 'Characters', icon: <PersonIcon />, endpoint: 'characters' },
     { name: 'Locations', icon: <PlaceIcon />, endpoint: 'locations' },
+    { name: 'Species & Nature', icon: <SpeciesIcon />, endpoint: 'species' },
     { name: 'Items', icon: <ItemIcon />, endpoint: 'items' },
     { name: 'Lore', icon: <LoreIcon />, endpoint: 'lore' },
 ];
@@ -64,11 +67,26 @@ interface Character {
     name: string;
     pictureUrl: string;
     birthday: string;
+    speciesId?: number;
     socialStatus: string;
     role: string;
     traits: string[];
     appearance: string;
     description: string;
+    customSections: Section[];
+}
+
+interface Species {
+    id?: number;
+    name: string;
+    pictureUrl: string;
+    category: 'SPECIES' | 'RACE' | 'FLORA' | 'FAUNA';
+    parentId?: number;
+    lifespan: string;
+    averageSize: string;
+    diet: string;
+    description: string;
+    habitatId?: number;
     customSections: Section[];
 }
 
@@ -108,6 +126,7 @@ const Worldbuilding: React.FC = () => {
     // Lists
     const [characters, setCharacters] = useState<Character[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
+    const [species, setSpecies] = useState<Species[]>([]);
     const [items, setItems] = useState<Item[]>([]);
     const [lore, setLore] = useState<Lore[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -131,6 +150,7 @@ const Worldbuilding: React.FC = () => {
             .then(data => {
                 if (activeCategory === 'Characters') setCharacters(data);
                 if (activeCategory === 'Locations') setLocations(data);
+                if (activeCategory === 'Species & Nature') setSpecies(data);
                 if (activeCategory === 'Items') setItems(data);
                 if (activeCategory === 'Lore') setLore(data);
                 setIsLoading(false);
@@ -177,6 +197,7 @@ const Worldbuilding: React.FC = () => {
                 let list: any[] = [];
                 if (categoryParam === 'Characters') list = characters;
                 else if (categoryParam === 'Locations') list = locations;
+                else if (categoryParam === 'Species & Nature') list = species;
                 else if (categoryParam === 'Items') list = items;
                 else if (categoryParam === 'Lore') list = lore;
 
@@ -209,6 +230,19 @@ const Worldbuilding: React.FC = () => {
                 description: '<p>What is this place?</p>',
                 whereItIs: '<p>Where is it located?</p>',
                 details: '<p>Important details (e.g. why is it important, when was it built)...</p>',
+                customSections: []
+            });
+        } else if (activeCategory === 'Species & Nature') {
+            setEditEntry({
+                name: '',
+                pictureUrl: '',
+                category: 'SPECIES',
+                parentId: undefined,
+                lifespan: '',
+                averageSize: '',
+                diet: '',
+                description: '<p>Describe this species/race...</p>',
+                habitatId: undefined,
                 customSections: []
             });
         } else if (activeCategory === 'Items') {
@@ -354,6 +388,7 @@ const Worldbuilding: React.FC = () => {
         let list: any[] = [];
         if (activeCategory === 'Characters') list = characters;
         if (activeCategory === 'Locations') list = locations;
+        if (activeCategory === 'Species & Nature') list = species;
         if (activeCategory === 'Items') list = items;
         if (activeCategory === 'Lore') list = lore;
 
@@ -518,6 +553,20 @@ const Worldbuilding: React.FC = () => {
                                         onChange={(e) => setEditEntry({ ...editEntry, socialStatus: e.target.value })}
                                         sx={{ mb: 2 }}
                                     />
+
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Species / Race"
+                                        value={editEntry.speciesId || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, speciesId: e.target.value || undefined })}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        <MenuItem value="">Unknown</MenuItem>
+                                        {species.map(s => (
+                                            <MenuItem key={s.id} value={s.id}>{s.name} ({s.category})</MenuItem>
+                                        ))}
+                                    </TextField>
                                     
                                     <Typography variant="subtitle2" sx={{ mb: 1 }}>Traits</Typography>
                                     <Box sx={{ mb: 2 }}>
@@ -535,6 +584,77 @@ const Worldbuilding: React.FC = () => {
                                             onKeyDown={(e) => e.key === 'Enter' && addTrait()}
                                         />
                                     </Box>
+                                </>
+                            )}
+
+                            {activeCategory === 'Species & Nature' && (
+                                <>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Category"
+                                        value={editEntry.category}
+                                        onChange={(e) => setEditEntry({ ...editEntry, category: e.target.value })}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        <MenuItem value="SPECIES">Species</MenuItem>
+                                        <MenuItem value="RACE">Race</MenuItem>
+                                        <MenuItem value="FLORA">Flora</MenuItem>
+                                        <MenuItem value="FAUNA">Fauna</MenuItem>
+                                    </TextField>
+
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Parent Species"
+                                        value={editEntry.parentId || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, parentId: e.target.value || undefined })}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        <MenuItem value="">None</MenuItem>
+                                        {species
+                                            .filter(s => s.id !== editEntry.id && s.category === 'SPECIES')
+                                            .map(s => (
+                                                <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                                            ))
+                                        }
+                                    </TextField>
+
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Habitat (Location)"
+                                        value={editEntry.habitatId || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, habitatId: e.target.value || undefined })}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        <MenuItem value="">Unknown</MenuItem>
+                                        {locations.map(loc => (
+                                            <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+                                        ))}
+                                    </TextField>
+
+                                    <TextField
+                                        fullWidth
+                                        label="Lifespan"
+                                        value={editEntry.lifespan || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, lifespan: e.target.value })}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        label="Average Size"
+                                        value={editEntry.averageSize || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, averageSize: e.target.value })}
+                                        sx={{ mb: 2 }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        label="Diet"
+                                        value={editEntry.diet || ''}
+                                        onChange={(e) => setEditEntry({ ...editEntry, diet: e.target.value })}
+                                        sx={{ mb: 2 }}
+                                    />
                                 </>
                             )}
 
@@ -737,6 +857,7 @@ const Worldbuilding: React.FC = () => {
                                         options={
                                             activeCategory === 'Characters' ? characters :
                                             activeCategory === 'Locations' ? locations :
+                                            activeCategory === 'Species & Nature' ? species :
                                             activeCategory === 'Items' ? items :
                                             activeCategory === 'Lore' ? lore : []
                                         }
