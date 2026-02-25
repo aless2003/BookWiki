@@ -12,5 +12,5 @@
 
 ---
 
-- [ ] **Track: The ability for Species/Races/Flora and Fauna to be added to the world building section**
+- [x] **Track: The ability for Species/Races/Flora and Fauna to be added to the world building section**
 *Link: [./tracks/species_nature_20260225/](./tracks/species_nature_20260225/)*
