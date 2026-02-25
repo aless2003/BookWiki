@@ -42,6 +42,7 @@ public class CharacterService {
             c.setName(updated.getName());
             c.setPictureUrl(updated.getPictureUrl());
             c.setBirthday(updated.getBirthday());
+            c.setSpeciesId(updated.getSpeciesId());
             
             // New fields
             c.setSocialStatus(updated.getSocialStatus());

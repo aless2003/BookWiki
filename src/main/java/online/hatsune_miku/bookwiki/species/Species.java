@@ -1,4 +1,4 @@
-package online.hatsune_miku.bookwiki.character;
+package online.hatsune_miku.bookwiki.species;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -12,46 +12,44 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "characters")
+@Table(name = "species")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Character {
+public class Species {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
     private String pictureUrl;
-    private String birthday;
 
-    private Long speciesId;
+    @Enumerated(EnumType.STRING)
+    private SpeciesCategory category;
 
-    private String socialStatus;
-    private String role;
+    private Long parentId;
 
-    @ElementCollection
-    @CollectionTable(name = "character_traits", joinColumns = @JoinColumn(name = "character_id"))
-    @Column(name = "trait")
-    private List<String> traits = new ArrayList<>();
-
-    @Column(columnDefinition = "TEXT")
-    private String appearance;
+    // Physical Traits
+    private String lifespan;
+    private String averageSize;
+    private String diet;
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    private Long habitatId; // Reference to Location ID
 
     @ManyToOne
     @JoinColumn(name = "story_id")
     @JsonBackReference
     private Story story;
 
-    @OneToMany(mappedBy = "character", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "species", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @ToString.Exclude
-    private List<CharacterSection> customSections = new ArrayList<>();
+    private List<SpeciesSection> customSections = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {
@@ -60,8 +58,8 @@ public class Character {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Character character = (Character) o;
-        return getId() != null && Objects.equals(getId(), character.getId());
+        Species species = (Species) o;
+        return getId() != null && Objects.equals(getId(), species.getId());
     }
 
     @Override
