@@ -14,7 +14,7 @@ import 'quill-mention/dist/quill.mention.css';
 import { API_BASE_URL } from '../constants/media';
 
 interface Entity {
-  id: number;
+  id?: number;
   name: string;
 }
 
@@ -24,6 +24,7 @@ interface RichTextEditorProps {
   items?: Entity[];
   locations?: Entity[];
   lore?: Entity[];
+  species?: Entity[];
   onChange: (html: string) => void;
   onSave?: () => void;
   onMentionClick?: (id: number, type: string) => void;
@@ -36,6 +37,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     items = [], 
     locations = [], 
     lore = [], 
+    species = [],
     onChange, 
     onSave, 
     onMentionClick,
@@ -51,8 +53,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     ...characters.map(e => ({ ...e, type: 'character', icon: '👤' })),
     ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
     ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
-    ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' }))
-  ], [characters, items, locations, lore]);
+    ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
+    ...species.map(e => ({ ...e, type: 'species', icon: '🐾' }))
+  ], [characters, items, locations, lore, species]);
 
   const dataRef = useRef(allEntities);
   useEffect(() => { dataRef.current = allEntities; }, [allEntities]);

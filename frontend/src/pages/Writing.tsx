@@ -40,6 +40,7 @@ const Writing: React.FC = () => {
   const [items, setItems] = useState<Entity[]>([]);
   const [locations, setLocations] = useState<Entity[]>([]);
   const [lore, setLore] = useState<Entity[]>([]);
+  const [species, setSpecies] = useState<Entity[]>([]);
   const [emotes, setEmotes] = useState<Entity[]>([]);
 
   const fetchEmotes = React.useCallback(async () => {
@@ -69,9 +70,10 @@ const Writing: React.FC = () => {
         fetchJson(`http://localhost:3906/api/stories/${storyId}/items`),
         fetchJson(`http://localhost:3906/api/stories/${storyId}/locations`),
         fetchJson(`http://localhost:3906/api/stories/${storyId}/lore`),
+        fetchJson(`http://localhost:3906/api/stories/${storyId}/species`),
         fetchJson(`http://localhost:3906/api/stories/${storyId}/emotes`)
     ])
-    .then(([chaptersData, chars, its, locs, lr, ems]) => {
+    .then(([chaptersData, chars, its, locs, lr, spec, ems]) => {
         // Chapters
         const processedChapters = (chaptersData || []).map((c: any) => ({ ...c, notes: c.notes || [] }));
         setChapters(processedChapters);
@@ -96,6 +98,7 @@ const Writing: React.FC = () => {
         setItems(its);
         setLocations(locs);
         setLore(lr);
+        setSpecies(spec);
         setEmotes(ems || []);
 
         setIsLoading(false);
@@ -265,15 +268,16 @@ const Writing: React.FC = () => {
   };
 
   const handleMentionClick = (id: number, type: string) => {
-      // Map 'character', 'item', 'location', 'lore' to display categories
+      // Map 'character', 'item', 'location', 'lore', 'species' to display categories
       const typeMap: Record<string, string> = {
           'character': 'Characters',
           'item': 'Items',
           'location': 'Locations',
-          'lore': 'Lore'
+          'lore': 'Lore',
+          'species': 'Species & Nature'
       };
       const category = typeMap[type] || 'Characters';
-      navigate(`/world/${storyId}?category=${category}&id=${id}`);
+      navigate(`/world/${storyId}?category=${encodeURIComponent(category)}&id=${id}`);
   };
 
   if (isLoading) return <div className="text-light p-5">Loading studio...</div>;
@@ -388,6 +392,7 @@ const Writing: React.FC = () => {
                       items={items}
                       locations={locations}
                       lore={lore}
+                      species={species}
                       emotes={emotes}
                       onRefreshEmotes={fetchEmotes}
                       onChange={updateChapterContent}

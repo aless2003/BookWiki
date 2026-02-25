@@ -169,46 +169,66 @@ const Worldbuilding: React.FC = () => {
         fetchData();
     }, [storyId, activeCategory, navigate, fetchData]);
 
-    const handleEditStart = (entry: any) => {
-        if (activeCategory === 'Characters') {
-            setEditEntry({ ...entry, traits: entry.traits || [] });
-        } else if (activeCategory === 'Lore') {
-            setEditEntry({ ...entry, categories: entry.categories || [] });
-        } else {
-            setEditEntry({ ...entry });
-        }
-        setIsEditing(true);
-    };
-
-    // Handle deep linking from Writing page (CTRL+Click on mention)
+    // Separate useEffect for Deep Linking to handle state race conditions
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const categoryParam = searchParams.get('category');
         const idParam = searchParams.get('id');
 
-        if (categoryParam && categories.some(c => c.name === categoryParam)) {
-            if (activeCategory !== categoryParam) {
-                setActiveCategory(categoryParam);
-                return; 
-            }
-            
-            if (idParam) {
-                const id = parseInt(idParam);
-                let list: any[] = [];
-                if (categoryParam === 'Characters') list = characters;
-                else if (categoryParam === 'Locations') list = locations;
-                else if (categoryParam === 'Species & Nature') list = species;
-                else if (categoryParam === 'Items') list = items;
-                else if (categoryParam === 'Lore') list = lore;
+        if (!categoryParam || !idParam) return;
 
+        console.log(`Deep Link detected: Category=${categoryParam}, ID=${idParam}. ActiveCategory=${activeCategory}`);
+
+        // 1. Switch category if needed
+        if (categories.some(c => c.name === categoryParam) && activeCategory !== categoryParam) {
+            console.log(`Switching category to: ${categoryParam}`);
+            setActiveCategory(categoryParam);
+            return;
+        }
+
+        // 2. Once category matches, find the entry in the populated list
+        if (activeCategory === categoryParam) {
+            let list: any[] = [];
+            if (activeCategory === 'Characters') list = characters;
+            else if (activeCategory === 'Locations') list = locations;
+            else if (activeCategory === 'Species & Nature') list = species;
+            else if (activeCategory === 'Items') list = items;
+            else if (activeCategory === 'Lore') list = lore;
+            
+            console.log(`Searching for ID ${idParam} in ${activeCategory} list (length: ${list.length})`);
+            
+            if (list.length > 0) {
+                const id = parseInt(idParam);
                 const entry = list.find(e => e.id === id);
                 if (entry) {
+                    console.log(`Found entry! Opening editor...`);
                     handleEditStart(entry);
                     navigate(location.pathname, { replace: true });
+                } else {
+                    console.warn(`Entry with ID ${id} not found in ${activeCategory} list.`);
                 }
             }
         }
-    }, [location.search, activeCategory, characters, locations, items, lore, navigate, location.pathname]);
+    }, [location.search, activeCategory, characters, locations, species, items, lore]);
+
+    const handleEditStart = (entry: any) => {
+        if (activeCategory === 'Characters') {
+            setEditEntry({ ...entry, traits: entry.traits || [] });
+        } else if (activeCategory === 'Lore') {
+            setEditEntry({ ...entry, categories: entry.categories || [] });
+        } else if (activeCategory === 'Species & Nature') {
+            setEditEntry({ 
+                ...entry, 
+                category: entry.category || 'SPECIES',
+                lifespan: entry.lifespan || '',
+                averageSize: entry.averageSize || '',
+                diet: entry.diet || ''
+            });
+        } else {
+            setEditEntry({ ...entry });
+        }
+        setIsEditing(true);
+    };
 
     const handleCreateNew = () => {
         if (activeCategory === 'Characters') {
@@ -384,6 +404,31 @@ const Worldbuilding: React.FC = () => {
         }
     };
 
+    const handleMentionClick = (id: number, type: string) => {
+        const typeMap: Record<string, string> = {
+            'character': 'Characters',
+            'item': 'Items',
+            'location': 'Locations',
+            'lore': 'Lore',
+            'species': 'Species & Nature'
+        };
+        const category = typeMap[type] || 'Characters';
+        
+        if (activeCategory === category) {
+            const list = category === 'Characters' ? characters :
+                         category === 'Locations' ? locations :
+                         category === 'Species & Nature' ? species :
+                         category === 'Items' ? items :
+                         category === 'Lore' ? lore : [];
+            const entry = list.find(e => e.id === id);
+            if (entry) handleEditStart(entry);
+        } else {
+            setActiveCategory(category);
+            // The useEffect will handle opening the entry after category switch and fetch
+            navigate(`${location.pathname}?category=${encodeURIComponent(category)}&id=${id}`, { replace: true });
+        }
+    };
+
     const renderList = () => {
         let list: any[] = [];
         if (activeCategory === 'Characters') list = characters;
@@ -416,6 +461,17 @@ const Worldbuilding: React.FC = () => {
                             )}
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>{entry.name}</Typography>
+                                
+                                {activeCategory === 'Characters' && entry.speciesId && (
+                                    <Chip 
+                                        label={species.find(s => s.id === entry.speciesId)?.name || 'Unknown Species'} 
+                                        size="small" 
+                                        color="primary" 
+                                        variant="outlined"
+                                        sx={{ mb: 1 }}
+                                    />
+                                )}
+
                                 <Typography 
                                     variant="body2" 
                                     color="text.secondary"
@@ -700,7 +756,13 @@ const Worldbuilding: React.FC = () => {
                             <RichTextEditor 
                                 key={activeCategory + (editEntry.id || 'new')}
                                 content={editEntry.description} 
+                                characters={characters}
+                                locations={locations}
+                                species={species}
+                                items={items}
+                                lore={lore}
                                 onChange={(html) => setEditEntry({ ...editEntry, description: html })}
+                                onMentionClick={handleMentionClick}
                                 minHeight={300}
                                 onSave={handleSave}
                             />
@@ -712,7 +774,13 @@ const Worldbuilding: React.FC = () => {
                                 <RichTextEditor 
                                     key={`appearance-${editEntry.id || 'new'}`}
                                     content={editEntry.appearance} 
+                                    characters={characters}
+                                    locations={locations}
+                                    species={species}
+                                    items={items}
+                                    lore={lore}
                                     onChange={(html) => setEditEntry({ ...editEntry, appearance: html })}
+                                    onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
                                 />
@@ -726,7 +794,13 @@ const Worldbuilding: React.FC = () => {
                                     <RichTextEditor 
                                         key={`where-${editEntry.id || 'new'}`}
                                         content={editEntry.whereItIs} 
+                                        characters={characters}
+                                        locations={locations}
+                                        species={species}
+                                        items={items}
+                                        lore={lore}
                                         onChange={(html) => setEditEntry({ ...editEntry, whereItIs: html })}
+                                        onMentionClick={handleMentionClick}
                                         minHeight={150}
                                         onSave={handleSave}
                                     />
@@ -736,7 +810,13 @@ const Worldbuilding: React.FC = () => {
                                     <RichTextEditor 
                                         key={`details-${editEntry.id || 'new'}`}
                                         content={editEntry.details} 
+                                        characters={characters}
+                                        locations={locations}
+                                        species={species}
+                                        items={items}
+                                        lore={lore}
                                         onChange={(html) => setEditEntry({ ...editEntry, details: html })}
+                                        onMentionClick={handleMentionClick}
                                         minHeight={200}
                                         onSave={handleSave}
                                     />
@@ -764,7 +844,13 @@ const Worldbuilding: React.FC = () => {
                                 <RichTextEditor 
                                     key={`section-${index}-${editEntry.id || 'new'}`}
                                     content={section.content} 
+                                    characters={characters}
+                                    locations={locations}
+                                    species={species}
+                                    items={items}
+                                    lore={lore}
                                     onChange={(html) => updateSection(index, 'content', html)}
+                                    onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
                                 />

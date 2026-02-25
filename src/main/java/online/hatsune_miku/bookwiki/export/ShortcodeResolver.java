@@ -4,6 +4,7 @@ import online.hatsune_miku.bookwiki.character.CharacterService;
 import online.hatsune_miku.bookwiki.item.ItemService;
 import online.hatsune_miku.bookwiki.location.LocationService;
 import online.hatsune_miku.bookwiki.lore.LoreService;
+import online.hatsune_miku.bookwiki.species.SpeciesService;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Matcher;
@@ -16,12 +17,14 @@ public class ShortcodeResolver {
     private final ItemService itemService;
     private final LocationService locationService;
     private final LoreService loreService;
+    private final SpeciesService speciesService;
 
-    public ShortcodeResolver(CharacterService characterService, ItemService itemService, LocationService locationService, LoreService loreService) {
+    public ShortcodeResolver(CharacterService characterService, ItemService itemService, LocationService locationService, LoreService loreService, SpeciesService speciesService) {
         this.characterService = characterService;
         this.itemService = itemService;
         this.locationService = locationService;
         this.loreService = loreService;
+        this.speciesService = speciesService;
     }
 
     public String resolve(String content) {
@@ -66,6 +69,7 @@ public class ShortcodeResolver {
                         case "item" -> itemService.getItemById(id).map(i -> i.getName()).orElse("Unknown Item");
                         case "location" -> locationService.getLocationById(id).map(l -> l.getName()).orElse("Unknown Location");
                         case "lore" -> loreService.getLoreById(id).map(l -> l.getName()).orElse("Unknown Lore");
+                        case "species" -> speciesService.getSpeciesById(id).map(s -> s.getName()).orElse("Unknown Species");
                         default -> matcher.group(0); // Keep as is if unknown type
                     };
                 } catch (NumberFormatException e) {

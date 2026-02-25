@@ -48,7 +48,7 @@ import MentionList from './MentionList';
 import 'tippy.js/dist/tippy.css';
 
 interface Entity {
-  id: number | string;
+  id?: number | string;
   name: string;
   imageUrl?: string;
   icon?: string;
@@ -61,6 +61,7 @@ interface TiptapPagedEditorProps {
   items?: Entity[];
   locations?: Entity[];
   lore?: Entity[];
+  species?: Entity[];
   emotes?: Entity[];
   onRefreshEmotes?: () => void;
   onChange: (html: string) => void;
@@ -76,6 +77,7 @@ const TiptapPagedEditor = ({
   items = [],
   locations = [],
   lore = [],
+  species = [],
   emotes = [],
   onRefreshEmotes,
   onChange,
@@ -100,8 +102,9 @@ const TiptapPagedEditor = ({
       ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
       ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
       ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
+      ...species.map(e => ({ ...e, type: 'species', icon: '🐾' })),
       ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: resolveShortcodes(e.imageUrl) }))
-    ], [characters, items, locations, lore, emotes]);
+    ], [characters, items, locations, lore, species, emotes]);
   
     const allEntitiesRef = useRef(allEntities);
     useEffect(() => {
@@ -130,7 +133,7 @@ const TiptapPagedEditor = ({
       // 2. Resolve mentions and pagebreaks in the resulting HTML string
       let processed = doc.body.innerHTML;
       processed = processed.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
-        const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id.toString() === id);
+        const entity = allEntities.find(e => e.id !== undefined && e.type === type.toLowerCase() && e.id.toString() === id);
         const name = entity ? entity.name : `Unknown ${type}`;
         return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}">${name}</span>`;
       });
@@ -325,6 +328,26 @@ const TiptapPagedEditor = ({
                       item.label.toLowerCase().includes(query.toLowerCase())
                     );
                   }
+                },
+                command: ({ editor, range, props }: any) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContentAt(range, [
+                      {
+                        type: 'mention',
+                        attrs: {
+                          id: props.id,
+                          label: props.label,
+                          'entity-type': props.type,
+                        },
+                      },
+                      {
+                        type: 'text',
+                        text: ' ',
+                      },
+                    ])
+                    .run();
                 },
                 render: () => {
                   let component: ReactRenderer<any>;
