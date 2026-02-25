@@ -9,11 +9,11 @@ BookWiki is a platform designed to empower writers and worldbuilders by providin
 
 ## Primary Goals
 - **Seamless Writing Environment:** Provide a distraction-free studio with rich text editing, auto-save functionality, and intuitive navigation.
-- **Comprehensive Worldbuilding Wiki:** Enable the creation of a structured wiki for complex lore, including characters and locations, allowing for deep narrative consistency.
+- **Comprehensive Worldbuilding Wiki:** Enable the creation of a structured wiki for complex lore, including characters, locations, and species, allowing for deep narrative consistency.
 - **Data Integrity and Linking:** (Implicitly supported) Ensure that the manuscript and wiki are tightly integrated, allowing writers to reference and navigate their worldbuilding effortlessly.
 
 ## Core Features`n- **Standalone Desktop Application:** A self-contained, cross-platform desktop wrapper providing a native app experience without requiring manual environment setup.`n- **Native Installers:** Automated generation of Windows (.msi and .exe) installers for easy local deployment and use.
-- **Advanced Worldbuilding Modules:** Implementation of specialized systems for managing Items, Lore, and other generic worldbuilding categories.
+- **Advanced Worldbuilding Modules:** Implementation of specialized systems for managing Species & Nature, Items, Lore, and other generic worldbuilding categories.
 - **Enhanced Writing Studio:** A feature-rich editor utilizing Tiptap with custom extensions (including arbitrary image resizing with aspect ratio control), ensuring a high-quality writing experience.
 - **Inline Emote System:** Support for converting images into inline, non-resizable "emotes" with a dedicated management interface for renaming and deleting them.
 - **Manuscript Export:** Ability to export chapters or full stories into standard PDF and DOCX formats with high-fidelity formatting.
