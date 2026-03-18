@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_multiple_installers_20260318",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-03-18T10:00:00Z",
+  "updated_at": "2026-03-18T10:00:00Z",
+  "description": "Bugfix: For some reason the installer does always create installers for 0.2.1, 0.2.2 and 0.3.0 despite the current version being just 0.3.0"
+}
