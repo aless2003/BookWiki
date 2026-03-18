@@ -135,7 +135,7 @@ task packageInstaller(type: Copy) {
     from "$frontendDir/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis"
     into "$projectDir/releases"
 
-    include "*.msi", "*.exe"
+    include "*_${version}_*.msi", "*_${version}_*.exe"
 }
 
 // Version Management
