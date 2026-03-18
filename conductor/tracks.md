@@ -12,5 +12,5 @@
 
 ---
 
-- [ ] **Track: Bugfix: For some reason the installer does always create installers for 0.2.1, 0.2.2 and 0.3.0 despite the current version being just 0.3.0**
+- [x] **Track: Bugfix: For some reason the installer does always create installers for 0.2.1, 0.2.2 and 0.3.0 despite the current version being just 0.3.0**
 *Link: [./tracks/fix_multiple_installers_20260318/](./tracks/fix_multiple_installers_20260318/)*
