@@ -1,9 +1,9 @@
 # Implementation Plan
 
-## Phase 1: Tauri Window Management & Capabilities
-- [ ] Task: Ensure Tauri v2 configuration (`tauri.conf.json` or capabilities files) allows the frontend to dynamically create new windows (`window:create` capability, etc.).
-- [ ] Task: Create a frontend utility (`WindowService.ts` or similar) that uses Tauri's window APIs to spawn a new `WebviewWindow` targeted at a specific React Route (e.g., `/story/:id/chapter/:chapterId`).
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Tauri Window Management & Capabilities' (Protocol in workflow.md)
+## Phase 1: Tauri Window Management & Capabilities [checkpoint: 2fa71f0]
+- [x] Task: Ensure Tauri v2 configuration (`tauri.conf.json` or capabilities files) allows the frontend to dynamically create new windows (`window:create` capability, etc.).
+- [x] Task: Create a frontend utility (`WindowService.ts` or similar) that uses Tauri's window APIs to spawn a new `WebviewWindow` targeted at a specific React Route (e.g., `/story/:id/chapter/:chapterId`).
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Tauri Window Management & Capabilities' (Protocol in workflow.md)
 
 ## Phase 2: Middle-Click Integration in Sidebar
 - [ ] Task: Update the sidebar navigation components to detect middle-click events (`onAuxClick` or checking `e.button === 1`).
