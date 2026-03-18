@@ -6,6 +6,6 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Investigate and Fix Multiple Version Builds' (Protocol in workflow.md)
 
 ## Phase 2: Verification
-- [ ] Task: Run `gradle clean packageInstaller`.
-- [ ] Task: Inspect the output directory to ensure only the 0.3.0 installers are generated.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Verification' (Protocol in workflow.md)
+- [x] Task: Run `gradle clean packageInstaller`.
+- [x] Task: Inspect the output directory to ensure only the 0.3.0 installers are generated.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Verification' (Protocol in workflow.md)
