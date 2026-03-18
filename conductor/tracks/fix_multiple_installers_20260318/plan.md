@@ -5,7 +5,7 @@
 - [x] Task: Update the configuration or scripts to ensure they rely only on the single source-of-truth version (e.g., from `package.json` or `tauri.conf.json`).
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Investigate and Fix Multiple Version Builds' (Protocol in workflow.md)
 
-## Phase 2: Verification
+## Phase 2: Verification [checkpoint: 3352587]
 - [x] Task: Run `gradle clean packageInstaller`.
 - [x] Task: Inspect the output directory to ensure only the 0.3.0 installers are generated.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Verification' (Protocol in workflow.md)
