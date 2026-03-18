@@ -5,10 +5,10 @@
 - [x] Task: Create a frontend utility (`WindowService.ts` or similar) that uses Tauri's window APIs to spawn a new `WebviewWindow` targeted at a specific React Route (e.g., `/story/:id/chapter/:chapterId`).
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Tauri Window Management & Capabilities' (Protocol in workflow.md)
 
-## Phase 2: Middle-Click Integration in Sidebar
-- [ ] Task: Update the sidebar navigation components to detect middle-click events (`onAuxClick` or checking `e.button === 1`).
-- [ ] Task: Connect the middle-click event to the window creation utility, passing the correct route for the selected item, preventing default navigation behavior.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Middle-Click Integration in Sidebar' (Protocol in workflow.md)
+## Phase 2: Middle-Click Integration in Sidebar [checkpoint: f68f11a]
+- [x] Task: Update the sidebar navigation components to detect middle-click events (`onAuxClick` or checking `e.button === 1`).
+- [x] Task: Connect the middle-click event to the window creation utility, passing the correct route for the selected item, preventing default navigation behavior.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Middle-Click Integration in Sidebar' (Protocol in workflow.md)
 
 ## Phase 3: Middle-Click Integration in Editor Mentions
 - [ ] Task: Update the rich text editor's mention extension logic. Modify the click handler to distinguish between left-click (`CTRL+Click`) and middle-click.
