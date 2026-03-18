@@ -42,6 +42,7 @@ import {
     Pets as SpeciesIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { WindowService } from '../utils/WindowService';
 import RichTextEditor from '../components/RichTextEditor';
 import { darkTheme } from '../theme';
 import { resolveShortcodes } from '../constants/media';
@@ -454,6 +455,13 @@ const Worldbuilding: React.FC = () => {
                                 '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }
                             }}
                             onClick={() => handleEditStart(entry)}
+                            onMouseDown={(e) => {
+                                if (e.button === 1) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    WindowService.openWindow(`/world/${storyId}?category=${encodeURIComponent(activeCategory)}&id=${entry.id}&popup=true`, `entry_${entry.id}`, `${entry.name} - BookWiki`);
+                                }
+                            }}
                         >
                             {entry.pictureUrl && (
                                 <CardMedia
