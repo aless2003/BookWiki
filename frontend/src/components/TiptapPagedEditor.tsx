@@ -67,7 +67,7 @@ interface TiptapPagedEditorProps {
   onChange: (html: string) => void;
   onPageCountChange?: (count: number) => void;
   onSave?: () => void;
-  onMentionClick?: (id: number, type: string) => void;
+  onMentionClick?: (id: number, type: string, isMiddleClick?: boolean) => void;
   storyId?: string; // Add storyId to interface
 }
 
@@ -531,6 +531,23 @@ const TiptapPagedEditor = ({
                         onSaveRef.current();
                     }
                     return true;
+                }
+                return false;
+            },
+            mousedown: (view, event) => {
+                if (event.button === 1) {
+                    const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
+                    if (pos) {
+                        const node = view.state.doc.nodeAt(pos.pos);
+                        if (node && node.type.name === 'mention') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (onMentionClick) {
+                                onMentionClick(node.attrs.id, node.attrs['entity-type'], true);
+                            }
+                            return true;
+                        }
+                    }
                 }
                 return false;
             },

@@ -27,7 +27,7 @@ interface RichTextEditorProps {
   species?: Entity[];
   onChange: (html: string) => void;
   onSave?: () => void;
-  onMentionClick?: (id: number, type: string) => void;
+  onMentionClick?: (id: number, type: string, isMiddleClick?: boolean) => void;
   minHeight?: string | number;
 }
 
@@ -167,13 +167,16 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     const handleContainerClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         const mentionEl = target.closest('.mention');
-        if (mentionEl && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            e.stopPropagation();
-            const id = mentionEl.getAttribute('data-id');
-            const type = mentionEl.getAttribute('data-type');
-            if (id && type && onMentionClickRef.current) {
-                onMentionClickRef.current(parseInt(id), type);
+        if (mentionEl) {
+            const isMiddleClick = e.button === 1;
+            if (e.ctrlKey || e.metaKey || isMiddleClick) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = mentionEl.getAttribute('data-id');
+                const type = mentionEl.getAttribute('data-type');
+                if (id && type && onMentionClickRef.current) {
+                    onMentionClickRef.current(parseInt(id), type, isMiddleClick);
+                }
             }
         }
     };

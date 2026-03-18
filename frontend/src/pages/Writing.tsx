@@ -276,7 +276,7 @@ const Writing: React.FC = () => {
       }));
   };
 
-  const handleMentionClick = (id: number, type: string) => {
+  const handleMentionClick = (id: number, type: string, isMiddleClick?: boolean) => {
       // Map 'character', 'item', 'location', 'lore', 'species' to display categories
       const typeMap: Record<string, string> = {
           'character': 'Characters',
@@ -286,7 +286,12 @@ const Writing: React.FC = () => {
           'species': 'Species & Nature'
       };
       const category = typeMap[type] || 'Characters';
-      navigate(`/world/${storyId}?category=${encodeURIComponent(category)}&id=${id}`);
+      
+      if (isMiddleClick) {
+          WindowService.openWindow(`/world/${storyId}?category=${encodeURIComponent(category)}&id=${id}&popup=true`, `entry_${id}`, `BookWiki`);
+      } else {
+          navigate(`/world/${storyId}?category=${encodeURIComponent(category)}&id=${id}`);
+      }
   };
 
   if (isLoading) return <div className="text-light p-5">Loading studio...</div>;

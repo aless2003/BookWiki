@@ -410,7 +410,7 @@ const Worldbuilding: React.FC = () => {
         }
     };
 
-    const handleMentionClick = (id: number, type: string) => {
+    const handleMentionClick = (id: number, type: string, isMiddleClick?: boolean) => {
         const typeMap: Record<string, string> = {
             'character': 'Characters',
             'item': 'Items',
@@ -420,6 +420,11 @@ const Worldbuilding: React.FC = () => {
         };
         const category = typeMap[type] || 'Characters';
         
+        if (isMiddleClick) {
+            WindowService.openWindow(`/world/${storyId}?category=${encodeURIComponent(category)}&id=${id}&popup=true`, `entry_${id}`, `BookWiki`);
+            return;
+        }
+
         if (activeCategory === category) {
             const list = category === 'Characters' ? characters :
                          category === 'Locations' ? locations :
