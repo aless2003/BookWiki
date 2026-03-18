@@ -117,6 +117,8 @@ interface Lore {
     customSections: Section[];
 }
 
+type WorldbuildingEntry = Character | Species | Location | Item | Lore;
+
 const Worldbuilding: React.FC = () => {
     const { storyId } = useParams<{ storyId: string }>();
     const navigate = useNavigate();
@@ -135,7 +137,7 @@ const Worldbuilding: React.FC = () => {
     
     // Editor State
     const [isEditing, setIsEditing] = useState(false);
-    const [editEntry, setEditEntry] = useState<any>(null); 
+    const [editEntry, setEditEntry] = useState<WorldbuildingEntry | null>(null); 
     const [isUploading, setIsUploading] = useState(false);
     const [newTrait, setNewTrait] = useState('');
 
@@ -168,6 +170,28 @@ const Worldbuilding: React.FC = () => {
         }
         fetchData();
     }, [storyId, activeCategory, navigate, fetchData]);
+
+    const handleEditStart = useCallback((entry: WorldbuildingEntry) => {
+        if (activeCategory === 'Characters') {
+            const char = entry as Character;
+            setEditEntry({ ...char, traits: char.traits || [] });
+        } else if (activeCategory === 'Lore') {
+            const loreEntry = entry as Lore;
+            setEditEntry({ ...loreEntry, categories: loreEntry.categories || [] });
+        } else if (activeCategory === 'Species & Nature') {
+            const spec = entry as Species;
+            setEditEntry({ 
+                ...spec, 
+                category: spec.category || 'SPECIES',
+                lifespan: spec.lifespan || '',
+                averageSize: spec.averageSize || '',
+                diet: spec.diet || ''
+            });
+        } else {
+            setEditEntry({ ...entry });
+        }
+        setIsEditing(true);
+    }, [activeCategory]);
 
     // Separate useEffect for Deep Linking to handle state race conditions
     useEffect(() => {
@@ -209,26 +233,7 @@ const Worldbuilding: React.FC = () => {
                 }
             }
         }
-    }, [location.search, activeCategory, characters, locations, species, items, lore]);
-
-    const handleEditStart = (entry: any) => {
-        if (activeCategory === 'Characters') {
-            setEditEntry({ ...entry, traits: entry.traits || [] });
-        } else if (activeCategory === 'Lore') {
-            setEditEntry({ ...entry, categories: entry.categories || [] });
-        } else if (activeCategory === 'Species & Nature') {
-            setEditEntry({ 
-                ...entry, 
-                category: entry.category || 'SPECIES',
-                lifespan: entry.lifespan || '',
-                averageSize: entry.averageSize || '',
-                diet: entry.diet || ''
-            });
-        } else {
-            setEditEntry({ ...entry });
-        }
-        setIsEditing(true);
-    };
+    }, [location.search, activeCategory, characters, locations, species, items, lore, navigate, handleEditStart, location.pathname]);
 
     const handleCreateNew = () => {
         if (activeCategory === 'Characters') {
@@ -364,14 +369,14 @@ const Worldbuilding: React.FC = () => {
         if (!newTrait.trim() || !editEntry) return;
         setEditEntry({
             ...editEntry,
-            traits: [...(editEntry.traits || []), newTrait.trim()]
+            traits: [...((editEntry as Character).traits || []), newTrait.trim()]
         });
         setNewTrait('');
     };
 
     const removeTrait = (index: number) => {
         if (!editEntry) return;
-        const newTraits = [...(editEntry.traits || [])];
+        const newTraits = [...((editEntry as Character).traits || [])];
         newTraits.splice(index, 1);
         setEditEntry({ ...editEntry, traits: newTraits });
     };
@@ -398,7 +403,7 @@ const Worldbuilding: React.FC = () => {
         setEditEntry({ ...editEntry, customSections: newSections });
     };
 
-    const onSearchChange = (_event: any, value: any) => {
+    const onSearchChange = (_event: React.SyntheticEvent, value: WorldbuildingEntry | null) => {
         if (value) {
             handleEditStart(value);
         }
@@ -421,7 +426,7 @@ const Worldbuilding: React.FC = () => {
                          category === 'Items' ? items :
                          category === 'Lore' ? lore : [];
             const entry = list.find(e => e.id === id);
-            if (entry) handleEditStart(entry);
+            if (entry) handleEditStart(entry as WorldbuildingEntry);
         } else {
             setActiveCategory(category);
             // The useEffect will handle opening the entry after category switch and fetch
@@ -430,7 +435,7 @@ const Worldbuilding: React.FC = () => {
     };
 
     const renderList = () => {
-        let list: any[] = [];
+        let list: WorldbuildingEntry[] = [];
         if (activeCategory === 'Characters') list = characters;
         if (activeCategory === 'Locations') list = locations;
         if (activeCategory === 'Species & Nature') list = species;
@@ -462,9 +467,9 @@ const Worldbuilding: React.FC = () => {
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>{entry.name}</Typography>
                                 
-                                {activeCategory === 'Characters' && entry.speciesId && (
+                                {activeCategory === 'Characters' && (entry as Character).speciesId && (
                                     <Chip 
-                                        label={species.find(s => s.id === entry.speciesId)?.name || 'Unknown Species'} 
+                                        label={species.find(s => s.id === (entry as Character).speciesId)?.name || 'Unknown Species'} 
                                         size="small" 
                                         color="primary" 
                                         variant="outlined"
@@ -505,7 +510,7 @@ const Worldbuilding: React.FC = () => {
                                 variant="outlined" 
                                 color="error" 
                                 startIcon={<DeleteIcon />}
-                                onClick={() => handleDelete(editEntry.id)}
+                                onClick={() => handleDelete(editEntry.id!)}
                             >
                                 Delete
                             </Button>
@@ -586,144 +591,144 @@ const Worldbuilding: React.FC = () => {
                                 sx={{ mb: 2 }}
                             />
 
-                            {activeCategory === 'Characters' && (
-                                <>
-                                    <TextField
-                                        fullWidth
-                                        label="Birthday / Age"
-                                        value={editEntry.birthday}
-                                        onChange={(e) => setEditEntry({ ...editEntry, birthday: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-                                    <TextField
-                                        fullWidth
-                                        label="Role"
-                                        value={editEntry.role}
-                                        onChange={(e) => setEditEntry({ ...editEntry, role: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-                                    <TextField
-                                        fullWidth
-                                        label="Social Status"
-                                        value={editEntry.socialStatus}
-                                        onChange={(e) => setEditEntry({ ...editEntry, socialStatus: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-
-                                    <TextField
-                                        select
-                                        fullWidth
-                                        label="Species / Race"
-                                        value={editEntry.speciesId || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, speciesId: e.target.value || undefined })}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <MenuItem value="">Unknown</MenuItem>
-                                        {species.map(s => (
-                                            <MenuItem key={s.id} value={s.id}>{s.name} ({s.category})</MenuItem>
-                                        ))}
-                                    </TextField>
-                                    
-                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Traits</Typography>
-                                    <Box sx={{ mb: 2 }}>
-                                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                                            {editEntry.traits?.map((trait: string, i: number) => (
-                                                <Chip key={i} label={trait} onDelete={() => removeTrait(i)} size="small" />
-                                            ))}
-                                        </Stack>
-                                        <TextField
-                                            size="small"
-                                            fullWidth
-                                            placeholder="Add trait and press Enter"
-                                            value={newTrait}
-                                            onChange={(e) => setNewTrait(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && addTrait()}
-                                        />
-                                    </Box>
-                                </>
-                            )}
-
-                            {activeCategory === 'Species & Nature' && (
-                                <>
-                                    <TextField
-                                        select
-                                        fullWidth
-                                        label="Category"
-                                        value={editEntry.category}
-                                        onChange={(e) => setEditEntry({ ...editEntry, category: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <MenuItem value="SPECIES">Species</MenuItem>
-                                        <MenuItem value="RACE">Race</MenuItem>
-                                        <MenuItem value="FLORA">Flora</MenuItem>
-                                        <MenuItem value="FAUNA">Fauna</MenuItem>
-                                    </TextField>
-
-                                    <TextField
-                                        select
-                                        fullWidth
-                                        label="Parent Species"
-                                        value={editEntry.parentId || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, parentId: e.target.value || undefined })}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <MenuItem value="">None</MenuItem>
-                                        {species
-                                            .filter(s => s.id !== editEntry.id && s.category === 'SPECIES')
-                                            .map(s => (
-                                                <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
-                                            ))
-                                        }
-                                    </TextField>
-
-                                    <TextField
-                                        select
-                                        fullWidth
-                                        label="Habitat (Location)"
-                                        value={editEntry.habitatId || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, habitatId: e.target.value || undefined })}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <MenuItem value="">Unknown</MenuItem>
-                                        {locations.map(loc => (
-                                            <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
-                                        ))}
-                                    </TextField>
-
-                                    <TextField
-                                        fullWidth
-                                        label="Lifespan"
-                                        value={editEntry.lifespan || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, lifespan: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-                                    <TextField
-                                        fullWidth
-                                        label="Average Size"
-                                        value={editEntry.averageSize || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, averageSize: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-                                    <TextField
-                                        fullWidth
-                                        label="Diet"
-                                        value={editEntry.diet || ''}
-                                        onChange={(e) => setEditEntry({ ...editEntry, diet: e.target.value })}
-                                        sx={{ mb: 2 }}
-                                    />
-                                </>
-                            )}
-
-                            {activeCategory === 'Lore' && (
+                                                        {activeCategory === 'Characters' && (
+                                                            <>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Birthday / Age"
+                                                                    value={(editEntry as Character).birthday}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), birthday: e.target.value })}
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Role"
+                                                                    value={(editEntry as Character).role}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), role: e.target.value })}
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Social Status"
+                                                                    value={(editEntry as Character).socialStatus}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), socialStatus: e.target.value })}
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                            
+                                                                <TextField
+                                                                    select
+                                                                    fullWidth
+                                                                    label="Species / Race"
+                                                                    value={(editEntry as Character).speciesId || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), speciesId: (e.target.value as any) || undefined })}
+                                                                    sx={{ mb: 2 }}
+                                                                >
+                                                                    <MenuItem value="">Unknown</MenuItem>
+                                                                    {species.map(s => (
+                                                                        <MenuItem key={s.id} value={s.id}>{s.name} ({s.category})</MenuItem>
+                                                                    ))}
+                                                                </TextField>
+                                                                
+                                                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Traits</Typography>
+                                                                <Box sx={{ mb: 2 }}>
+                                                                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                                                                        {(editEntry as Character).traits?.map((trait: string, i: number) => (
+                                                                            <Chip key={i} label={trait} onDelete={() => removeTrait(i)} size="small" />
+                                                                        ))}
+                                                                    </Stack>
+                                                                    <TextField
+                                                                        size="small"
+                                                                        fullWidth
+                                                                        placeholder="Add trait and press Enter"
+                                                                        value={newTrait}
+                                                                        onChange={(e) => setNewTrait(e.target.value)}
+                                                                        onKeyDown={(e) => e.key === 'Enter' && addTrait()}
+                                                                    />
+                                                                </Box>
+                                                            </>
+                                                        )}
+                            
+                                                        {activeCategory === 'Species & Nature' && (
+                                                            <>
+                                                                <TextField
+                                                                    select
+                                                                    fullWidth
+                                                                    label="Category"
+                                                                    value={(editEntry as Species).category}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), category: e.target.value as any })}
+                                                                    sx={{ mb: 2 }}
+                                                                >
+                                                                    <MenuItem value="SPECIES">Species</MenuItem>
+                                                                    <MenuItem value="RACE">Race</MenuItem>
+                                                                    <MenuItem value="FLORA">Flora</MenuItem>
+                                                                    <MenuItem value="FAUNA">Fauna</MenuItem>
+                                                                </TextField>
+                            
+                                                                <TextField
+                                                                    select
+                                                                    fullWidth
+                                                                    label="Parent Species"
+                                                                    value={(editEntry as Species).parentId || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), parentId: (e.target.value as any) || undefined })}
+                                                                    sx={{ mb: 2 }}
+                                                                >
+                                                                    <MenuItem value="">None</MenuItem>
+                                                                    {species
+                                                                        .filter(s => s.id !== editEntry.id && s.category === 'SPECIES')
+                                                                        .map(s => (
+                                                                            <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                                                                        ))
+                                                                    }
+                                                                </TextField>
+                            
+                                                                <TextField
+                                                                    select
+                                                                    fullWidth
+                                                                    label="Habitat (Location)"
+                                                                    value={(editEntry as Species).habitatId || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), habitatId: (e.target.value as any) || undefined })}
+                                                                    sx={{ mb: 2 }}
+                                                                >
+                                                                    <MenuItem value="">Unknown</MenuItem>
+                                                                    {locations.map(loc => (
+                                                                        <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+                                                                    ))}
+                                                                </TextField>
+                            
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Lifespan"
+                                                                    value={(editEntry as Species).lifespan || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), lifespan: e.target.value })}
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Average Size"
+                                                                    value={(editEntry as Species).averageSize || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), averageSize: e.target.value })}
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Diet"
+                                                                    value={(editEntry as Species).diet || ''}
+                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), diet: e.target.value })}    
+                                                                    sx={{ mb: 2 }}
+                                                                />
+                                                            </>
+                                                        )}
+                                                        {activeCategory === 'Lore' && (
                                 <>
                                     <Typography variant="subtitle2" sx={{ mb: 1 }}>Lore Categories</Typography>
                                     <Box sx={{ mb: 2 }}>
                                         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                                            {editEntry.categories?.map((cat: string, i: number) => (
+                                            {(editEntry as Lore).categories?.map((cat: string, i: number) => (
                                                 <Chip key={i} label={cat} onDelete={() => {
-                                                    const newCats = [...editEntry.categories];
+                                                    const loreEntry = editEntry as Lore;
+                                                    const newCats = [...loreEntry.categories];
                                                     newCats.splice(i, 1);
-                                                    setEditEntry({ ...editEntry, categories: newCats });
+                                                    setEditEntry({ ...loreEntry, categories: newCats });
                                                 }} size="small" />
                                             ))}
                                         </Stack>
@@ -735,9 +740,10 @@ const Worldbuilding: React.FC = () => {
                                             onChange={(e) => setNewTrait(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && newTrait.trim()) {
+                                                    const loreEntry = editEntry as Lore;
                                                     setEditEntry({
-                                                        ...editEntry,
-                                                        categories: [...(editEntry.categories || []), newTrait.trim()]
+                                                        ...loreEntry,
+                                                        categories: [...(loreEntry.categories || []), newTrait.trim()]
                                                     });
                                                     setNewTrait('');
                                                 }
@@ -773,13 +779,13 @@ const Worldbuilding: React.FC = () => {
                                 <Typography variant="h6" gutterBottom>Appearance</Typography>
                                 <RichTextEditor 
                                     key={`appearance-${editEntry.id || 'new'}`}
-                                    content={editEntry.appearance} 
+                                    content={(editEntry as Character).appearance} 
                                     characters={characters}
                                     locations={locations}
                                     species={species}
                                     items={items}
                                     lore={lore}
-                                    onChange={(html) => setEditEntry({ ...editEntry, appearance: html })}
+                                    onChange={(html) => setEditEntry({ ...(editEntry as Character), appearance: html })}
                                     onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
@@ -793,13 +799,13 @@ const Worldbuilding: React.FC = () => {
                                     <Typography variant="h6" gutterBottom>Where is it?</Typography>
                                     <RichTextEditor 
                                         key={`where-${editEntry.id || 'new'}`}
-                                        content={editEntry.whereItIs} 
+                                        content={(editEntry as Location).whereItIs} 
                                         characters={characters}
                                         locations={locations}
                                         species={species}
                                         items={items}
                                         lore={lore}
-                                        onChange={(html) => setEditEntry({ ...editEntry, whereItIs: html })}
+                                        onChange={(html) => setEditEntry({ ...(editEntry as Location), whereItIs: html })}
                                         onMentionClick={handleMentionClick}
                                         minHeight={150}
                                         onSave={handleSave}
@@ -809,13 +815,13 @@ const Worldbuilding: React.FC = () => {
                                     <Typography variant="h6" gutterBottom>Important Details</Typography>
                                     <RichTextEditor 
                                         key={`details-${editEntry.id || 'new'}`}
-                                        content={editEntry.details} 
+                                        content={(editEntry as Location).details} 
                                         characters={characters}
                                         locations={locations}
                                         species={species}
                                         items={items}
                                         lore={lore}
-                                        onChange={(html) => setEditEntry({ ...editEntry, details: html })}
+                                        onChange={(html) => setEditEntry({ ...(editEntry as Location), details: html })}
                                         onMentionClick={handleMentionClick}
                                         minHeight={200}
                                         onSave={handleSave}

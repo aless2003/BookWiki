@@ -97,14 +97,17 @@ const TiptapPagedEditor = ({
       onPageCountChangeRef.current = onPageCountChange;
     }, [onSave, onChange, onPageCountChange]);
   
-    const allEntities = useMemo(() => [
-      ...characters.map(e => ({ ...e, type: 'character', icon: '👤' })),
-      ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
-      ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
-      ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
-      ...species.map(e => ({ ...e, type: 'species', icon: '🐾' })),
-      ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: resolveShortcodes(e.imageUrl) }))
-    ], [characters, items, locations, lore, species, emotes]);
+    const allEntities = useMemo(() => {
+      const filter = (e: Entity) => e.id !== undefined;
+      return [
+        ...characters.filter(filter).map(e => ({ ...e, type: 'character', icon: '👤' })),
+        ...items.filter(filter).map(e => ({ ...e, type: 'item', icon: '📦' })),
+        ...locations.filter(filter).map(e => ({ ...e, type: 'location', icon: '📍' })),
+        ...lore.filter(filter).map(e => ({ ...e, type: 'lore', icon: '📜' })),
+        ...species.filter(filter).map(e => ({ ...e, type: 'species', icon: '🐾' })),
+        ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: resolveShortcodes(e.imageUrl) }))
+      ];
+    }, [characters, items, locations, lore, species, emotes]);
   
     const allEntitiesRef = useRef(allEntities);
     useEffect(() => {

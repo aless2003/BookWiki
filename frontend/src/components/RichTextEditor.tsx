@@ -49,13 +49,16 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
   const onMentionClickRef = useRef(onMentionClick);
   const lastSentContent = useRef(content);
 
-  const allEntities = useMemo(() => [
-    ...characters.map(e => ({ ...e, type: 'character', icon: '👤' })),
-    ...items.map(e => ({ ...e, type: 'item', icon: '📦' })),
-    ...locations.map(e => ({ ...e, type: 'location', icon: '📍' })),
-    ...lore.map(e => ({ ...e, type: 'lore', icon: '📜' })),
-    ...species.map(e => ({ ...e, type: 'species', icon: '🐾' }))
-  ], [characters, items, locations, lore, species]);
+  const allEntities = useMemo(() => {
+    const filter = (e: Entity) => e.id !== undefined;
+    return [
+      ...characters.filter(filter).map(e => ({ ...e, type: 'character', icon: '👤' })),
+      ...items.filter(filter).map(e => ({ ...e, type: 'item', icon: '📦' })),
+      ...locations.filter(filter).map(e => ({ ...e, type: 'location', icon: '📍' })),
+      ...lore.filter(filter).map(e => ({ ...e, type: 'lore', icon: '📜' })),
+      ...species.filter(filter).map(e => ({ ...e, type: 'species', icon: '🐾' }))
+    ];
+  }, [characters, items, locations, lore, species]);
 
   const dataRef = useRef(allEntities);
   useEffect(() => { dataRef.current = allEntities; }, [allEntities]);
