@@ -9,3 +9,8 @@
 
 - [x] **Track: A gradle task that edits the version of the program in all relevant files including but not limited to gradle itself, Tauri etc.**
 *Link: [./tracks/version_sync_20260221/](./tracks/version_sync_20260221/)*
+
+---
+
+- [ ] **Track: Feature: The ability to open extra windows/pop-ups of other world-building sections or writing chapters.**
+*Link: [./tracks/multi_window_support_20260318/](./tracks/multi_window_support_20260318/)*
