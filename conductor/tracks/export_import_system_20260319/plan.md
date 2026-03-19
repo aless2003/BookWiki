@@ -15,7 +15,7 @@
 - [x] Task: Create the "Import" UI in `Settings.tsx` (File upload, status indicators) and wire it to the backend.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: End-to-End Import' (Protocol in workflow.md)
 
-## Phase 4: Final Verification & Polishing
-- [ ] Task: Perform a complete "Round Trip" test (Export project -> Wipe DB -> Import project) via the UI.
-- [ ] Task: Refine UI feedback (loading states, success/error alerts).
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Verification & Polishing' (Protocol in workflow.md)
+## Phase 4: Final Verification & Polishing [checkpoint: b28f205]
+- [x] Task: Perform a complete "Round Trip" test (Export project -> Wipe DB -> Import project) via the UI.
+- [x] Task: Refine UI feedback (loading states, success/error alerts).
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Verification & Polishing' (Protocol in workflow.md)
