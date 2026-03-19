@@ -20,16 +20,18 @@ fn main() {
 
             Ok(())
         })
-        .on_window_event(|app, event| {
+        .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let state = app.state::<SidecarState>();
-                let maybe_child = {
-                    let mut lock = state.0.lock().unwrap();
-                    lock.take()
-                };
+                if window.label() == "main" {
+                    let state = window.state::<SidecarState>();
+                    let maybe_child = {
+                        let mut lock = state.0.lock().unwrap();
+                        lock.take()
+                    };
 
-                if let Some(child) = maybe_child {
-                    let _ = child.kill();
+                    if let Some(child) = maybe_child {
+                        let _ = child.kill();
+                    }
                 }
             }
         })

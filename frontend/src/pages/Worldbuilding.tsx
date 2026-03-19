@@ -228,7 +228,8 @@ const Worldbuilding: React.FC = () => {
                 if (entry) {
                     console.log(`Found entry! Opening editor...`);
                     handleEditStart(entry);
-                    navigate(location.pathname, { replace: true });
+                    const isPopup = searchParams.get('popup') === 'true';
+                    navigate(`${location.pathname}${isPopup ? '?popup=true' : ''}`, { replace: true });
                 } else {
                     console.warn(`Entry with ID ${id} not found in ${activeCategory} list.`);
                 }
@@ -436,7 +437,9 @@ const Worldbuilding: React.FC = () => {
         } else {
             setActiveCategory(category);
             // The useEffect will handle opening the entry after category switch and fetch
-            navigate(`${location.pathname}?category=${encodeURIComponent(category)}&id=${id}`, { replace: true });
+            const isPopup = new URLSearchParams(location.search).get('popup') === 'true';
+            const popupParam = isPopup ? `&popup=true` : '';
+            navigate(`${location.pathname}?category=${encodeURIComponent(category)}&id=${id}${popupParam}`, { replace: true });
         }
     };
 
@@ -891,59 +894,63 @@ const Worldbuilding: React.FC = () => {
         );
     };
 
+    const isPopup = new URLSearchParams(location.search).get('popup') === 'true';
+
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
             <Box sx={{ display: 'flex', height: '100%', bgcolor: 'background.default', overflow: 'hidden' }}>
-                <Drawer
-                    variant="permanent"
-                    sx={{
-                        width: drawerWidth,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
+                {!isPopup && (
+                    <Drawer
+                        variant="permanent"
+                        sx={{
                             width: drawerWidth,
-                            boxSizing: 'border-box',
-                            bgcolor: 'background.paper',
-                            borderRight: '1px solid rgba(255,255,255,0.1)',
-                            position: 'relative',
-                            height: '100%'
-                        },
-                    }}
-                >
-                    <Toolbar>
-                        <IconButton onClick={() => navigate('/stories')} sx={{ mr: 1 }}>
-                            <ArrowBackIcon />
-                        </IconButton>
-                        <Typography variant="h6" noWrap component="div">BookWiki</Typography>
-                    </Toolbar>
-                    <Divider />
-                    <List sx={{ px: 1, py: 2 }}>
-                        {categories.map((cat) => (
-                            <ListItem key={cat.name} disablePadding sx={{ mb: 1 }}>
-                                <ListItemButton 
-                                    selected={activeCategory === cat.name}
-                                    onClick={() => {
-                                        setActiveCategory(cat.name);
-                                        setIsEditing(false);
-                                        setEditEntry(null);
-                                    }}
-                                    sx={{ 
-                                        borderRadius: 2,
-                                        '&.Mui-selected': {
-                                            bgcolor: 'primary.main',
-                                            color: 'primary.contrastText',
-                                            '&:hover': { bgcolor: 'primary.dark' },
-                                            '& .MuiListItemIcon-root': { color: 'inherit' }
-                                        }
-                                    }}
-                                >
-                                    <ListItemIcon>{cat.icon}</ListItemIcon>
-                                    <ListItemText primary={cat.name} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
-                </Drawer>
+                            flexShrink: 0,
+                            '& .MuiDrawer-paper': {
+                                width: drawerWidth,
+                                boxSizing: 'border-box',
+                                bgcolor: 'background.paper',
+                                borderRight: '1px solid rgba(255,255,255,0.1)',
+                                position: 'relative',
+                                height: '100%'
+                            },
+                        }}
+                    >
+                        <Toolbar>
+                            <IconButton onClick={() => navigate('/stories')} sx={{ mr: 1 }}>
+                                <ArrowBackIcon />
+                            </IconButton>
+                            <Typography variant="h6" noWrap component="div">BookWiki</Typography>
+                        </Toolbar>
+                        <Divider />
+                        <List sx={{ px: 1, py: 2 }}>
+                            {categories.map((cat) => (
+                                <ListItem key={cat.name} disablePadding sx={{ mb: 1 }}>
+                                    <ListItemButton 
+                                        selected={activeCategory === cat.name}
+                                        onClick={() => {
+                                            setActiveCategory(cat.name);
+                                            setIsEditing(false);
+                                            setEditEntry(null);
+                                        }}
+                                        sx={{ 
+                                            borderRadius: 2,
+                                            '&.Mui-selected': {
+                                                bgcolor: 'primary.main',
+                                                color: 'primary.contrastText',
+                                                '&:hover': { bgcolor: 'primary.dark' },
+                                                '& .MuiListItemIcon-root': { color: 'inherit' }
+                                            }
+                                        }}
+                                    >
+                                        <ListItemIcon>{cat.icon}</ListItemIcon>
+                                        <ListItemText primary={cat.name} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Drawer>
+                )}
 
                 <Box component="main" sx={{ flexGrow: 1, height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <AppBar position="sticky" sx={{ bgcolor: 'background.paper', color: 'text.primary', boxShadow: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
