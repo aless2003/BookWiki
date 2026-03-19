@@ -5,10 +5,10 @@
 - [x] Task: Update `frontend/src/App.tsx` and `frontend/src/components/Navigation.tsx` to integrate the Settings page and Gear Icon.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Settings UI & Navigation' (Protocol in workflow.md)
 
-## Phase 2: End-to-End Export
-- [ ] Task: Implement backend `ExportService` and REST endpoints for full and story-specific exports.
-- [ ] Task: Create the "Export" UI in `Settings.tsx` (Buttons, Story selection list) and wire it to the backend.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: End-to-End Export' (Protocol in workflow.md)
+## Phase 2: End-to-End Export [checkpoint: 329a033]
+- [x] Task: Implement backend `ExportService` and REST endpoints for full and story-specific exports.
+- [x] Task: Create the "Export" UI in `Settings.tsx` (Buttons, Story selection list) and wire it to the backend.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: End-to-End Export' (Protocol in workflow.md)
 
 ## Phase 3: End-to-End Import
 - [ ] Task: Implement backend `ImportService` and the `/api/import` endpoint with merge logic.
