@@ -12,5 +12,5 @@
 
 ---
 
-- [ ] **Track: Feature: The ability to open extra windows/pop-ups of other world-building sections or writing chapters.**
+- [x] **Track: Feature: The ability to open extra windows/pop-ups of other world-building sections or writing chapters.**
 *Link: [./tracks/multi_window_support_20260318/](./tracks/multi_window_support_20260318/)*
