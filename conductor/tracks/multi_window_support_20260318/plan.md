@@ -15,7 +15,7 @@
 - [x] Task: Route the middle-click on a mention to open a new Tauri window via the utility, while preserving the existing in-window navigation for `CTRL+Click`.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Middle-Click Integration in Editor Mentions' (Protocol in workflow.md)
 
-## Phase 4: State & Context Verification
-- [~] Task: Verify that opening multiple windows allows editing without breaking backend synchronization or auto-saving functionality (ensure parallel windows maintain isolated state or sync via the backend correctly).
-- [~] Task: (Optional Refactor) Add URL parameters or state to the new window to optionally hide the main layout (sidebar/header) if it should look more like a dedicated pop-up, depending on UX testing.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: State & Context Verification' (Protocol in workflow.md)
+## Phase 4: State & Context Verification [checkpoint: 1e0f84e]
+- [x] Task: Verify that opening multiple windows allows editing without breaking backend synchronization or auto-saving functionality (ensure parallel windows maintain isolated state or sync via the backend correctly).
+- [x] Task: (Optional Refactor) Add URL parameters or state to the new window to optionally hide the main layout (sidebar/header) if it should look more like a dedicated pop-up, depending on UX testing.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: State & Context Verification' (Protocol in workflow.md)
