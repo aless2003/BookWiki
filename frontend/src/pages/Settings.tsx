@@ -1,10 +1,84 @@
-import React from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack } from 'react-icons/md';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, ListGroup, Spinner } from 'react-bootstrap';
+import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../constants/api';
+
+interface Story {
+  id: number;
+  title: string;
+}
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const [stories, setStories] = useState<Story[]>([]);
+  const [selectedStoryIds, setSelectedStoryIds] = useState<number[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isLoadingStories, setIsLoadingStories] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/stories`)
+      .then(res => res.json())
+      .then(data => {
+        setStories(data);
+        setIsLoadingStories(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch stories', err);
+        setIsLoadingStories(false);
+      });
+  }, []);
+
+  const handleToggleStory = (id: number) => {
+    setSelectedStoryIds(prev => 
+      prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+    );
+  };
+
+  const handleFullExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/data/export/full`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bookwiki_full_backup_${new Date().toISOString().split('T')[0]}.bwiki`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error('Full export failed', err);
+      alert('Export failed. Please check the console for details.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleSelectedExport = async () => {
+    if (selectedStoryIds.length === 0) return;
+    setIsExporting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/data/export/stories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedStoryIds)
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bookwiki_stories_export_${new Date().toISOString().split('T')[0]}.bwiki`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error('Selected export failed', err);
+      alert('Export failed. Please check the console for details.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <Container className="py-5 h-100 overflow-auto text-light">
@@ -20,7 +94,7 @@ const Settings: React.FC = () => {
       <Row className="g-4">
         <Col md={6}>
           <Card className="h-100 bg-dark border-secondary">
-            <Card.Body className="p-4">
+            <Card.Body className="p-4 d-flex flex-column">
               <div className="d-flex align-items-center mb-3">
                 <MdCloudDownload size={32} className="text-primary me-2" />
                 <Card.Title className="fs-4 m-0">Export Data</Card.Title>
@@ -28,9 +102,48 @@ const Settings: React.FC = () => {
               <Card.Text className="text-secondary mb-4">
                 Export your entire project database or individual stories into a portable .bwiki archive.
               </Card.Text>
-              <div className="d-grid gap-2">
-                <Button variant="outline-primary" disabled>Full Export (.bwiki)</Button>
-                <Button variant="outline-secondary" disabled>Select Stories to Export</Button>
+              
+              <div className="d-grid gap-2 mb-4">
+                <Button 
+                  variant="outline-primary" 
+                  onClick={handleFullExport} 
+                  disabled={isExporting}
+                >
+                  {isExporting ? <Spinner size="sm" className="me-2" /> : null}
+                  Full Export (.bwiki)
+                </Button>
+              </div>
+
+              <div className="flex-grow-1">
+                <Card.Subtitle className="mb-2 text-muted text-uppercase small fw-bold">Select Stories to Export</Card.Subtitle>
+                {isLoadingStories ? (
+                  <div className="text-center py-3"><Spinner size="sm" /></div>
+                ) : (
+                  <ListGroup className="mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {stories.map(story => (
+                      <ListGroup.Item 
+                        key={story.id} 
+                        className={`bg-dark text-light border-secondary cursor-pointer d-flex justify-content-between align-items-center ${selectedStoryIds.includes(story.id) ? 'bg-primary bg-opacity-10' : ''}`}
+                        onClick={() => handleToggleStory(story.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {story.title}
+                        {selectedStoryIds.includes(story.id) && <MdCheck className="text-primary" />}
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                )}
+              </div>
+
+              <div className="d-grid mt-auto">
+                <Button 
+                  variant="primary" 
+                  onClick={handleSelectedExport} 
+                  disabled={isExporting || selectedStoryIds.length === 0}
+                >
+                  {isExporting ? <Spinner size="sm" className="me-2" /> : null}
+                  Export Selected ({selectedStoryIds.length})
+                </Button>
               </div>
             </Card.Body>
           </Card>

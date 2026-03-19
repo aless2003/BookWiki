@@ -62,6 +62,11 @@ public class Story {
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @ToString.Exclude
+    private List<online.hatsune_miku.bookwiki.species.Species> species = new ArrayList<>();
+
+    @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @ToString.Exclude
     private List<Emote> emotes = new ArrayList<>();
 
     private LocalDateTime createdAt;
