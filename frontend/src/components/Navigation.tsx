@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navbar, Container, Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { MdBook, MdPublic, MdEdit } from 'react-icons/md';
+import { MdBook, MdPublic, MdEdit, MdSettings } from 'react-icons/md';
 
 const Navigation: React.FC = () => {
     const location = useLocation();
@@ -26,8 +26,11 @@ const Navigation: React.FC = () => {
                         <Nav.Link as={Link} to={worldLink} className={`d-flex align-items-center me-3 ${location.pathname.startsWith('/world') ? 'active text-light' : ''}`}>
                             <MdPublic className="me-1" /> Worldbuilding
                         </Nav.Link>
-                        <Nav.Link as={Link} to={writeLink} className={`d-flex align-items-center ${location.pathname.startsWith('/write') || location.pathname === '/stories' ? 'active text-light' : ''}`}>
+                        <Nav.Link as={Link} to={writeLink} className={`d-flex align-items-center me-3 ${location.pathname.startsWith('/write') || location.pathname === '/stories' ? 'active text-light' : ''}`}>
                             <MdEdit className="me-1" /> Writing
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/settings" className={`d-flex align-items-center ${location.pathname === '/settings' ? 'active text-light' : ''}`}>
+                            <MdSettings className="me-1" /> Settings
                         </Nav.Link>
                     </Nav>
                 </Navbar.Collapse>

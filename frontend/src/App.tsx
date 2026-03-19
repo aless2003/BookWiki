@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Worldbuilding from './pages/Worldbuilding';
 import Writing from './pages/Writing';
 import StorySelector from './pages/StorySelector';
+import Settings from './pages/Settings';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { API_BASE_URL } from './constants/api';
 
@@ -80,6 +81,7 @@ function App() {
             <Route path="/world" element={<StorySelector mode="world" />} />
             <Route path="/stories" element={<StorySelector mode="write" />} />
             <Route path="/write/:storyId" element={<Writing />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </div>
