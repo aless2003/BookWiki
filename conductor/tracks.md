@@ -12,5 +12,5 @@
 
 ---
 
-- [ ] **Track: Implement an Export/Import feature in a new settings page**
+- [x] **Track: Implement an Export/Import feature in a new settings page**
 *Link: [./tracks/export_import_system_20260319/](./tracks/export_import_system_20260319/)*
