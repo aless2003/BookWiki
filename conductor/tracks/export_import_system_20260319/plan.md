@@ -1,9 +1,9 @@
 # Implementation Plan: Export/Import System
 
-## Phase 1: Settings UI & Navigation
-- [ ] Task: Create `frontend/src/pages/Settings.tsx` with basic layout and route navigation.
-- [ ] Task: Update `frontend/src/App.tsx` and `frontend/src/components/Navigation.tsx` to integrate the Settings page and Gear Icon.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Settings UI & Navigation' (Protocol in workflow.md)
+## Phase 1: Settings UI & Navigation [checkpoint: 3b61f37]
+- [x] Task: Create `frontend/src/pages/Settings.tsx` with basic layout and route navigation.
+- [x] Task: Update `frontend/src/App.tsx` and `frontend/src/components/Navigation.tsx` to integrate the Settings page and Gear Icon.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Settings UI & Navigation' (Protocol in workflow.md)
 
 ## Phase 2: End-to-End Export
 - [ ] Task: Implement backend `ExportService` and REST endpoints for full and story-specific exports.
