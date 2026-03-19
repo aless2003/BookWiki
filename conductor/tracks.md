@@ -9,3 +9,8 @@
 
 - [x] **Track: A gradle task that edits the version of the program in all relevant files including but not limited to gradle itself, Tauri etc.**
 *Link: [./tracks/version_sync_20260221/](./tracks/version_sync_20260221/)*
+
+---
+
+- [ ] **Track: Implement an Export/Import feature in a new settings page**
+*Link: [./tracks/export_import_system_20260319/](./tracks/export_import_system_20260319/)*
