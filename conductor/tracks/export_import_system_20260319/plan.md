@@ -10,10 +10,10 @@
 - [x] Task: Create the "Export" UI in `Settings.tsx` (Buttons, Story selection list) and wire it to the backend.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: End-to-End Export' (Protocol in workflow.md)
 
-## Phase 3: End-to-End Import
-- [ ] Task: Implement backend `ImportService` and the `/api/import` endpoint with merge logic.
-- [ ] Task: Create the "Import" UI in `Settings.tsx` (File upload, status indicators) and wire it to the backend.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: End-to-End Import' (Protocol in workflow.md)
+## Phase 3: End-to-End Import [checkpoint: e371a21]
+- [x] Task: Implement backend `ImportService` and the `/api/import` endpoint with merge logic.
+- [x] Task: Create the "Import" UI in `Settings.tsx` (File upload, status indicators) and wire it to the backend.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: End-to-End Import' (Protocol in workflow.md)
 
 ## Phase 4: Final Verification & Polishing
 - [ ] Task: Perform a complete "Round Trip" test (Export project -> Wipe DB -> Import project) via the UI.
