@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, ListGroup, Spinner } from 'react-bootstrap';
-import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck } from 'react-icons/md';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Button, ListGroup, Spinner, Alert } from 'react-bootstrap';
+import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck, MdErrorOutline } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../constants/api';
 
@@ -11,12 +11,22 @@ interface Story {
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [stories, setStories] = useState<Story[]>([]);
   const [selectedStoryIds, setSelectedStoryIds] = useState<number[]>([]);
+  
   const [isExporting, setIsExporting] = useState(false);
   const [isLoadingStories, setIsLoadingStories] = useState(true);
+  
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'danger', message: string } | null>(null);
 
   useEffect(() => {
+    fetchStories();
+  }, []);
+
+  const fetchStories = () => {
+    setIsLoadingStories(true);
     fetch(`${API_BASE_URL}/api/stories`)
       .then(res => res.json())
       .then(data => {
@@ -27,7 +37,7 @@ const Settings: React.FC = () => {
         console.error('Failed to fetch stories', err);
         setIsLoadingStories(false);
       });
-  }, []);
+  };
 
   const handleToggleStory = (id: number) => {
     setSelectedStoryIds(prev => 
@@ -77,6 +87,41 @@ const Settings: React.FC = () => {
       alert('Export failed. Please check the console for details.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportStatus(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/data/import`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        setImportStatus({ type: 'success', message: 'Import successful! Data has been merged.' });
+        fetchStories(); // Refresh list
+      } else {
+        throw new Error('Import failed');
+      }
+    } catch (err) {
+      console.error('Import failed', err);
+      setImportStatus({ type: 'danger', message: 'Import failed. The file may be invalid or corrupted.' });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -151,7 +196,7 @@ const Settings: React.FC = () => {
 
         <Col md={6}>
           <Card className="h-100 bg-dark border-secondary">
-            <Card.Body className="p-4">
+            <Card.Body className="p-4 d-flex flex-column">
               <div className="d-flex align-items-center mb-3">
                 <MdCloudUpload size={32} className="text-success me-2" />
                 <Card.Title className="fs-4 m-0">Import Data</Card.Title>
@@ -159,8 +204,34 @@ const Settings: React.FC = () => {
               <Card.Text className="text-secondary mb-4">
                 Import a .bwiki archive to merge new stories and worldbuilding data into your current project.
               </Card.Text>
-              <div className="d-grid">
-                <Button variant="outline-success" disabled>Choose .bwiki File</Button>
+              
+              <Alert 
+                variant={importStatus?.type || 'info'} 
+                className="bg-dark text-light border-secondary d-flex align-items-center mb-4"
+                show={!!importStatus}
+                onClose={() => setImportStatus(null)}
+                dismissible
+              >
+                {importStatus?.type === 'success' ? <MdCheck size={20} className="me-2 text-success" /> : <MdErrorOutline size={20} className="me-2 text-danger" />}
+                {importStatus?.message}
+              </Alert>
+
+              <div className="d-grid mt-auto">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept=".bwiki"
+                  onChange={handleFileChange}
+                />
+                <Button 
+                  variant="outline-success" 
+                  onClick={handleImportClick}
+                  disabled={isImporting}
+                >
+                  {isImporting ? <Spinner size="sm" className="me-2" /> : null}
+                  {isImporting ? 'Importing...' : 'Choose .bwiki File'}
+                </Button>
               </div>
             </Card.Body>
           </Card>

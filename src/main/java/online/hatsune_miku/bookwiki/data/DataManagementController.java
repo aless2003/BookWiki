@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +14,11 @@ import java.util.List;
 public class DataManagementController {
 
     private final ExportService exportService;
+    private final ImportService importService;
 
-    public DataManagementController(ExportService exportService) {
+    public DataManagementController(ExportService exportService, ImportService importService) {
         this.exportService = exportService;
+        this.importService = importService;
     }
 
     @GetMapping("/export/full")
@@ -34,5 +37,11 @@ public class DataManagementController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"stories_export.bwiki\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(content);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Void> importData(@RequestParam("file") MultipartFile file) throws IOException {
+        importService.importPackage(file);
+        return ResponseEntity.ok().build();
     }
 }

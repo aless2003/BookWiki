@@ -107,24 +107,38 @@ public class ExportService {
     }
 
     private byte[] createZip(List<Story> stories, List<Media> media) throws IOException {
+        List<MediaDTO> mediaDTOs = new ArrayList<>();
+        for (Media m : media) {
+            try {
+                byte[] data = m.getData().getBytes(1, (int) m.getData().length());
+                mediaDTOs.add(MediaDTO.builder()
+                        .id(m.getId())
+                        .filename(m.getFilename())
+                        .contentType(m.getContentType())
+                        .data(data)
+                        .createdAt(m.getCreatedAt())
+                        .build());
+            } catch (Exception e) {
+                System.err.println("Failed to read media data for: " + m.getId());
+            }
+        }
+
         DataPackage dataPackage = DataPackage.builder()
                 .version("1.0")
                 .stories(stories)
-                .media(media)
+                .media(mediaDTOs)
                 .build();
 
         String json = objectMapper.writeValueAsString(dataPackage);
 
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ZipOutputStream zos = new ZipOutputStream(baos)) {
-            
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
             ZipEntry entry = new ZipEntry("data.json");
             zos.putNextEntry(entry);
             zos.write(json.getBytes(StandardCharsets.UTF_8));
             zos.closeEntry();
-            
             zos.finish();
-            return baos.toByteArray();
         }
+        return baos.toByteArray();
     }
 }

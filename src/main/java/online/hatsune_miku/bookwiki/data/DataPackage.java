@@ -16,5 +16,5 @@ import java.util.List;
 public class DataPackage {
     private String version;
     private List<Story> stories;
-    private List<Media> media;
+    private List<MediaDTO> media;
 }
