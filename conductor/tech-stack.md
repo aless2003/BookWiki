@@ -12,6 +12,7 @@
   - `apache-poi`: For DOCX document generation.
   - `openpdf`: For PDF document generation.
   - `jsoup`: For HTML content parsing during export.
+  - `jackson-datatype-jsr310`: For modern Java Date/Time serialization support.
 
 ## Frontend
 - **Language:** TypeScript
@@ -32,5 +33,6 @@
 
 ## Desktop Wrapper`n- **Framework:** Tauri v2 (Rust-based native wrapper)`n- **Sidecar:** Rust-based process orchestrator for the Spring Boot backend`n- **Bundled Runtime:** Minimal Java Runtime (JRE) generated via jlink`n`n## Infrastructure & DevOps
 - **Database:** H2 (File-based)`n- **Persistence:** System-standard AppData folder for database and uploads in standalone mode
+- **Portable Data Format:** `.bwiki` archives (ZIP-compressed JSON + Binary blobs) for backups and data exchange.
 - **Development Environment:** Zero-install local development (Docker Compose no longer required for DB).
 - **Frontend Integration:** Gradle-managed Bun build and sync process.`n- **Installer Automation:** Gradle-integrated Tauri build and packaging pipeline
