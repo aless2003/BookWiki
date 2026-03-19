@@ -18,3 +18,4 @@ BookWiki is a platform designed to empower writers and worldbuilders by providin
 - **Inline Emote System:** Support for converting images into inline, non-resizable "emotes" with a dedicated management interface for renaming and deleting them.
 - **Manuscript Export:** Ability to export chapters or full stories into standard PDF and DOCX formats with high-fidelity formatting.
 - **Deep Integration:** Bi-directional navigation and deep-linking between the writing studio and the worldbuilding wiki to facilitate an efficient creative workflow.
+- **Multi-Window Support:** The ability to pop-out worldbuilding entries or chapters into secondary OS-level windows via middle-click, allowing for parallel referencing and editing across multiple monitors.
