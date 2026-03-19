@@ -44,4 +44,10 @@ public class DataManagementController {
         importService.importPackage(file);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/reset")
+    public ResponseEntity<Void> resetApplication() {
+        importService.resetAll();
+        return ResponseEntity.ok().build();
+    }
 }

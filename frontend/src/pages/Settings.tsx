@@ -136,7 +136,18 @@ const Settings: React.FC = () => {
         </h1>
       </div>
 
-      <Row className="g-4">
+      <Alert 
+        variant={importStatus?.type || 'info'} 
+        className="bg-dark text-light border-secondary d-flex align-items-center mb-4"
+        show={!!importStatus}
+        onClose={() => setImportStatus(null)}
+        dismissible
+      >
+        {importStatus?.type === 'success' ? <MdCheck size={20} className="me-2 text-success" /> : <MdErrorOutline size={20} className="me-2 text-danger" />}
+        {importStatus?.message}
+      </Alert>
+
+      <Row className="g-4 mb-5">
         <Col md={6}>
           <Card className="h-100 bg-dark border-secondary">
             <Card.Body className="p-4 d-flex flex-column">
@@ -205,17 +216,6 @@ const Settings: React.FC = () => {
                 Import a .bwiki archive to merge new stories and worldbuilding data into your current project.
               </Card.Text>
               
-              <Alert 
-                variant={importStatus?.type || 'info'} 
-                className="bg-dark text-light border-secondary d-flex align-items-center mb-4"
-                show={!!importStatus}
-                onClose={() => setImportStatus(null)}
-                dismissible
-              >
-                {importStatus?.type === 'success' ? <MdCheck size={20} className="me-2 text-success" /> : <MdErrorOutline size={20} className="me-2 text-danger" />}
-                {importStatus?.message}
-              </Alert>
-
               <div className="d-grid mt-auto">
                 <input
                   type="file"
@@ -237,6 +237,40 @@ const Settings: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      <div className="mt-5 pt-5 border-top border-danger border-opacity-25">
+        <h3 className="text-danger mb-4">Danger Zone</h3>
+        <Card className="bg-dark border-danger border-opacity-50">
+          <Card.Body className="p-4 d-flex justify-content-between align-items-center">
+            <div>
+              <Card.Title className="text-danger fs-5 mb-1">Reset Application</Card.Title>
+              <Card.Text className="text-secondary small">
+                Permanently delete all stories, chapters, worldbuilding entries, and media. This action cannot be undone.
+              </Card.Text>
+            </div>
+            <Button 
+              variant="outline-danger" 
+              onClick={() => {
+                if (window.confirm('Are you absolutely sure? This will delete EVERYTHING.')) {
+                  const input = window.prompt('Type "RESET" to confirm:');
+                  if (input === 'RESET') {
+                    fetch(`${API_BASE_URL}/api/data/reset`, { method: 'DELETE' })
+                      .then(res => {
+                        if (res.ok) {
+                          alert('Application data has been reset.');
+                          fetchStories();
+                        }
+                      })
+                      .catch(err => console.error('Reset failed', err));
+                  }
+                }
+              }}
+            >
+              Reset All Data
+            </Button>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
 };

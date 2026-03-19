@@ -6,6 +6,8 @@ import online.hatsune_miku.bookwiki.media.MediaRepository;
 import online.hatsune_miku.bookwiki.story.Story;
 import online.hatsune_miku.bookwiki.story.StoryRepository;
 import online.hatsune_miku.bookwiki.species.Species;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +26,9 @@ public class ImportService {
     private final StoryRepository storyRepository;
     private final MediaRepository mediaRepository;
     private final ObjectMapper objectMapper;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public ImportService(StoryRepository storyRepository, MediaRepository mediaRepository, ObjectMapper objectMapper) {
         this.storyRepository = storyRepository;
@@ -60,47 +65,69 @@ public class ImportService {
         }
     }
 
+    @Transactional
+    public void resetAll() {
+        System.out.println("CRITICAL: Resetting application data...");
+        storyRepository.deleteAll();
+        mediaRepository.deleteAll();
+        System.out.println("Reset complete.");
+    }
+
     private void processImport(DataPackage dataPackage) {
-        System.out.println("Processing import. Stories: " + (dataPackage.getStories() != null ? dataPackage.getStories().size() : 0));
-        // 1. Import Media first (preserving UUIDs if possible, or remapping if necessary)
-        // We preserve UUIDs because they are used in shortcodes within text fields.
-        if (dataPackage.getMedia() != null) {
-            for (MediaDTO mediaDTO : dataPackage.getMedia()) {
-                if (!mediaRepository.existsById(mediaDTO.getId())) {
-                    System.out.println("Saving media: " + mediaDTO.getFilename());
-                    Media media = new Media();
+        try {
+            System.out.println("Processing import. Stories: " + (dataPackage.getStories() != null ? dataPackage.getStories().size() : 0));
+            
+            // 1. Import Media first
+            if (dataPackage.getMedia() != null) {
+                for (MediaDTO mediaDTO : dataPackage.getMedia()) {
+                    System.out.println("Merging media: " + mediaDTO.getId());
+                    
+                    // Check if exists in DB
+                    Media existing = entityManager.find(Media.class, mediaDTO.getId());
+                    Media media = (existing != null) ? existing : new Media();
+                    
                     media.setId(mediaDTO.getId());
                     media.setFilename(mediaDTO.getFilename());
                     media.setContentType(mediaDTO.getContentType());
                     media.setCreatedAt(mediaDTO.getCreatedAt());
                     
                     try {
+                        // For H2/Hibernate, sometimes a simple byte array cast or SerialBlob is fine
+                        // but let's try to be as direct as possible.
                         media.setData(new SerialBlob(mediaDTO.getData()));
-                        mediaRepository.save(media);
                     } catch (Exception e) {
-                        System.err.println("Failed to save media: " + mediaDTO.getId());
+                        throw new RuntimeException("Failed to create blob", e);
+                    }
+                    
+                    if (existing == null) {
+                        entityManager.persist(media);
+                    } else {
+                        entityManager.merge(media);
                     }
                 }
+                entityManager.flush();
+                entityManager.clear(); // Clear after media to avoid conflicts with stories
             }
-        }
 
-        // 2. Import Stories
-        // Since we are "Appending", we want to create NEW stories.
-        // We must nullify IDs to let JPA generate new ones.
-        if (dataPackage.getStories() != null) {
-            for (Story story : dataPackage.getStories()) {
-                System.out.println("Importing story: " + story.getTitle());
-                prepareForImport(story);
-                Story saved = storyRepository.save(story);
-                System.out.println("Saved story with new ID: " + saved.getId());
+            // 2. Import Stories
+            if (dataPackage.getStories() != null) {
+                for (Story story : dataPackage.getStories()) {
+                    System.out.println("Importing story: " + story.getTitle());
+                    prepareForImport(story);
+                    entityManager.persist(story); // Always persist as they are new (IDs were nullified)
+                }
+                entityManager.flush();
             }
+        } catch (Exception e) {
+            System.err.println("FATAL ERROR DURING IMPORT:");
+            e.printStackTrace();
+            throw e;
         }
     }
 
     private void prepareForImport(Story story) {
         story.setId(null);
         
-        // Chapters
         if (story.getChapters() != null) {
             story.getChapters().forEach(c -> {
                 c.setId(null);
@@ -108,7 +135,6 @@ public class ImportService {
             });
         }
         
-        // Characters
         if (story.getCharacters() != null) {
             story.getCharacters().forEach(c -> {
                 c.setId(null);
@@ -122,7 +148,6 @@ public class ImportService {
             });
         }
         
-        // Locations
         if (story.getLocations() != null) {
             story.getLocations().forEach(l -> {
                 l.setId(null);
@@ -136,7 +161,6 @@ public class ImportService {
             });
         }
         
-        // Items
         if (story.getItems() != null) {
             story.getItems().forEach(i -> {
                 i.setId(null);
@@ -150,7 +174,6 @@ public class ImportService {
             });
         }
         
-        // Lore
         if (story.getLores() != null) {
             story.getLores().forEach(l -> {
                 l.setId(null);
@@ -164,7 +187,6 @@ public class ImportService {
             });
         }
 
-        // Species
         if (story.getSpecies() != null) {
             story.getSpecies().forEach(s -> {
                 s.setId(null);
@@ -175,13 +197,9 @@ public class ImportService {
                         cs.setSpecies(s);
                     });
                 }
-                // Warning: parentId and habitatId references will be broken if they pointed to other entities in the same export
-                // remaping these would require a more complex multi-pass import.
-                // For now we accept that internal Long-ID references might break on import merge.
             });
         }
 
-        // Emotes
         if (story.getEmotes() != null) {
             story.getEmotes().forEach(e -> {
                 e.setId(null);
