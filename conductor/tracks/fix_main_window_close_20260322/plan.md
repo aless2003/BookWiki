@@ -12,7 +12,7 @@
     - [x] Ensure that closing the last window properly triggers the backend shutdown sequence.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
 
-## Phase 3: Testing and Refactoring
+## Phase 3: Testing and Refactoring [checkpoint: b98d9f5]
 - [x] Task: Test multi-window lifecycle.
     - [x] Open the main window, spawn a secondary window.
     - [x] Close the main window and verify the secondary window and backend remain running.
