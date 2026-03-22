@@ -19,3 +19,6 @@
     - [x] Close the secondary window and verify the application fully terminates.
 - [x] Task: Refactor any messy window event handling code.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Testing and Refactoring' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 601df14
