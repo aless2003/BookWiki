@@ -129,7 +129,7 @@ dependencies = [
 
 [[package]]
 name = "bookwiki"
-version = "0.3.1"
+version = "0.5.0"
 dependencies = [
  "serde",
  "serde_json",
