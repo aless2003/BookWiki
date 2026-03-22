@@ -9,8 +9,3 @@
 
 - [x] **Track: A gradle task that edits the version of the program in all relevant files including but not limited to gradle itself, Tauri etc.**
 *Link: [./tracks/version_sync_20260221/](./tracks/version_sync_20260221/)*
-
----
-
-- [x] **Track: bug fix: The Application backend closes if the main window is closed, it should only stop if all windows are closed**
-*Link: [./tracks/fix_main_window_close_20260322/](./tracks/fix_main_window_close_20260322/)*
