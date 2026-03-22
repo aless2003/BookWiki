@@ -1,0 +1,8 @@
+{
+  "track_id": "fix_main_window_close_20260322",
+  "type": "bug fix",
+  "status": "new",
+  "created_at": "2026-03-22T00:00:00Z",
+  "updated_at": "2026-03-22T00:00:00Z",
+  "description": "bug fix: The Application backend closes if the main window is closed, it should only stop if all windows are closed"
+}
