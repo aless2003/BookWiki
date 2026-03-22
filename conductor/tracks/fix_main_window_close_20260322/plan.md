@@ -6,7 +6,7 @@
     - [ ] Determine if the backend process is killed explicitly on main window close or implicitly on application exit.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Investigation and Setup' (Protocol in workflow.md)
 
-## Phase 2: Implementation
+## Phase 2: Implementation [checkpoint: fcece01]
 - [x] Task: Update Tauri event handling.
     - [x] Modify the `RunEvent::WindowEvent` or `RunEvent::ExitRequested` handler to prevent exit if windows are still open.
     - [x] Ensure that closing the last window properly triggers the backend shutdown sequence.
