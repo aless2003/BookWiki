@@ -20,21 +20,20 @@ fn main() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                if window.label() == "main" {
-                    let state = window.state::<SidecarState>();
-                    let maybe_child = {
-                        let mut lock = state.0.lock().unwrap();
-                        lock.take()
-                    };
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| match event {
+            tauri::RunEvent::Exit => {
+                let state = app_handle.state::<SidecarState>();
+                let maybe_child = {
+                    let mut lock = state.0.lock().unwrap();
+                    lock.take()
+                };
 
-                    if let Some(child) = maybe_child {
-                        let _ = child.kill();
-                    }
+                if let Some(child) = maybe_child {
+                    let _ = child.kill();
                 }
             }
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+            _ => {}
+        });
 }

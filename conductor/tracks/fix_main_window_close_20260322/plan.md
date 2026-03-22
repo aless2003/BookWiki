@@ -7,10 +7,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Investigation and Setup' (Protocol in workflow.md)
 
 ## Phase 2: Implementation
-- [ ] Task: Update Tauri event handling.
-    - [ ] Modify the `RunEvent::WindowEvent` or `RunEvent::ExitRequested` handler to prevent exit if windows are still open.
-    - [ ] Ensure that closing the last window properly triggers the backend shutdown sequence.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
+- [x] Task: Update Tauri event handling.
+    - [x] Modify the `RunEvent::WindowEvent` or `RunEvent::ExitRequested` handler to prevent exit if windows are still open.
+    - [x] Ensure that closing the last window properly triggers the backend shutdown sequence.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Testing and Refactoring
 - [ ] Task: Test multi-window lifecycle.
