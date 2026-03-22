@@ -1,6 +1,6 @@
 # Implementation Plan: Fix Application Exit on Main Window Close
 
-## Phase 1: Investigation and Setup
+## Phase 1: Investigation and Setup [checkpoint: b64a634]
 - [x] Task: Investigate Tauri configuration for window exit behavior.
     - [ ] Locate `main.rs` and identify the application lifecycle event listeners.
     - [ ] Determine if the backend process is killed explicitly on main window close or implicitly on application exit.
