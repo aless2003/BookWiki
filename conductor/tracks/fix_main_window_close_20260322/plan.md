@@ -13,9 +13,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Testing and Refactoring
-- [ ] Task: Test multi-window lifecycle.
-    - [ ] Open the main window, spawn a secondary window.
-    - [ ] Close the main window and verify the secondary window and backend remain running.
-    - [ ] Close the secondary window and verify the application fully terminates.
-- [ ] Task: Refactor any messy window event handling code.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Testing and Refactoring' (Protocol in workflow.md)
+- [x] Task: Test multi-window lifecycle.
+    - [x] Open the main window, spawn a secondary window.
+    - [x] Close the main window and verify the secondary window and backend remain running.
+    - [x] Close the secondary window and verify the application fully terminates.
+- [x] Task: Refactor any messy window event handling code.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Testing and Refactoring' (Protocol in workflow.md)
