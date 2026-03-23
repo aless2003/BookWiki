@@ -42,6 +42,7 @@ import {
     Pets as SpeciesIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useToast } from '../utils/toast';
 import { WindowService } from '../utils/WindowService';
 import RichTextEditor from '../components/RichTextEditor';
 import { darkTheme } from '../theme';
@@ -124,6 +125,7 @@ const Worldbuilding: React.FC = () => {
     const { storyId } = useParams<{ storyId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
+    const { success, error } = useToast();
     const [activeCategory, setActiveCategory] = useState('Characters');
     
     // Lists
@@ -291,29 +293,58 @@ const Worldbuilding: React.FC = () => {
         setIsEditing(true);
     };
 
+    const isSaving = useRef(false);
+    const lastSaveTime = useRef(0);
+    const editEntryRef = useRef<WorldbuildingEntry | null>(null);
+    const activeCategoryRef = useRef(activeCategory);
+
+    useEffect(() => {
+        editEntryRef.current = editEntry;
+        activeCategoryRef.current = activeCategory;
+    }, [editEntry, activeCategory]);
+
     const handleSave = useCallback(() => {
-        if (!editEntry || !storyId) return;
-        const cat = categories.find(c => c.name === activeCategory);
+        const currentEditEntry = editEntryRef.current;
+        const currentActiveCategory = activeCategoryRef.current;
+
+        const now = Date.now();
+        if (!currentEditEntry || !storyId || isSaving.current || (now - lastSaveTime.current < 1000)) {
+            return;
+        }
+
+        isSaving.current = true;
+        const cat = categories.find(c => c.name === currentActiveCategory);
         if (!cat) return;
 
-        const method = editEntry.id ? 'PUT' : 'POST';
-        const url = editEntry.id 
-            ? `http://localhost:3906/api/${cat.endpoint}/${editEntry.id}`
+        const method = currentEditEntry.id ? 'PUT' : 'POST';
+        const url = currentEditEntry.id 
+            ? `http://localhost:3906/api/${cat.endpoint}/${currentEditEntry.id}`
             : `http://localhost:3906/api/stories/${storyId}/${cat.endpoint}`;
 
         fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(editEntry)
+            body: JSON.stringify(currentEditEntry)
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Save failed');
+            return res.json();
+        })
         .then(() => {
+            success('Saved successfully');
+            lastSaveTime.current = Date.now();
             fetchData();
             setIsEditing(false);
             setEditEntry(null);
         })
-        .catch(err => console.error(err));
-    }, [editEntry, storyId, activeCategory, fetchData]);
+        .catch(err => {
+            console.error(err);
+            error('Failed to save');
+        })
+        .finally(() => {
+            isSaving.current = false;
+        });
+    }, [storyId, fetchData, success, error]);
 
     // Optimize CTRL+S listener with a Ref to avoid constant re-binding
     const saveRef = useRef(handleSave);
@@ -338,10 +369,16 @@ const Worldbuilding: React.FC = () => {
         if (!cat) return;
 
         fetch(`http://localhost:3906/api/${cat.endpoint}/${id}`, { method: 'DELETE' })
-            .then(() => {
+            .then(res => {
+                if (!res.ok) throw new Error('Delete failed');
+                success('Deleted successfully');
                 fetchData();
                 setIsEditing(false);
                 setEditEntry(null);
+            })
+            .catch(err => {
+                console.error(err);
+                error('Failed to delete');
             });
     };
 
@@ -357,13 +394,20 @@ const Worldbuilding: React.FC = () => {
             method: 'POST',
             body: formData,
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Upload failed');
+            return res.json();
+        })
         .then(data => {
             if (data.id && editEntry) {
                 setEditEntry((prev: any) => ({ ...prev, pictureUrl: `#{image:${data.id}}` }));
+                success('Image uploaded');
             }
         })
-        .catch(err => console.error('Upload failed', err))
+        .catch(err => {
+            console.error('Upload failed', err);
+            error('Failed to upload image');
+        })
         .finally(() => setIsUploading(false));
     };
 

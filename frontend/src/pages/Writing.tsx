@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { MdArrowBack, MdSave, MdPublish, MdOutlineDescription, MdSettings, MdMoreVert, MdAdd, MdDelete, MdEmojiEmotions } from 'react-icons/md';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useToast } from '../utils/toast';
+import { debounce } from '../utils/debounce';
 import { WindowService } from '../utils/WindowService';
 import TiptapPagedEditor from '../components/TiptapPagedEditor';
 import ExportModal from '../components/ExportModal';
@@ -29,6 +31,7 @@ const Writing: React.FC = () => {
   const navigate = useNavigate();
   const { storyId } = useParams<{ storyId: string }>();
   const [searchParams] = useSearchParams();
+  const { success, error } = useToast();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -140,10 +143,28 @@ const Writing: React.FC = () => {
       a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' })
   );
 
-  const handleSave = React.useCallback(async (chapterToSave?: Chapter) => {
-      const targetChapter = chapterToSave || selectedChapter;
-      if (!targetChapter) return;
+  const chaptersRef = useRef<Chapter[]>([]);
+  const selectedChapterIdRef = useRef<number | null>(null);
 
+  useEffect(() => {
+      chaptersRef.current = chapters;
+      selectedChapterIdRef.current = selectedChapterId;
+  }, [chapters, selectedChapterId]);
+
+  const isSaving = useRef(false);
+  const lastSaveTime = useRef(0);
+
+  const performSave = React.useCallback(async (chapterToSave?: Chapter) => {
+      // Use ref for state to keep this callback stable
+      const targetChapter = chapterToSave || chaptersRef.current.find(c => c.id === selectedChapterIdRef.current);
+      
+      // If we are already saving, or saved very recently (less than 1s ago), skip
+      const now = Date.now();
+      if (!targetChapter || isSaving.current || (now - lastSaveTime.current < 1000)) {
+          return;
+      }
+
+      isSaving.current = true;
       try {
           const response = await fetch(`http://localhost:3906/api/chapters/${targetChapter.id}`, {
               method: 'PUT',
@@ -156,20 +177,36 @@ const Writing: React.FC = () => {
               setChapters(prev => prev.map(c =>
                   c.id === updatedChapter.id ? { ...updatedChapter, notes: updatedChapter.notes || [] } : c
               ));
+              success('Saved successfully');
+              lastSaveTime.current = Date.now();
+          } else {
+              error('Failed to save');
           }
       } catch (err) {
           console.error('Error saving chapter:', err);
+          error('Failed to save');
+      } finally {
+          isSaving.current = false;
       }
-  }, [selectedChapter]);
+  }, [success, error]);
+
+  const debouncedSave = useMemo(() => debounce(() => performSave(), 1000), [performSave]);
+
+  const handleSave = (chapterToSave?: Chapter) => {
+      // If immediate save called, we should ideally cancel any pending debounced save
+      // but our simple debounce doesn't support cancel yet. 
+      // isSaving.current guard in performSave handles concurrency.
+      performSave(chapterToSave);
+  };
 
   const handleChapterSwitch = (newId: number) => {
       if (selectedChapterId === newId) return;
-      if (selectedChapter) handleSave(selectedChapter);
+      if (selectedChapter) performSave(selectedChapter);
       setSelectedChapterId(newId);
   };
 
   const handleCreateChapter = async () => {
-      if (selectedChapter) handleSave(selectedChapter);
+      if (selectedChapter) performSave(selectedChapter);
 
       const newTitle = `Chapter ${chapters.length + 1}`;
       try {
@@ -184,9 +221,13 @@ const Writing: React.FC = () => {
               const chapterWithNotes = { ...newChapter, notes: [] };
               setChapters(prev => [...prev, chapterWithNotes]);
               setSelectedChapterId(newChapter.id);
+              success('Chapter created');
+          } else {
+              error('Failed to create chapter');
           }
       } catch (err) {
           console.error('Error creating chapter:', err);
+          error('Failed to create chapter');
       }
   };
 
@@ -208,9 +249,13 @@ const Writing: React.FC = () => {
               if (selectedChapterId === chapterId) {
                   setSelectedChapterId(null);
               }
+              success('Chapter deleted');
+          } else {
+              error('Failed to delete chapter');
           }
       } catch (err) {
           console.error('Error deleting chapter:', err);
+          error('Failed to delete chapter');
       }
   };
 
@@ -218,15 +263,16 @@ const Writing: React.FC = () => {
   useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
           if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-              if (selectedChapter) {
+              const currentChapter = chaptersRef.current.find(c => c.id === selectedChapterIdRef.current);
+              if (currentChapter) {
                   e.preventDefault();
-                  handleSave();
+                  performSave();
               }
           }
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedChapter, handleSave]);
+  }, [performSave]);
 
   const updateChapterContent = (newContent: string) => {
       if (selectedChapterId === null) return;
@@ -422,7 +468,7 @@ const Writing: React.FC = () => {
                       onRefreshEmotes={fetchEmotes}
                       onChange={updateChapterContent}
                       onPageCountChange={setPageCount}
-                      onSave={() => handleSave()}
+                      onSave={debouncedSave}
                       onMentionClick={handleMentionClick}
                       storyId={storyId}
                     />

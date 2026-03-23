@@ -8,13 +8,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Setup Toast Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Integrate with Save Operations
-- [ ] Task: Update Worldbuilding Wiki save handlers.
-    - [ ] Locate the API call/save handlers for Characters, Locations, Species, etc.
-    - [ ] Inject `useToast().success("Saved")` on successful promises.
-    - [ ] Inject `useToast().error("Failed to save")` on rejected promises.
-- [ ] Task: Update Writing Studio save handlers.
-    - [ ] Locate the auto-save and manual save handlers for Chapter content and notes.
-    - [ ] Inject success and error toasts appropriately.
+- [x] Task: Update Worldbuilding Wiki save handlers.
+    - [x] Locate the API call/save handlers for Characters, Locations, Species, etc.
+    - [x] Inject `useToast().success("Saved")` on successful promises.
+    - [x] Inject `useToast().error("Failed to save")` on rejected promises.
+- [x] Task: Update Writing Studio save handlers.
+    - [x] Locate the auto-save and manual save handlers for Chapter content and notes.
+    - [x] Inject success and error toasts appropriately.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Integrate with Save Operations' (Protocol in workflow.md)
 
 ## Phase 3: Unsaved Changes State
