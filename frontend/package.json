@@ -27,6 +27,7 @@
     "@tiptap/react": "^3.19.0",
     "@tiptap/starter-kit": "^3.19.0",
     "bootstrap": "^5.3.8",
+    "notistack": "^3.0.2",
     "quill-mention": "^6.1.1",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",

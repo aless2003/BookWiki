@@ -1,11 +1,11 @@
 # Implementation Plan: Global Save Indicator (Toast Notifications)
 
 ## Phase 1: Setup Toast Infrastructure
-- [ ] Task: Evaluate and integrate a Toast/Snackbar library.
-    - [ ] Research options suitable for React/MUI (e.g., `notistack`, or build a custom context using MUI's `<Snackbar>`).
-    - [ ] Add the chosen library to dependencies or implement the custom context provider at the root of the application (`App.tsx` or similar).
-    - [ ] Create a globally accessible hook (e.g., `useToast()`) to trigger notifications from any component.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Setup Toast Infrastructure' (Protocol in workflow.md)
+- [x] Task: Evaluate and integrate a Toast/Snackbar library.
+    - [x] Research options suitable for React/MUI (e.g., `notistack`, or build a custom context using MUI's `<Snackbar>`).
+    - [x] Add the chosen library to dependencies or implement the custom context provider at the root of the application (`App.tsx` or similar).
+    - [x] Create a globally accessible hook (e.g., `useToast()`) to trigger notifications from any component.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Setup Toast Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Integrate with Save Operations
 - [ ] Task: Update Worldbuilding Wiki save handlers.

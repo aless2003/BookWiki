@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Worldbuilding from './pages/Worldbuilding';
@@ -72,19 +73,21 @@ function App() {
 
   return (
     <BackendStatusGuard>
-      <div className="vh-100 d-flex flex-column overflow-hidden">
-        <Navigation />
-        <div className="flex-grow-1 overflow-hidden position-relative">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/world/:storyId" element={<Worldbuilding />} />
-            <Route path="/world" element={<StorySelector mode="world" />} />
-            <Route path="/stories" element={<StorySelector mode="write" />} />
-            <Route path="/write/:storyId" element={<Writing />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
+      <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+        <div className="vh-100 d-flex flex-column overflow-hidden">
+          <Navigation />
+          <div className="flex-grow-1 overflow-hidden position-relative">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/world/:storyId" element={<Worldbuilding />} />
+              <Route path="/world" element={<StorySelector mode="world" />} />
+              <Route path="/stories" element={<StorySelector mode="write" />} />
+              <Route path="/write/:storyId" element={<Writing />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </div>
         </div>
-      </div>
+      </SnackbarProvider>
     </BackendStatusGuard>
   );
 }
