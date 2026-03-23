@@ -29,3 +29,8 @@
 
 - [ ] **Track: Feature: Desktop App save at specific location (browser too if possible)**
 *Link: [./tracks/specific_save_location_20260322/](./tracks/specific_save_location_20260322/)*
+
+---
+
+- [ ] **Track: Feature: Show Save Indicator on save**
+*Link: [./tracks/global_save_indicator_20260322/](./tracks/global_save_indicator_20260322/)*

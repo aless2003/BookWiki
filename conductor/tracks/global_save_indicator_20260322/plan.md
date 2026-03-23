@@ -1,0 +1,27 @@
+# Implementation Plan: Global Save Indicator (Toast Notifications)
+
+## Phase 1: Setup Toast Infrastructure
+- [ ] Task: Evaluate and integrate a Toast/Snackbar library.
+    - [ ] Research options suitable for React/MUI (e.g., `notistack`, or build a custom context using MUI's `<Snackbar>`).
+    - [ ] Add the chosen library to dependencies or implement the custom context provider at the root of the application (`App.tsx` or similar).
+    - [ ] Create a globally accessible hook (e.g., `useToast()`) to trigger notifications from any component.
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Setup Toast Infrastructure' (Protocol in workflow.md)
+
+## Phase 2: Integrate with Save Operations
+- [ ] Task: Update Worldbuilding Wiki save handlers.
+    - [ ] Locate the API call/save handlers for Characters, Locations, Species, etc.
+    - [ ] Inject `useToast().success("Saved")` on successful promises.
+    - [ ] Inject `useToast().error("Failed to save")` on rejected promises.
+- [ ] Task: Update Writing Studio save handlers.
+    - [ ] Locate the auto-save and manual save handlers for Chapter content and notes.
+    - [ ] Inject success and error toasts appropriately.
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Integrate with Save Operations' (Protocol in workflow.md)
+
+## Phase 3: Unsaved Changes State
+- [ ] Task: Implement 'Unsaved Changes' tracking.
+    - [ ] For key editors (Writing Studio, Worldbuilding forms), introduce a state boolean (e.g., `isDirty`).
+    - [ ] Set `isDirty` to true on any input change. Set to false upon successful save.
+- [ ] Task: Display 'Unsaved' warning.
+    - [ ] When `isDirty` is true, trigger a specific, non-dismissing (or long-duration) toast or a visual indicator in the header: "Unsaved changes...".
+    - [ ] Optionally, implement a `beforeunload` or router transition block to warn the user if they try to navigate away while `isDirty` is true.
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Unsaved Changes State' (Protocol in workflow.md)
