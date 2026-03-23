@@ -15,13 +15,13 @@
 - [x] Task: Update Writing Studio save handlers.
     - [x] Locate the auto-save and manual save handlers for Chapter content and notes.
     - [x] Inject success and error toasts appropriately.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Integrate with Save Operations' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Integrate with Save Operations' (Protocol in workflow.md)
 
-## Phase 3: Unsaved Changes State
-- [ ] Task: Implement 'Unsaved Changes' tracking.
-    - [ ] For key editors (Writing Studio, Worldbuilding forms), introduce a state boolean (e.g., `isDirty`).
-    - [ ] Set `isDirty` to true on any input change. Set to false upon successful save.
-- [ ] Task: Display 'Unsaved' warning.
-    - [ ] When `isDirty` is true, trigger a specific, non-dismissing (or long-duration) toast or a visual indicator in the header: "Unsaved changes...".
-    - [ ] Optionally, implement a `beforeunload` or router transition block to warn the user if they try to navigate away while `isDirty` is true.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Unsaved Changes State' (Protocol in workflow.md)
+## Phase 3: Unsaved Changes State [checkpoint: d742489]
+- [x] Task: Implement 'Unsaved Changes' tracking.
+    - [x] For key editors (Writing Studio, Worldbuilding forms), introduce a state boolean (e.g., `isDirty`).
+    - [x] Set `isDirty` to true on any input change. Set to false upon successful save.
+- [x] Task: Display 'Unsaved' warning.
+    - [x] When `isDirty` is true, trigger a specific, non-dismissing (or long-duration) toast or a visual indicator in the header: "Unsaved changes...".
+    - [x] Optionally, implement a `beforeunload` or router transition block to warn the user if they try to navigate away while `isDirty` is true.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Unsaved Changes State' (Protocol in workflow.md)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Container, Row, Col, Button, Form } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Badge } from 'react-bootstrap';
 import { MdArrowBack, MdSave, MdPublish, MdOutlineDescription, MdSettings, MdMoreVert, MdAdd, MdDelete, MdEmojiEmotions } from 'react-icons/md';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useToast } from '../utils/toast';
@@ -33,6 +33,7 @@ const Writing: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { success, error } = useToast();
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageCount, setPageCount] = useState(1);
@@ -178,6 +179,7 @@ const Writing: React.FC = () => {
                   c.id === updatedChapter.id ? { ...updatedChapter, notes: updatedChapter.notes || [] } : c
               ));
               success('Saved successfully');
+              setIsDirty(false);
               lastSaveTime.current = Date.now();
           } else {
               error('Failed to save');
@@ -276,6 +278,7 @@ const Writing: React.FC = () => {
 
   const updateChapterContent = (newContent: string) => {
       if (selectedChapterId === null) return;
+      setIsDirty(true);
       setChapters(prev => prev.map(c =>
           c.id === selectedChapterId ? { ...c, content: newContent } : c
       ));
@@ -283,6 +286,7 @@ const Writing: React.FC = () => {
 
   const updateChapterTitle = (newTitle: string) => {
       if (selectedChapterId === null) return;
+      setIsDirty(true);
       setChapters(prev => prev.map(c =>
           c.id === selectedChapterId ? { ...c, title: newTitle } : c
       ));
@@ -291,6 +295,7 @@ const Writing: React.FC = () => {
   // Note Handling
   const handleUpdateNote = (index: number, content: string) => {
       if (selectedChapterId === null) return;
+      setIsDirty(true);
       setChapters(prev => prev.map(c => {
           if (c.id === selectedChapterId) {
               const updatedNotes = [...c.notes];
@@ -303,6 +308,7 @@ const Writing: React.FC = () => {
 
   const handleDeleteNote = (index: number) => {
       if (selectedChapterId === null) return;
+      setIsDirty(true);
       setChapters(prev => prev.map(c => {
           if (c.id === selectedChapterId) {
               const updatedNotes = c.notes.filter((_, i) => i !== index);
@@ -314,6 +320,7 @@ const Writing: React.FC = () => {
 
   const handleNoteAdd = () => {
       if (selectedChapterId === null) return;
+      setIsDirty(true);
       setChapters(prev => prev.map(c => {
           if (c.id === selectedChapterId) {
               return { ...c, notes: [...c.notes, { content: '' }] };
@@ -340,6 +347,18 @@ const Writing: React.FC = () => {
       }
   };
 
+  // Unsaved changes warning
+  useEffect(() => {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+          if (isDirty) {
+              e.preventDefault();
+              e.returnValue = '';
+          }
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   if (isLoading) return <div className="text-light p-5">Loading studio...</div>;
 
   return (
@@ -352,25 +371,28 @@ const Writing: React.FC = () => {
                     <MdArrowBack size={24} />
                 </Button>
                 <div>
-                  <Form.Control
-                      type="text"
-                      className="m-0 fw-bold bg-transparent border-0 text-light p-0 shadow-none"
-                      style={{ fontSize: '1rem', fontWeight: 'bold' }}
-                      value={selectedChapter?.title || ''}
-                      onChange={(e) => updateChapterTitle(e.target.value)}
-                      disabled={!selectedChapter}
-                      placeholder="Chapter Title"
-                      onBlur={() => handleSave()}
-                      onKeyDown={(e) => {
-                          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                              e.preventDefault();
-                              handleSave();
-                          }
-                          if (e.key === 'Enter') {
-                              e.currentTarget.blur();
-                          }
-                      }}
-                  />
+                  <div className="d-flex align-items-center gap-2">
+                      <Form.Control
+                          type="text"
+                          className="m-0 fw-bold bg-transparent border-0 text-light p-0 shadow-none"
+                          style={{ fontSize: '1rem', fontWeight: 'bold' }}
+                          value={selectedChapter?.title || ''}
+                          onChange={(e) => updateChapterTitle(e.target.value)}
+                          disabled={!selectedChapter}
+                          placeholder="Chapter Title"
+                          onBlur={() => handleSave()}
+                          onKeyDown={(e) => {
+                              if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                                  e.preventDefault();
+                                  handleSave();
+                              }
+                              if (e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                              }
+                          }}
+                      />
+                      {isDirty && <Badge bg="warning" text="dark" style={{ fontSize: '0.65rem' }}>Unsaved</Badge>}
+                  </div>
                   <div className="d-flex gap-2 align-items-center">
                       <small className="text-secondary">Last edited just now</small>
                       <span className="text-secondary" style={{ fontSize: '0.8rem' }}>•</span>

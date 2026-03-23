@@ -150,11 +150,12 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
     }
   }, [content, allEntities]); 
 
-  const handleChange = (html: string) => {
+  const handleChange = (html: string, _delta: any, source: string) => {
     setValue(html);
+    if (source !== 'user') return; // Only trigger if the user actually typed something
+    
     const shortcodeVersion = toShortcodes(html);
     if (shortcodeVersion !== lastSentContent.current) {
-        console.log("Saving as shortcode:", shortcodeVersion); // Debug log
         lastSentContent.current = shortcodeVersion;
         onChangeRef.current(shortcodeVersion);
     }

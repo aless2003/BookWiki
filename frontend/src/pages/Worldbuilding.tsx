@@ -135,6 +135,7 @@ const Worldbuilding: React.FC = () => {
     const [items, setItems] = useState<Item[]>([]);
     const [lore, setLore] = useState<Lore[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDirty, setIsDirty] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     
@@ -143,6 +144,11 @@ const Worldbuilding: React.FC = () => {
     const [editEntry, setEditEntry] = useState<WorldbuildingEntry | null>(null); 
     const [isUploading, setIsUploading] = useState(false);
     const [newTrait, setNewTrait] = useState('');
+
+    const markDirty = useCallback((updater: any) => {
+        setIsDirty(true);
+        setEditEntry(updater);
+    }, []);
 
     const fetchData = useCallback(() => {
         if (!storyId) return;
@@ -175,6 +181,7 @@ const Worldbuilding: React.FC = () => {
     }, [storyId, activeCategory, navigate, fetchData]);
 
     const handleEditStart = useCallback((entry: WorldbuildingEntry) => {
+        setIsDirty(false);
         if (activeCategory === 'Characters') {
             const char = entry as Character;
             setEditEntry({ ...char, traits: char.traits || [] });
@@ -240,6 +247,7 @@ const Worldbuilding: React.FC = () => {
     }, [location.search, activeCategory, characters, locations, species, items, lore, navigate, handleEditStart, location.pathname]);
 
     const handleCreateNew = () => {
+        setIsDirty(false);
         if (activeCategory === 'Characters') {
             setEditEntry({
                 name: '',
@@ -332,6 +340,7 @@ const Worldbuilding: React.FC = () => {
         })
         .then(() => {
             success('Saved successfully');
+            setIsDirty(false);
             lastSaveTime.current = Date.now();
             fetchData();
             setIsEditing(false);
@@ -400,7 +409,7 @@ const Worldbuilding: React.FC = () => {
         })
         .then(data => {
             if (data.id && editEntry) {
-                setEditEntry((prev: any) => ({ ...prev, pictureUrl: `#{image:${data.id}}` }));
+                markDirty((prev: any) => ({ ...prev, pictureUrl: `#{image:${data.id}}` }));
                 success('Image uploaded');
             }
         })
@@ -413,7 +422,7 @@ const Worldbuilding: React.FC = () => {
 
     const addTrait = () => {
         if (!newTrait.trim() || !editEntry) return;
-        setEditEntry({
+        markDirty({
             ...editEntry,
             traits: [...((editEntry as Character).traits || []), newTrait.trim()]
         });
@@ -424,19 +433,19 @@ const Worldbuilding: React.FC = () => {
         if (!editEntry) return;
         const newTraits = [...((editEntry as Character).traits || [])];
         newTraits.splice(index, 1);
-        setEditEntry({ ...editEntry, traits: newTraits });
+        markDirty({ ...editEntry, traits: newTraits });
     };
 
     const updateSection = (index: number, field: keyof Section, value: string) => {
         if (!editEntry) return;
         const newSections = [...editEntry.customSections];
         newSections[index] = { ...newSections[index], [field]: value };
-        setEditEntry({ ...editEntry, customSections: newSections });
+        markDirty({ ...editEntry, customSections: newSections });
     };
 
     const addSection = () => {
         if (!editEntry) return;
-        setEditEntry({
+        markDirty({
             ...editEntry,
             customSections: [...editEntry.customSections, { title: 'New Section', content: '<p>Content...</p>' }]
         });
@@ -446,8 +455,25 @@ const Worldbuilding: React.FC = () => {
         if (!editEntry) return;
         const newSections = [...editEntry.customSections];
         newSections.splice(index, 1);
-        setEditEntry({ ...editEntry, customSections: newSections });
+        markDirty({ ...editEntry, customSections: newSections });
     };
+
+    useEffect(() => {
+        // This used to set isDirty to true automatically on any entry load.
+        // We now rely on markDirty wrapper for user-initiated changes.
+    }, [editEntry, isEditing]);
+
+    // Unsaved changes warning
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
 
     const onSearchChange = (_event: React.SyntheticEvent, value: WorldbuildingEntry | null) => {
         if (value) {
@@ -563,7 +589,17 @@ const Worldbuilding: React.FC = () => {
         return (
             <Box sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, alignItems: 'center' }}>
-                    <Typography variant="h4">{editEntry.id ? 'Edit' : 'Create'} {activeCategory.slice(0, -1)}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="h4">{editEntry.id ? 'Edit' : 'Create'} {activeCategory.slice(0, -1)}</Typography>
+                        {isDirty && (
+                            <Chip 
+                                label="Unsaved" 
+                                color="warning" 
+                                size="small" 
+                                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 'bold' }} 
+                            />
+                        )}
+                    </Box>
                     <Stack direction="row" spacing={2}>
                         {editEntry.id && (
                             <Button 
@@ -647,7 +683,7 @@ const Worldbuilding: React.FC = () => {
                                 fullWidth
                                 label="Name"
                                 value={editEntry.name}
-                                onChange={(e) => setEditEntry({ ...editEntry, name: e.target.value })}
+                                onChange={(e) => markDirty({ ...editEntry, name: e.target.value })}
                                 sx={{ mb: 2 }}
                             />
 
@@ -657,21 +693,21 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Birthday / Age"
                                                                     value={(editEntry as Character).birthday}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), birthday: e.target.value })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Character), birthday: e.target.value })}
                                                                     sx={{ mb: 2 }}
                                                                 />
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Role"
                                                                     value={(editEntry as Character).role}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), role: e.target.value })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Character), role: e.target.value })}
                                                                     sx={{ mb: 2 }}
                                                                 />
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Social Status"
                                                                     value={(editEntry as Character).socialStatus}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), socialStatus: e.target.value })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Character), socialStatus: e.target.value })}
                                                                     sx={{ mb: 2 }}
                                                                 />
                             
@@ -680,7 +716,7 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Species / Race"
                                                                     value={(editEntry as Character).speciesId || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Character), speciesId: (e.target.value as any) || undefined })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Character), speciesId: (e.target.value as any) || undefined })}
                                                                     sx={{ mb: 2 }}
                                                                 >
                                                                     <MenuItem value="">Unknown</MenuItem>
@@ -715,7 +751,7 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Category"
                                                                     value={(editEntry as Species).category}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), category: e.target.value as any })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), category: e.target.value as any })}
                                                                     sx={{ mb: 2 }}
                                                                 >
                                                                     <MenuItem value="SPECIES">Species</MenuItem>
@@ -729,7 +765,7 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Parent Species"
                                                                     value={(editEntry as Species).parentId || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), parentId: (e.target.value as any) || undefined })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), parentId: (e.target.value as any) || undefined })}
                                                                     sx={{ mb: 2 }}
                                                                 >
                                                                     <MenuItem value="">None</MenuItem>
@@ -746,7 +782,7 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Habitat (Location)"
                                                                     value={(editEntry as Species).habitatId || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), habitatId: (e.target.value as any) || undefined })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), habitatId: (e.target.value as any) || undefined })}
                                                                     sx={{ mb: 2 }}
                                                                 >
                                                                     <MenuItem value="">Unknown</MenuItem>
@@ -759,21 +795,21 @@ const Worldbuilding: React.FC = () => {
                                                                     fullWidth
                                                                     label="Lifespan"
                                                                     value={(editEntry as Species).lifespan || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), lifespan: e.target.value })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), lifespan: e.target.value })}
                                                                     sx={{ mb: 2 }}
                                                                 />
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Average Size"
                                                                     value={(editEntry as Species).averageSize || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), averageSize: e.target.value })}
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), averageSize: e.target.value })}
                                                                     sx={{ mb: 2 }}
                                                                 />
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Diet"
                                                                     value={(editEntry as Species).diet || ''}
-                                                                    onChange={(e) => setEditEntry({ ...(editEntry as Species), diet: e.target.value })}    
+                                                                    onChange={(e) => markDirty({ ...(editEntry as Species), diet: e.target.value })}    
                                                                     sx={{ mb: 2 }}
                                                                 />
                                                             </>
@@ -788,7 +824,7 @@ const Worldbuilding: React.FC = () => {
                                                     const loreEntry = editEntry as Lore;
                                                     const newCats = [...loreEntry.categories];
                                                     newCats.splice(i, 1);
-                                                    setEditEntry({ ...loreEntry, categories: newCats });
+                                                    markDirty({ ...loreEntry, categories: newCats });
                                                 }} size="small" />
                                             ))}
                                         </Stack>
@@ -801,7 +837,7 @@ const Worldbuilding: React.FC = () => {
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && newTrait.trim()) {
                                                     const loreEntry = editEntry as Lore;
-                                                    setEditEntry({
+                                                    markDirty({
                                                         ...loreEntry,
                                                         categories: [...(loreEntry.categories || []), newTrait.trim()]
                                                     });
@@ -827,7 +863,7 @@ const Worldbuilding: React.FC = () => {
                                 species={species}
                                 items={items}
                                 lore={lore}
-                                onChange={(html) => setEditEntry({ ...editEntry, description: html })}
+                                onChange={(html) => markDirty({ ...editEntry, description: html })}
                                 onMentionClick={handleMentionClick}
                                 minHeight={300}
                                 onSave={handleSave}
@@ -845,7 +881,7 @@ const Worldbuilding: React.FC = () => {
                                     species={species}
                                     items={items}
                                     lore={lore}
-                                    onChange={(html) => setEditEntry({ ...(editEntry as Character), appearance: html })}
+                                    onChange={(html) => markDirty({ ...(editEntry as Character), appearance: html })}
                                     onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
@@ -865,7 +901,7 @@ const Worldbuilding: React.FC = () => {
                                         species={species}
                                         items={items}
                                         lore={lore}
-                                        onChange={(html) => setEditEntry({ ...(editEntry as Location), whereItIs: html })}
+                                        onChange={(html) => markDirty({ ...(editEntry as Location), whereItIs: html })}
                                         onMentionClick={handleMentionClick}
                                         minHeight={150}
                                         onSave={handleSave}
@@ -881,7 +917,7 @@ const Worldbuilding: React.FC = () => {
                                         species={species}
                                         items={items}
                                         lore={lore}
-                                        onChange={(html) => setEditEntry({ ...(editEntry as Location), details: html })}
+                                        onChange={(html) => markDirty({ ...(editEntry as Location), details: html })}
                                         onMentionClick={handleMentionClick}
                                         minHeight={200}
                                         onSave={handleSave}
