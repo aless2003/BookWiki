@@ -9,3 +9,8 @@
 
 - [x] **Track: A gradle task that edits the version of the program in all relevant files including but not limited to gradle itself, Tauri etc.**
 *Link: [./tracks/version_sync_20260221/](./tracks/version_sync_20260221/)*
+
+---
+
+- [ ] **Track: Feature Change: Instead of having actual text in stuff like the description/custom sections of Worldbuilding entries "ghost text" that you can just overwrite by clicking into the text field would probably be better**
+*Link: [./tracks/wb_placeholders_20260322/](./tracks/wb_placeholders_20260322/)*
