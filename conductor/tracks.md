@@ -32,7 +32,7 @@
 
 ---
 
-- [ ] **Track: Feature: Show Save Indicator on save**
+- [x] **Track: Feature: Show Save Indicator on save**
 *Link: [./tracks/global_save_indicator_20260322/](./tracks/global_save_indicator_20260322/)*
 
 ---
