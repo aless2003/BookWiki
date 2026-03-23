@@ -1,6 +1,6 @@
 # Implementation Plan: Global Save Indicator (Toast Notifications)
 
-## Phase 1: Setup Toast Infrastructure
+## Phase 1: Setup Toast Infrastructure [checkpoint: dd91904]
 - [x] Task: Evaluate and integrate a Toast/Snackbar library.
     - [x] Research options suitable for React/MUI (e.g., `notistack`, or build a custom context using MUI's `<Snackbar>`).
     - [x] Add the chosen library to dependencies or implement the custom context provider at the root of the application (`App.tsx` or similar).
