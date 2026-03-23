@@ -20,3 +20,4 @@ BookWiki is a platform designed to empower writers and worldbuilders by providin
 - **Deep Integration:** Bi-directional navigation and deep-linking between the writing studio and the worldbuilding wiki to facilitate an efficient creative workflow.
 - **Multi-Window Support:** The ability to pop-out worldbuilding entries or chapters into secondary OS-level windows via middle-click, allowing for parallel referencing and editing across multiple monitors.
 - **Data Portability & Backups:** A robust system for exporting entire projects or individual stories into portable `.bwiki` archives, with full import and merge capabilities to ensure data safety and easy project sharing.
+- **Global Save Indicators:** Real-time visual feedback via toast notifications and "Unsaved" state indicators across all modules, ensuring users are always aware of their data's sync status.

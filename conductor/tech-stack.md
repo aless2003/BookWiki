@@ -22,6 +22,7 @@
 - **UI Frameworks:** 
   - Material UI (MUI) - Primary for structured components.
   - React Bootstrap - Secondary for layout and specific components.
+  - `notistack`: For standardized toast notifications across the application.
 - **Rich Text Editing:** 
   - Tiptap v3 (Primary paged editor)
   - React Quill (Standardized robust editor)
