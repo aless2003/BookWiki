@@ -20,13 +20,13 @@
     - [x] Add a "View Taxonomy Tree" button on the `Worldbuilding` / `Species` detail view linking to the new route.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Setup and Routing' (Protocol in workflow.md)
 
-## Phase 3: Frontend Tree Implementation
-- [ ] Task: Write Tests for Taxonomy View.
-    - [ ] Write frontend component tests ensuring data fetching and correct rendering of the tree nodes.
+## Phase 3: Frontend Tree Implementation [checkpoint: ec0bca4]
 - [x] Task: Implement Expandable Tree UI.
     - [x] Fetch data from the new backend API endpoint.
     - [x] Render the tree hierarchy using an expandable component structure (e.g., Material UI `TreeView` or custom recursive components).
     - [x] Render each node with a small thumbnail and the species name.
     - [x] Configure node click to toggle expansion/collapse.
     - [x] Add an explicit "View" icon/button to each node to navigate to its respective species page.
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Frontend Tree Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Frontend Tree Implementation' (Protocol in workflow.md)
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [checkpoint: 30fc0a7]
