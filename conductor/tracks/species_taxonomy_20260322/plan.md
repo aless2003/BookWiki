@@ -1,6 +1,6 @@
 # Implementation Plan: Species Taxonomy Tree View
 
-## Phase 1: Backend API for Taxonomy Tree
+## Phase 1: Backend API for Taxonomy Tree [checkpoint: 14218ab]
 - [x] Task: Define DTOs for Taxonomy Tree.
     - [x] Create `SpeciesTreeNodeDTO` (id, name, pictureUrl, children).
     - [x] Create `SpeciesTaxonomyDTO` (parent node, target node).
@@ -13,12 +13,12 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend API for Taxonomy Tree' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Setup and Routing
-- [ ] Task: Create Taxonomy Tree View Component scaffolding.
-    - [ ] Scaffold `SpeciesTaxonomy.tsx` component.
-    - [ ] Implement React Router route for `/stories/:storyId/species/:speciesId/taxonomy`.
-- [ ] Task: Add Navigation Link in Species Detail Page.
-    - [ ] Add a "View Taxonomy Tree" button on the `Worldbuilding` / `Species` detail view linking to the new route.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Setup and Routing' (Protocol in workflow.md)
+- [~] Task: Create Taxonomy Tree View Component scaffolding.
+    - [x] Scaffold `SpeciesTaxonomy.tsx` component.
+    - [x] Implement React Router route for `/stories/:storyId/species/:speciesId/taxonomy`.
+- [x] Task: Add Navigation Link in Species Detail Page.
+    - [x] Add a "View Taxonomy Tree" button on the `Worldbuilding` / `Species` detail view linking to the new route.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Setup and Routing' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Tree Implementation
 - [ ] Task: Write Tests for Taxonomy View.

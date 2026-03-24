@@ -7,6 +7,7 @@ import Worldbuilding from './pages/Worldbuilding';
 import Writing from './pages/Writing';
 import StorySelector from './pages/StorySelector';
 import Settings from './pages/Settings';
+import SpeciesTaxonomy from './pages/SpeciesTaxonomy';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { API_BASE_URL } from './constants/api';
 
@@ -15,8 +16,8 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
   const [attempts, setAttempts] = useState(0);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
     let isMounted = true;
+    let interval: ReturnType<typeof setInterval>;
     
     const checkBackend = async () => {
       const controller = new AbortController();
@@ -80,6 +81,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/world/:storyId" element={<Worldbuilding />} />
+              <Route path="/world/:storyId/species/:speciesId/taxonomy" element={<SpeciesTaxonomy />} />
               <Route path="/world" element={<StorySelector mode="world" />} />
               <Route path="/stories" element={<StorySelector mode="write" />} />
               <Route path="/write/:storyId" element={<Writing />} />

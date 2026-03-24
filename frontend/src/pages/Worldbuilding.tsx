@@ -39,7 +39,8 @@ import {
     Delete as DeleteIcon, 
     Save as SaveIcon, 
     CloudUpload as CloudUploadIcon,
-    Pets as SpeciesIcon
+    Pets as SpeciesIcon,
+    AccountTree as AccountTreeIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../utils/toast';
@@ -601,6 +602,15 @@ const Worldbuilding: React.FC = () => {
                         )}
                     </Box>
                     <Stack direction="row" spacing={2}>
+                        {activeCategory === 'Species & Nature' && editEntry.id && (
+                            <Button
+                                variant="outlined"
+                                startIcon={<AccountTreeIcon />}
+                                onClick={() => navigate(`/world/${storyId}/species/${editEntry.id}/taxonomy`)}
+                            >
+                                View Taxonomy
+                            </Button>
+                        )}
                         {editEntry.id && (
                             <Button 
                                 variant="outlined" 
