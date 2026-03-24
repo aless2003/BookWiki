@@ -1,0 +1,8 @@
+{
+  "track_id": "wb_placeholders_20260322",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-03-22T00:00:00Z",
+  "updated_at": "2026-03-22T00:00:00Z",
+  "description": "Feature Change: Instead of having actual text in stuff like the description/custom sections of Worldbuilding entries \"ghost text\" that you can just overwrite by clicking into the text field would probably be better"
+}
