@@ -447,7 +447,7 @@ const Worldbuilding: React.FC = () => {
         if (!editEntry) return;
         markDirty({
             ...editEntry,
-            customSections: [...editEntry.customSections, { title: 'New Section', content: '<p>Content...</p>' }]
+            customSections: [...editEntry.customSections, { title: 'New Section', content: '' }]
         });
     };
 
