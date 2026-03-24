@@ -38,3 +38,4 @@ out/
 
 src/main/resources/static
 uploads`nscripts/dist/`nscripts/wrapper/target/
+frontend/src-tauri/target/
