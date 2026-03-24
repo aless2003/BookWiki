@@ -20,6 +20,7 @@ interface Entity {
 
 interface RichTextEditorProps {
   content: string;
+  placeholder?: string;
   characters?: Entity[];
   items?: Entity[];
   locations?: Entity[];
@@ -33,6 +34,7 @@ interface RichTextEditorProps {
 
 const RichTextEditor = forwardRef<any, RichTextEditorProps>(({ 
     content, 
+    placeholder = "Type # to link characters, items, locations, or lore...",
     characters = [], 
     items = [], 
     locations = [], 
@@ -248,7 +250,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         value={value} 
         onChange={handleChange}
         modules={modules}
-        placeholder="Type # to link characters, items, locations, or lore..."
+        placeholder={placeholder}
       />
       <style>{`
         .quill-bubble-wrapper {

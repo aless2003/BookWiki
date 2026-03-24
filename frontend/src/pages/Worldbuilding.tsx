@@ -256,17 +256,17 @@ const Worldbuilding: React.FC = () => {
                 socialStatus: '',
                 role: '',
                 traits: [],
-                appearance: '<p>Describe appearance...</p>',
-                description: '<p>Enter backstory...</p>',
+                appearance: '',
+                description: '',
                 customSections: []
             });
         } else if (activeCategory === 'Locations') {
             setEditEntry({
                 name: '',
                 pictureUrl: '',
-                description: '<p>What is this place?</p>',
-                whereItIs: '<p>Where is it located?</p>',
-                details: '<p>Important details (e.g. why is it important, when was it built)...</p>',
+                description: '',
+                whereItIs: '',
+                details: '',
                 customSections: []
             });
         } else if (activeCategory === 'Species & Nature') {
@@ -278,7 +278,7 @@ const Worldbuilding: React.FC = () => {
                 lifespan: '',
                 averageSize: '',
                 diet: '',
-                description: '<p>Describe this species/race...</p>',
+                description: '',
                 habitatId: undefined,
                 customSections: []
             });
@@ -286,7 +286,7 @@ const Worldbuilding: React.FC = () => {
             setEditEntry({
                 name: '',
                 pictureUrl: '',
-                description: '<p>What is this item?</p>',
+                description: '',
                 customSections: []
             });
         } else if (activeCategory === 'Lore') {
@@ -294,7 +294,7 @@ const Worldbuilding: React.FC = () => {
                 name: '',
                 pictureUrl: '',
                 categories: [],
-                description: '<p>Tell the story of this lore entry...</p>',
+                description: '',
                 customSections: []
             });
         }
@@ -858,6 +858,7 @@ const Worldbuilding: React.FC = () => {
                             <RichTextEditor 
                                 key={activeCategory + (editEntry.id || 'new')}
                                 content={editEntry.description} 
+                                placeholder={`Write a description for this ${activeCategory.slice(0, -1).toLowerCase()}...`}
                                 characters={characters}
                                 locations={locations}
                                 species={species}
@@ -876,6 +877,7 @@ const Worldbuilding: React.FC = () => {
                                 <RichTextEditor 
                                     key={`appearance-${editEntry.id || 'new'}`}
                                     content={(editEntry as Character).appearance} 
+                                    placeholder="Describe appearance..."
                                     characters={characters}
                                     locations={locations}
                                     species={species}
@@ -896,6 +898,7 @@ const Worldbuilding: React.FC = () => {
                                     <RichTextEditor 
                                         key={`where-${editEntry.id || 'new'}`}
                                         content={(editEntry as Location).whereItIs} 
+                                        placeholder="Where is this location located?"
                                         characters={characters}
                                         locations={locations}
                                         species={species}
@@ -912,6 +915,7 @@ const Worldbuilding: React.FC = () => {
                                     <RichTextEditor 
                                         key={`details-${editEntry.id || 'new'}`}
                                         content={(editEntry as Location).details} 
+                                        placeholder="Important details (e.g. why is it important, when was it built)..."
                                         characters={characters}
                                         locations={locations}
                                         species={species}
@@ -946,6 +950,7 @@ const Worldbuilding: React.FC = () => {
                                 <RichTextEditor 
                                     key={`section-${index}-${editEntry.id || 'new'}`}
                                     content={section.content} 
+                                    placeholder={`Details for ${section.title}...`}
                                     characters={characters}
                                     locations={locations}
                                     species={species}

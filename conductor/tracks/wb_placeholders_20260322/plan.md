@@ -11,13 +11,13 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Research and Component Setup' (Protocol in workflow.md)
 
 ## Phase 2: Implementation
-- [ ] Task: Remove default text initialization.
-    - [ ] Update creation logic for Characters and Locations to start with empty descriptions.
-    - [ ] Update the 'Add Custom Section' logic to initialize section content as an empty string.
-- [ ] Task: Pass dynamic placeholders to editors.
-    - [ ] For Description fields: Pass a string like "Write a description for this character...".
-    - [ ] For 'Where is it?' (Locations): Pass a string like "Describe where this location is...".
-    - [ ] For Custom Sections: Dynamically construct the string based on the section title (e.g., "Details for [Section Title]...").
+- [x] Task: Remove default text initialization.
+    - [x] Update creation logic for Characters and Locations to start with empty descriptions.
+    - [x] Update the 'Add Custom Section' logic to initialize section content as an empty string.
+- [x] Task: Pass dynamic placeholders to editors.
+    - [x] For Description fields: Pass a string like "Write a description for this character...".
+    - [x] For 'Where is it?' (Locations): Pass a string like "Describe where this location is...".
+    - [x] For Custom Sections: Dynamically construct the string based on the section title (e.g., "Details for [Section Title]...").
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Testing and Refinement
