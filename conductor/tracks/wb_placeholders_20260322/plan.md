@@ -1,13 +1,13 @@
 # Implementation Plan: Worldbuilding Rich Text Placeholders
 
 ## Phase 1: Research and Component Setup
-- [ ] Task: Identify text initialization logic.
-    - [ ] Locate frontend components responsible for creating new Characters, Locations, and adding new Custom Sections.
-    - [ ] Pinpoint where the default "actual text" is currently set for these fields.
-- [ ] Task: Evaluate Editor Component Placeholder Support.
-    - [ ] Identify the specific rich text editor component used for these fields (Tiptap or Quill).
-    - [ ] Verify how to pass dynamic placeholder strings to this component.
-    - [ ] If using Tiptap, ensure the `Placeholder` extension is configured; if Quill, verify placeholder prop usage.
+- [x] Task: Identify text initialization logic.
+    - [x] Locate frontend components responsible for creating new Characters, Locations, and adding new Custom Sections.
+    - [x] Pinpoint where the default "actual text" is currently set for these fields.
+- [x] Task: Evaluate Editor Component Placeholder Support.
+    - [x] Identify the specific rich text editor component used for these fields (Tiptap or Quill).
+    - [x] Verify how to pass dynamic placeholder strings to this component.
+    - [x] If using Tiptap, ensure the `Placeholder` extension is configured; if Quill, verify placeholder prop usage.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Research and Component Setup' (Protocol in workflow.md)
 
 ## Phase 2: Implementation
