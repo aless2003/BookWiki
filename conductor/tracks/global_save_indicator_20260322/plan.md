@@ -25,3 +25,6 @@
     - [x] When `isDirty` is true, trigger a specific, non-dismissing (or long-duration) toast or a visual indicator in the header: "Unsaved changes...".
     - [x] Optionally, implement a `beforeunload` or router transition block to warn the user if they try to navigate away while `isDirty` is true.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Unsaved Changes State' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 49b618d
