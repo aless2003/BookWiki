@@ -32,10 +32,5 @@
 
 ---
 
-- [x] **Track: Feature: Show Save Indicator on save**
-*Link: [./tracks/global_save_indicator_20260322/](./tracks/global_save_indicator_20260322/)*
-
----
-
 - [ ] **Track: feature: Templates Inheritance from Parent. e.g. A custom section "Stats" of the parent species "Pokemon" can be marked to be inherited by all children so for example "Sylveon" would already have the default "Stats" Template in it on creation/on edit of parent etc.**
 *Link: [./tracks/species_template_inheritance_20260322/](./tracks/species_template_inheritance_20260322/)*
