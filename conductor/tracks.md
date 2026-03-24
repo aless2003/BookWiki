@@ -12,7 +12,7 @@
 
 ---
 
-- [~] **Track: Feature: Ability to view Parent/Sub Species tree**
+- [x] **Track: Feature: Ability to view Parent/Sub Species tree**
 *Link: [./tracks/species_taxonomy_20260322/](./tracks/species_taxonomy_20260322/)*
 
 ---
