@@ -41,4 +41,9 @@ public class SpeciesController {
     public Species addSection(@PathVariable Long id, @RequestBody SpeciesSection section) {
         return speciesService.addSection(id, section);
     }
+
+    @GetMapping("/stories/{storyId}/species/{speciesId}/taxonomy")
+    public SpeciesTaxonomyDTO getTaxonomy(@PathVariable Long storyId, @PathVariable Long speciesId) {
+        return speciesService.getTaxonomy(speciesId);
+    }
 }

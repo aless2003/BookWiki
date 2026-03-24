@@ -1,16 +1,16 @@
 # Implementation Plan: Species Taxonomy Tree View
 
 ## Phase 1: Backend API for Taxonomy Tree
-- [ ] Task: Define DTOs for Taxonomy Tree.
-    - [ ] Create `SpeciesTreeNodeDTO` (id, name, pictureUrl, children).
-    - [ ] Create `SpeciesTaxonomyDTO` (parent node, target node).
-- [ ] Task: Write Tests for Taxonomy Service.
-    - [ ] Create unit tests verifying correct parent assignment and recursive descendant mapping.
-- [ ] Task: Implement Repository/Service methods.
-    - [ ] Add logic to fetch and construct the tree structure (immediate parent + recursive descendants) for a given species.
-- [ ] Task: Create Controller Endpoint.
-    - [ ] Add `GET /api/stories/{storyId}/species/{speciesId}/taxonomy` endpoint.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend API for Taxonomy Tree' (Protocol in workflow.md)
+- [x] Task: Define DTOs for Taxonomy Tree.
+    - [x] Create `SpeciesTreeNodeDTO` (id, name, pictureUrl, children).
+    - [x] Create `SpeciesTaxonomyDTO` (parent node, target node).
+- [x] Task: Write Tests for Taxonomy Service.
+    - [x] Create unit tests verifying correct parent assignment and recursive descendant mapping.
+- [x] Task: Implement Repository/Service methods.
+    - [x] Add logic to fetch and construct the tree structure (immediate parent + recursive descendants) for a given species.
+- [x] Task: Create Controller Endpoint.
+    - [x] Add `GET /api/stories/{storyId}/species/{speciesId}/taxonomy` endpoint.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Backend API for Taxonomy Tree' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Setup and Routing
 - [ ] Task: Create Taxonomy Tree View Component scaffolding.

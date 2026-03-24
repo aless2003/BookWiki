@@ -97,4 +97,37 @@ public class SpeciesService {
         s.getCustomSections().add(section);
         return speciesRepository.save(s);
     }
+
+    public SpeciesTaxonomyDTO getTaxonomy(Long speciesId) {
+        Species target = getSpecies(speciesId);
+        SpeciesTaxonomyDTO taxonomy = new SpeciesTaxonomyDTO();
+
+        // Get immediate parent
+        if (target.getParentId() != null) {
+            speciesRepository.findById(target.getParentId()).ifPresent(parent -> {
+                taxonomy.setParentNode(mapToNodeDTO(parent, false));
+            });
+        }
+
+        // Get target and recursive descendants
+        taxonomy.setTargetNode(mapToNodeDTO(target, true));
+
+        return taxonomy;
+    }
+
+    private SpeciesTreeNodeDTO mapToNodeDTO(Species species, boolean recursive) {
+        SpeciesTreeNodeDTO node = new SpeciesTreeNodeDTO();
+        node.setId(species.getId());
+        node.setName(species.getName());
+        node.setPictureUrl(species.getPictureUrl());
+
+        if (recursive) {
+            List<Species> children = speciesRepository.findByParentId(species.getId());
+            for (Species child : children) {
+                node.getChildren().add(mapToNodeDTO(child, true));
+            }
+        }
+
+        return node;
+    }
 }

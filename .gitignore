@@ -37,5 +37,14 @@ out/
 .vscode/
 
 src/main/resources/static
-uploads`nscripts/dist/`nscripts/wrapper/target/
+uploads
+scripts/dist/
+scripts/wrapper/target/
 frontend/src-tauri/target/
+scripts/target
+scripts/dist
+scripts/gen
+scripts/wrapper
+releases/
+frontend/src-tauri/gen/
+frontend/src-tauri/bookwiki-backend-x86_64-pc-windows-gnu.exe
