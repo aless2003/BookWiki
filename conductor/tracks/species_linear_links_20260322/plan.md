@@ -1,6 +1,6 @@
 # Implementation Plan: Species Evolutionary/Growth Linking
 
-## Phase 1: Database and Backend Setup
+## Phase 1: Database and Backend Setup [checkpoint: b258030]
 - [x] Task: Create `SpeciesLink` Entity.
     - [x] Add properties: `id`, `sourceSpeciesId`, `targetSpeciesId`, `label` (String), `isBidirectional` (Boolean).
     - [x] Create corresponding Repository, Service, and DTOs.
