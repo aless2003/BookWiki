@@ -17,7 +17,6 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-    let interval: ReturnType<typeof setInterval>;
     
     const checkBackend = async () => {
       const controller = new AbortController();
@@ -34,7 +33,7 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
           setIsReady(true);
           return;
         }
-      } catch (err) {
+      } catch (_err) {
         // Not ready yet or timeout
       }
       if (isMounted) {
@@ -43,7 +42,7 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
     };
 
     checkBackend();
-    interval = setInterval(checkBackend, 3000); // Poll every 3 seconds to be less aggressive
+    const interval = setInterval(checkBackend, 3000); // Poll every 3 seconds to be less aggressive
 
     return () => {
       isMounted = false;

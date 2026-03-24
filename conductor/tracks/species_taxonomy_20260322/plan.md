@@ -12,7 +12,7 @@
     - [x] Add `GET /api/stories/{storyId}/species/{speciesId}/taxonomy` endpoint.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend API for Taxonomy Tree' (Protocol in workflow.md)
 
-## Phase 2: Frontend Setup and Routing
+## Phase 2: Frontend Setup and Routing [checkpoint: 1e41f09]
 - [~] Task: Create Taxonomy Tree View Component scaffolding.
     - [x] Scaffold `SpeciesTaxonomy.tsx` component.
     - [x] Implement React Router route for `/stories/:storyId/species/:speciesId/taxonomy`.
@@ -23,10 +23,10 @@
 ## Phase 3: Frontend Tree Implementation
 - [ ] Task: Write Tests for Taxonomy View.
     - [ ] Write frontend component tests ensuring data fetching and correct rendering of the tree nodes.
-- [ ] Task: Implement Expandable Tree UI.
-    - [ ] Fetch data from the new backend API endpoint.
-    - [ ] Render the tree hierarchy using an expandable component structure (e.g., Material UI `TreeView` or custom recursive components).
-    - [ ] Render each node with a small thumbnail and the species name.
-    - [ ] Configure node click to toggle expansion/collapse.
-    - [ ] Add an explicit "View" icon/button to each node to navigate to its respective species page.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Frontend Tree Implementation' (Protocol in workflow.md)
+- [x] Task: Implement Expandable Tree UI.
+    - [x] Fetch data from the new backend API endpoint.
+    - [x] Render the tree hierarchy using an expandable component structure (e.g., Material UI `TreeView` or custom recursive components).
+    - [x] Render each node with a small thumbnail and the species name.
+    - [x] Configure node click to toggle expansion/collapse.
+    - [x] Add an explicit "View" icon/button to each node to navigate to its respective species page.
+- [~] Task: Conductor - User Manual Verification 'Phase 3: Frontend Tree Implementation' (Protocol in workflow.md)
