@@ -2,6 +2,7 @@ package online.hatsune_miku.bookwiki.species;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -45,5 +46,20 @@ public class SpeciesController {
     @GetMapping("/stories/{storyId}/species/{speciesId}/taxonomy")
     public SpeciesTaxonomyDTO getTaxonomy(@PathVariable Long storyId, @PathVariable Long speciesId) {
         return speciesService.getTaxonomy(speciesId);
+    }
+
+    @GetMapping("/species/{id}/flow")
+    public SpeciesFlowDTO getSpeciesFlow(@PathVariable Long id) {
+        return speciesService.getSpeciesFlow(id);
+    }
+
+    @PostMapping("/species/links")
+    public SpeciesLink createLink(@Valid @RequestBody SpeciesLink link) {
+        return speciesService.createLink(link);
+    }
+
+    @DeleteMapping("/species/links/{linkId}")
+    public void deleteLink(@PathVariable Long linkId) {
+        speciesService.deleteLink(linkId);
     }
 }

@@ -1,13 +1,13 @@
 # Implementation Plan: Species Evolutionary/Growth Linking
 
 ## Phase 1: Database and Backend Setup
-- [ ] Task: Create `SpeciesLink` Entity.
-    - [ ] Add properties: `id`, `sourceSpeciesId`, `targetSpeciesId`, `label` (String), `isBidirectional` (Boolean).
-    - [ ] Create corresponding Repository, Service, and DTOs.
-- [ ] Task: Update Species Service and Controller.
-    - [ ] Add endpoints to create, update, and delete `SpeciesLink` records.
-    - [ ] Add an endpoint to fetch the "flow" network (nodes and edges) for a given Species (resolving both incoming and outgoing links).
-- [ ] Task: Write backend unit and integration tests for `SpeciesLink` operations.
+- [x] Task: Create `SpeciesLink` Entity.
+    - [x] Add properties: `id`, `sourceSpeciesId`, `targetSpeciesId`, `label` (String), `isBidirectional` (Boolean).
+    - [x] Create corresponding Repository, Service, and DTOs.
+- [x] Task: Update Species Service and Controller.
+    - [x] Add endpoints to create, update, and delete `SpeciesLink` records.
+    - [x] Add an endpoint to fetch the "flow" network (nodes and edges) for a given Species (resolving both incoming and outgoing links).
+- [x] Task: Write backend unit and integration tests for `SpeciesLink` operations.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Setup' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Data Management

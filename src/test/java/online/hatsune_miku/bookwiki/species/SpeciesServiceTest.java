@@ -19,8 +19,82 @@ class SpeciesServiceTest {
     @Mock
     private SpeciesRepository speciesRepository;
 
+    @Mock
+    private SpeciesLinkRepository speciesLinkRepository;
+
     @InjectMocks
     private SpeciesService speciesService;
+
+    @Test
+    void createLink_Success() {
+        SpeciesLink link = new SpeciesLink(null, 1L, 2L, "Evolves", false);
+        SpeciesLink savedLink = new SpeciesLink(100L, 1L, 2L, "Evolves", false);
+        
+        when(speciesLinkRepository.save(link)).thenReturn(savedLink);
+        
+        SpeciesLink result = speciesService.createLink(link);
+        
+        assertEquals(100L, result.getId());
+        assertEquals("Evolves", result.getLabel());
+        verify(speciesLinkRepository, times(1)).save(link);
+    }
+
+    @Test
+    void deleteLink_Success() {
+        speciesService.deleteLink(100L);
+        verify(speciesLinkRepository, times(1)).deleteById(100L);
+    }
+
+    @Test
+    void getSpeciesFlow_ComplexNetwork() {
+        // Setup: A -> B (TARGET) -> C
+        //             B <-> D
+        
+        Species target = new Species();
+        target.setId(2L);
+        target.setName("Target Species");
+        
+        Species sourceA = new Species();
+        sourceA.setId(1L);
+        sourceA.setName("Source A");
+        
+        Species targetC = new Species();
+        targetC.setId(3L);
+        targetC.setName("Target C");
+        
+        Species alternateD = new Species();
+        alternateD.setId(4L);
+        alternateD.setName("Alternate D");
+        
+        SpeciesLink linkAtoB = new SpeciesLink(10L, 1L, 2L, "Evolves From", false);
+        SpeciesLink linkBtoC = new SpeciesLink(11L, 2L, 3L, "Evolves To", false);
+        SpeciesLink linkBwithD = new SpeciesLink(12L, 2L, 4L, "Alternate", true);
+        
+        List<SpeciesLink> links = List.of(linkAtoB, linkBtoC, linkBwithD);
+        
+        when(speciesRepository.findById(2L)).thenReturn(Optional.of(target));
+        when(speciesLinkRepository.findAllBySpeciesId(2L)).thenReturn(links);
+        when(speciesRepository.findById(1L)).thenReturn(Optional.of(sourceA));
+        when(speciesRepository.findById(3L)).thenReturn(Optional.of(targetC));
+        when(speciesRepository.findById(4L)).thenReturn(Optional.of(alternateD));
+        
+        SpeciesFlowDTO flow = speciesService.getSpeciesFlow(2L);
+        
+        assertNotNull(flow);
+        assertEquals(4, flow.getNodes().size());
+        assertEquals(3, flow.getEdges().size());
+        
+        // Nodes check
+        assertTrue(flow.getNodes().stream().anyMatch(n -> n.getId().equals(2L)));
+        assertTrue(flow.getNodes().stream().anyMatch(n -> n.getId().equals(1L)));
+        assertTrue(flow.getNodes().stream().anyMatch(n -> n.getId().equals(3L)));
+        assertTrue(flow.getNodes().stream().anyMatch(n -> n.getId().equals(4L)));
+        
+        // Edges check
+        assertTrue(flow.getEdges().stream().anyMatch(e -> e.getId().equals(10L) && e.getLabel().equals("Evolves From")));
+        assertTrue(flow.getEdges().stream().anyMatch(e -> e.getId().equals(11L) && e.getLabel().equals("Evolves To")));
+        assertTrue(flow.getEdges().stream().anyMatch(e -> e.getId().equals(12L) && e.isBidirectional()));
+    }
 
     @Test
     void getTaxonomy_FullTree() {

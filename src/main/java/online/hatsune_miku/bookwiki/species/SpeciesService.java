@@ -19,6 +19,9 @@ public class SpeciesService {
     private StoryRepository storyRepository;
 
     @Autowired
+    private SpeciesLinkRepository speciesLinkRepository;
+
+    @Autowired
     private ReferenceTrackingService referenceTrackingService;
 
     public List<Species> getSpeciesByStory(Long storyId) {
@@ -31,6 +34,62 @@ public class SpeciesService {
 
     public Species getSpecies(Long id) {
         return speciesRepository.findById(id).orElseThrow(() -> new RuntimeException("Species not found"));
+    }
+
+    @Transactional
+    public SpeciesLink createLink(SpeciesLink link) {
+        return speciesLinkRepository.save(link);
+    }
+
+    @Transactional
+    public void deleteLink(Long linkId) {
+        speciesLinkRepository.deleteById(linkId);
+    }
+
+    public List<SpeciesLink> getLinksBySpecies(Long speciesId) {
+        return speciesLinkRepository.findAllBySpeciesId(speciesId);
+    }
+
+    public SpeciesFlowDTO getSpeciesFlow(Long speciesId) {
+        SpeciesFlowDTO flow = new SpeciesFlowDTO();
+        List<SpeciesLink> links = speciesLinkRepository.findAllBySpeciesId(speciesId);
+        
+        // Add the target species node
+        Species target = getSpecies(speciesId);
+        flow.getNodes().add(mapToNodeDTO(target, false));
+        
+        // Track added node IDs to avoid duplicates
+        java.util.Set<Long> addedNodes = new java.util.HashSet<>();
+        addedNodes.add(speciesId);
+        
+        for (SpeciesLink link : links) {
+            // Add edges
+            SpeciesLinkDTO edge = new SpeciesLinkDTO();
+            edge.setId(link.getId());
+            edge.setSourceSpeciesId(link.getSourceSpeciesId());
+            edge.setTargetSpeciesId(link.getTargetSpeciesId());
+            edge.setLabel(link.getLabel());
+            edge.setBidirectional(link.isBidirectional());
+            flow.getEdges().add(edge);
+            
+            // Add source node if not target and not already added
+            if (!addedNodes.contains(link.getSourceSpeciesId())) {
+                speciesRepository.findById(link.getSourceSpeciesId()).ifPresent(s -> {
+                    flow.getNodes().add(mapToNodeDTO(s, false));
+                    addedNodes.add(s.getId());
+                });
+            }
+            
+            // Add target node if not target and not already added
+            if (!addedNodes.contains(link.getTargetSpeciesId())) {
+                speciesRepository.findById(link.getTargetSpeciesId()).ifPresent(s -> {
+                    flow.getNodes().add(mapToNodeDTO(s, false));
+                    addedNodes.add(s.getId());
+                });
+            }
+        }
+        
+        return flow;
     }
 
     @Transactional
