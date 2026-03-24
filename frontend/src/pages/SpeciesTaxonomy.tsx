@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { resolveShortcodes } from '../constants/media';
+import { API_BASE_URL } from '../constants/api';
 
 interface SpeciesTreeNode {
     id: number;
@@ -145,7 +146,7 @@ const SpeciesTaxonomy: React.FC = () => {
         const fetchTaxonomy = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`http://localhost:3906/api/stories/${storyId}/species/${speciesId}/taxonomy`);
+                const response = await fetch(`${API_BASE_URL}/api/stories/${storyId}/species/${speciesId}/taxonomy`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch taxonomy');
                 }
