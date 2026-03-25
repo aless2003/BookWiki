@@ -1,8 +1,0 @@
-{
-  "track_id": "species_linear_links_20260322",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-03-22T00:00:00Z",
-  "updated_at": "2026-03-22T00:00:00Z",
-  "description": "Feature: Ability to link two Species linearly (like x -> y -> z or x <-> y) for things like evolutions/growth of a species etc."
-}
