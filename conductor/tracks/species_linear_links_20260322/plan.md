@@ -11,20 +11,23 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Setup' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Data Management
-- [ ] Task: Create Frontend API service for Species Links.
-    - [ ] Define types for `SpeciesLink` requests and responses.
-    - [ ] Add React Query hooks (or equivalent fetch logic) to manage creating, deleting, and fetching links.
-- [ ] Task: UI for Creating/Managing Links.
-    - [ ] Add a section on the Species detail page to "Add Related Species".
-    - [ ] Implement a modal/form to select another species, provide a custom label, and toggle unidirectional/bidirectional.
-    - [ ] Implement a simple list view in the edit mode to delete/manage these links.
+- [x] Task: Create Frontend API service for Species Links.
+    - [x] Define types for `SpeciesLink` requests and responses.
+    - [x] Add API functions (fetch) to manage creating, deleting, and fetching links.
+- [x] Task: UI for Creating/Managing Links.
+    - [x] Add a section on the Species detail page to "Add Related Species".
+    - [x] Implement a form to select another species, provide a custom label, and toggle unidirectional/bidirectional.
+    - [x] Implement a list view in the edit mode to delete/manage these links.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Data Management' (Protocol in workflow.md)
 
 ## Phase 3: Visual Flow Diagram Implementation
-- [ ] Task: Research and select a React diagramming library (e.g., React Flow) or implement a custom Canvas/SVG flow diagram using MUI.
-    - [ ] Document library choice in `tech-stack.md` if adding a new dependency.
-- [ ] Task: Implement `SpeciesFlowDiagram` Component.
-    - [ ] Process backend network data into Nodes (Species) and Edges (Links with labels and direction arrows).
-    - [ ] Render the interactive diagram on the Species detail page.
-    - [ ] Implement node click handlers to navigate to the respective Species page.
+- [x] Task: Research and select a React diagramming library (e.g., React Flow).
+    - [x] Document library choice in `tech-stack.md`.
+- [x] Task: Implement `SpeciesFlowDiagram` Component using `reactflow`.
+    - [x] Process backend network data into Nodes (Species) and Edges (Links with labels and direction arrows).
+    - [x] Render the interactive diagram on the Species detail page.
+    - [x] Implement node click handlers to navigate to the respective Species page.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Visual Flow Diagram Implementation' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions c9d8fae
