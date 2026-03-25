@@ -1,10 +1,10 @@
 # Implementation Plan: Taxonomy View Design Fix (Dark Mode & MUI)
 
-## Phase 1: Environment Setup & MUI X Integration
+## Phase 1: Environment Setup & MUI X Integration [checkpoint: 77b2b2d]
 - [x] Task: Install `@mui/x-tree-view` package for standard Material UI tree structures.
 - [x] Task: Wrap `SpeciesTaxonomy.tsx` in `ThemeProvider` using the global `darkTheme`.
 - [x] Task: Add `CssBaseline` to ensure consistent global background and text colors.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & MUI X Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & MUI X Integration' (Protocol in workflow.md)
 
 ## Phase 2: Restyling the Taxonomy Tree View
 - [ ] Task: Refactor `TreeNode` in `SpeciesTaxonomy.tsx` to use `useTheme()` for all dynamic styles.
