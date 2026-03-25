@@ -15,7 +15,9 @@ import {
     Tooltip,
     Button,
     ToggleButton,
-    ToggleButtonGroup
+    ToggleButtonGroup,
+    ThemeProvider,
+    CssBaseline
 } from '@mui/material';
 import { 
     ArrowBack as ArrowBackIcon, 
@@ -31,6 +33,7 @@ import { API_BASE_URL } from '../constants/api';
 import { fetchSpeciesFlow } from '../utils/speciesApi';
 import type { SpeciesFlow } from '../utils/speciesApi';
 import { SpeciesFlowDiagram } from '../components/SpeciesFlowDiagram';
+import { darkTheme } from '../theme';
 
 interface SpeciesTreeNode {
     id: number;
@@ -184,118 +187,124 @@ const SpeciesTaxonomy: React.FC = () => {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="background.default">
-                <CircularProgress />
-            </Box>
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline />
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="background.default">
+                    <CircularProgress />
+                </Box>
+            </ThemeProvider>
         );
     }
 
     return (
-        <Box sx={{ flexGrow: 1, bgcolor: 'background.default', minHeight: '100vh', color: 'text.primary' }}>
-            <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <Toolbar>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={handleBack}
-                        sx={{ mr: 2 }}
-                    >
-                        <ArrowBackIcon />
-                    </IconButton>
-                    <TreeIcon sx={{ mr: 2, color: 'primary.main' }} />
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        Species Relationships
-                    </Typography>
-                </Toolbar>
-            </AppBar>
-
-            <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-                    <Box>
-                        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                            <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature`}>
-                                Species List
-                            </MuiLink>
-                            <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature&id=${speciesId}`}>
-                                {taxonomy?.targetNode.name || 'Species'}
-                            </MuiLink>
-                            <Typography color="text.primary">{view === 'tree' ? 'Taxonomy Tree' : 'Relationship Network'}</Typography>
-                        </Breadcrumbs>
-                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                            {taxonomy?.targetNode.name} {view === 'tree' ? 'Hierarchy' : 'Relationships'}
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            <Box sx={{ flexGrow: 1, bgcolor: 'background.default', minHeight: '100vh', color: 'text.primary' }}>
+                <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Toolbar>
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={handleBack}
+                            sx={{ mr: 2 }}
+                        >
+                            <ArrowBackIcon />
+                        </IconButton>
+                        <TreeIcon sx={{ mr: 2, color: 'primary.main' }} />
+                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                            Species Relationships
                         </Typography>
+                    </Toolbar>
+                </AppBar>
+
+                <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+                        <Box>
+                            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+                                <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature`}>
+                                    Species List
+                                </MuiLink>
+                                <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature&id=${speciesId}`}>
+                                    {taxonomy?.targetNode.name || 'Species'}
+                                </MuiLink>
+                                <Typography color="text.primary">{view === 'tree' ? 'Taxonomy Tree' : 'Relationship Network'}</Typography>
+                            </Breadcrumbs>
+                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                                {taxonomy?.targetNode.name} {view === 'tree' ? 'Hierarchy' : 'Relationships'}
+                            </Typography>
+                        </Box>
+
+                        <ToggleButtonGroup
+                            value={view}
+                            exclusive
+                            onChange={(_e, newView) => newView && setView(newView)}
+                            size="small"
+                            aria-label="view switch"
+                        >
+                            <ToggleButton value="tree" aria-label="tree view">
+                                <TreeIcon sx={{ mr: 1 }} /> Tree
+                            </ToggleButton>
+                            <ToggleButton value="flow" aria-label="network view">
+                                <FlowIcon sx={{ mr: 1 }} /> Network
+                            </ToggleButton>
+                        </ToggleButtonGroup>
                     </Box>
 
-                    <ToggleButtonGroup
-                        value={view}
-                        exclusive
-                        onChange={(_e, newView) => newView && setView(newView)}
-                        size="small"
-                        aria-label="view switch"
-                    >
-                        <ToggleButton value="tree" aria-label="tree view">
-                            <TreeIcon sx={{ mr: 1 }} /> Tree
-                        </ToggleButton>
-                        <ToggleButton value="flow" aria-label="network view">
-                            <FlowIcon sx={{ mr: 1 }} /> Network
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-                </Box>
+                    {error ? (
+                        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(211, 47, 47, 0.1)', border: '1px solid rgba(211, 47, 47, 0.3)' }}>
+                            <Typography color="error">{error}</Typography>
+                            <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>Retry</Button>
+                        </Paper>
+                    ) : taxonomy ? (
+                        <Box>
+                            {view === 'tree' ? (
+                                <Paper sx={{ p: 4, borderRadius: 2 }}>
+                                    {taxonomy.parentNode && (
+                                        <>
+                                            <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
+                                                Parent Species
+                                            </Typography>
+                                            <TreeNode 
+                                                node={taxonomy.parentNode} 
+                                                level={0} 
+                                                storyId={storyId!} 
+                                            />
+                                            <Box sx={{ ml: 4, my: 1, height: 20, borderLeft: '1px dashed rgba(255,255,255,0.2)' }} />
+                                        </>
+                                    )}
 
-                {error ? (
-                    <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(211, 47, 47, 0.1)', border: '1px solid rgba(211, 47, 47, 0.3)' }}>
-                        <Typography color="error">{error}</Typography>
-                        <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>Retry</Button>
-                    </Paper>
-                ) : taxonomy ? (
-                    <Box>
-                        {view === 'tree' ? (
-                            <Paper sx={{ p: 4, borderRadius: 2 }}>
-                                {taxonomy.parentNode && (
-                                    <>
-                                        <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
-                                            Parent Species
-                                        </Typography>
-                                        <TreeNode 
-                                            node={taxonomy.parentNode} 
-                                            level={0} 
-                                            storyId={storyId!} 
-                                        />
-                                        <Box sx={{ ml: 4, my: 1, height: 20, borderLeft: '1px dashed rgba(255,255,255,0.2)' }} />
-                                    </>
-                                )}
-
-                                <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
-                                    {taxonomy.parentNode ? 'Current & Descendants' : 'Species Tree'}
-                                </Typography>
-                                <TreeNode 
-                                    node={taxonomy.targetNode} 
-                                    isTarget={true}
-                                    level={0} 
-                                    storyId={storyId!} 
-                                />
-                            </Paper>
-                        ) : (
-                            <Box>
-                                <Paper sx={{ p: 2, mb: 2, bgcolor: 'rgba(255,255,255,0.03)' }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        This diagram shows relationships between species, such as evolution, growth stages, variants, or social dynamics.
-                                        The diagram is automatically laid out to prevent overlaps. You can pan and zoom.
+                                    <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
+                                        {taxonomy.parentNode ? 'Current & Descendants' : 'Species Tree'}
                                     </Typography>
-                                </Paper>
-                                {flowData && (
-                                    <SpeciesFlowDiagram 
-                                        data={flowData} 
+                                    <TreeNode 
+                                        node={taxonomy.targetNode} 
+                                        isTarget={true}
+                                        level={0} 
                                         storyId={storyId!} 
-                                        targetSpeciesId={Number(speciesId)} 
                                     />
-                                )}
-                            </Box>
-                        )}
-                    </Box>
-                ) : null}
-            </Container>
-        </Box>
+                                </Paper>
+                            ) : (
+                                <Box>
+                                    <Paper sx={{ p: 2, mb: 2, bgcolor: 'rgba(255,255,255,0.03)' }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            This diagram shows relationships between species, such as evolution, growth stages, variants, or social dynamics.
+                                            The diagram is automatically laid out to prevent overlaps. You can pan and zoom.
+                                        </Typography>
+                                    </Paper>
+                                    {flowData && (
+                                        <SpeciesFlowDiagram 
+                                            data={flowData} 
+                                            storyId={storyId!} 
+                                            targetSpeciesId={Number(speciesId)} 
+                                        />
+                                    )}
+                                </Box>
+                            )}
+                        </Box>
+                    ) : null}
+                </Container>
+            </Box>
+        </ThemeProvider>
     );
 };
 
