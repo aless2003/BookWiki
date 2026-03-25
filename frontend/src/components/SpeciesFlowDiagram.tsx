@@ -36,6 +36,7 @@ interface SpeciesNodeData {
     isTarget: boolean;
     storyId: string;
     isExpanded?: boolean;
+    isInitial?: boolean;
     onToggle: (id: number, isExpanded: boolean) => void;
 }
 
@@ -170,57 +171,52 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
 
     const handleToggle = useCallback(async (speciesId: number, isExpanded: boolean) => {
         if (isExpanded) {
-            // Collapse: 
-            // 1. Mark the node as no longer expanded.
-            // 2. Remove all edges that were "discovered" by this node (where it is the source).
-            // 3. Perform a BFS from the targetSpeciesId to find all nodes that are still connected.
-            // 4. Remove any nodes (and their edges) that are no longer reachable from the target.
-            
-            setEdges((eds) => {
-                const remainingEdgesAfterCut = eds.filter(e => e.source !== speciesId.toString());
+            // 1. Mark the node as no longer expanded in current nodes state
+            const updatedNodes = nodes.map(n => 
+                n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: false } } : n
+            );
+
+            // 2. BFS to find reachable nodes starting from the core (initial nodes + the toggled node)
+            // A node is reachable if it's initial OR if it's connected to a reachable expanded node.
+            const legitNodes = new Set<string>();
+            const queue: string[] = [];
+
+            // Add all initial nodes and the toggled node to the start of BFS
+            updatedNodes.forEach(n => {
+                if (n.data.isInitial || n.id === speciesId.toString()) {
+                    legitNodes.add(n.id);
+                    queue.push(n.id);
+                }
+            });
+
+            while (queue.length > 0) {
+                const currId = queue.shift()!;
+                const currNode = updatedNodes.find(n => n.id === currId);
                 
-                setNodes((nds) => {
-                    const updatedNodes = nds.map(n => 
-                        n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: false } } : n
-                    );
-
-                    // BFS to find reachable nodes from targetSpeciesId
-                    const reachable = new Set<string>();
-                    const queue: string[] = [targetSpeciesId.toString()];
-                    reachable.add(targetSpeciesId.toString());
-
-                    while (queue.length > 0) {
-                        const currId = queue.shift()!;
-                        for (const edge of remainingEdgesAfterCut) {
-                            if (edge.source === currId && !reachable.has(edge.target)) {
-                                reachable.add(edge.target);
-                                queue.push(edge.target);
-                            } else if (edge.target === currId && !reachable.has(edge.source)) {
-                                reachable.add(edge.source);
-                                queue.push(edge.source);
-                            }
+                // If the current node is expanded, all its neighbors become legit
+                if (currNode && currNode.data.isExpanded) {
+                    for (const edge of edges) {
+                        if (edge.source === currId && !legitNodes.has(edge.target)) {
+                            legitNodes.add(edge.target);
+                            queue.push(edge.target);
+                        } else if (edge.target === currId && !legitNodes.has(edge.source)) {
+                            legitNodes.add(edge.source);
+                            queue.push(edge.source);
                         }
                     }
+                }
+            }
 
-                    const finalNodes = updatedNodes.filter(n => reachable.has(n.id));
-                    const finalEdges = remainingEdgesAfterCut.filter(e => 
-                        reachable.has(e.source) && reachable.has(e.target)
-                    );
+            // 3. Filter nodes and edges based on the legit set
+            const finalNodes = updatedNodes.filter(n => legitNodes.has(n.id));
+            const finalEdges = edges.filter(e => 
+                legitNodes.has(e.source) && legitNodes.has(e.target)
+            );
 
-                    const layoutedNodes = getLayoutedElements(finalNodes, finalEdges);
-                    setNodes(layoutedNodes);
-                    
-                    // We need to return the edges to setEdges, but we are inside setNodes.
-                    // Actually, the common pattern is to set both in one go or use a state update that depends on both.
-                    // To keep it simple and correct, I'll return the filtered edges in the setEdges call.
-                    return finalEdges;
-                });
-                
-                // This is a bit tricky because setNodes update depends on edges.
-                // React Flow's useNodesState/useEdgesState are standard.
-                // I will refactor this to update both properly.
-                return eds; // Placeholder, the actual update happens below
-            });
+            // 4. Layout and update both states
+            const layoutedNodes = getLayoutedElements(finalNodes, finalEdges);
+            setNodes(layoutedNodes);
+            setEdges(finalEdges);
             return;
         }
 
@@ -245,6 +241,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                             storyId, 
                             isTarget: n.id === targetSpeciesId,
                             isExpanded: false,
+                            isInitial: false,
                             onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
                         },
                         position: { x: 0, y: 0 }
@@ -283,7 +280,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
         } catch (err) {
             console.error('Failed to expand species flow', err);
         }
-    }, [storyId, targetSpeciesId, setNodes, setEdges, theme]);
+    }, [storyId, targetSpeciesId, setNodes, setEdges, theme, nodes, edges]);
 
     useEffect(() => {
         handleToggleRef.current = handleToggle;
@@ -299,6 +296,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                     storyId, 
                     isTarget: s.id === targetSpeciesId,
                     isExpanded: false,
+                    isInitial: true,
                     onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
                 },
                 position: { x: 0, y: 0 },
@@ -361,4 +359,3 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
 };
 
 export { SpeciesFlowDiagram };
-

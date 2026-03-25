@@ -27,5 +27,5 @@
 
 ---
 
-- [ ] **Track: Design Fix: Restyle Taxonomy to dark mode and material theme to be consistent with the rest of the application**
+- [x] **Track: Design Fix: Restyle Taxonomy to dark mode and material theme to be consistent with the rest of the application**
 *Link: [./tracks/taxonomy_restyle_20260325/](./tracks/taxonomy_restyle_20260325/)*

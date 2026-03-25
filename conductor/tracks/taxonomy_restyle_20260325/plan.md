@@ -17,11 +17,11 @@
 - [x] Task: Implement expansion toggle (collapse) logic in `SpeciesFlowDiagram.tsx`.
 - [x] Task: Implement theme-based colors for edges, markers, and labels (removing all hardcoded hex values).
 - [x] Task: Update the `ReactFlow` container and background to use consistent theme background colors.
-- [~] Task: Fix bug in collapse logic where connections to the target species are removed.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Relationship Network (React Flow) Restyle' (Protocol in workflow.md)
+- [x] Task: Fix bug in collapse logic where connections to the target species are removed.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Relationship Network (React Flow) Restyle' (Protocol in workflow.md)
 
-## Phase 4: Consistency Audit & Final Polishing
-- [ ] Task: Audit the entire `SpeciesTaxonomy` page for spacing (using `sx` or `Theme`) and font consistency.
-- [ ] Task: Verify that navigation and interactions match the "native" feel of the desktop application.
-- [ ] Task: Perform a side-by-side comparison with the `Worldbuilding` view to ensure seamless visual transition.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Consistency Audit & Final Polishing' (Protocol in workflow.md)
+## Phase 4: Consistency Audit & Final Polishing [checkpoint: bb440ff]
+- [x] Task: Audit the entire `SpeciesTaxonomy` page for spacing (using `sx` or `Theme`) and font consistency.
+- [x] Task: Verify that navigation and interactions match the "native" feel of the desktop application.
+- [x] Task: Perform a side-by-side comparison with the `Worldbuilding` view to ensure seamless visual transition.
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Consistency Audit & Final Polishing' (Protocol in workflow.md)
