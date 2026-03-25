@@ -171,12 +171,14 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
     const handleToggle = useCallback(async (speciesId: number, isExpanded: boolean) => {
         if (isExpanded) {
             // Collapse: Remove nodes that were added by this node expansion
-            // For a simple implementation, we remove edges starting from this node 
-            // and nodes that become orphaned (but we want to keep it simple for now).
-            // Better: just remove edges where this node is the source, and if those target nodes 
-            // have no other incoming edges, remove them too.
+            // CRITICAL: We should NOT remove edges that point to the target node
+            // as those are likely essential structural connections.
             setEdges((eds) => {
-                const edgesToRemove = eds.filter(e => e.source === speciesId.toString());
+                const edgesToRemove = eds.filter(e => 
+                    e.source === speciesId.toString() && 
+                    e.target !== targetSpeciesId.toString()
+                );
+                
                 const edgeIdsToRemove = new Set(edgesToRemove.map(e => e.id));
                 const targetNodeIds = new Set(edgesToRemove.map(e => e.target));
                 
@@ -190,9 +192,13 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                     
                     // Filter out nodes that were targets of removed edges AND have no other incoming edges
                     const finalNodes = updatedNodes.filter(n => {
+                        // Always keep the toggled node and the target node
                         if (n.id === speciesId.toString() || n.id === targetSpeciesId.toString()) return true;
+                        
+                        // If it wasn't a target of a removed edge, keep it
                         if (!targetNodeIds.has(n.id)) return true;
-                        // Keep if it has other incoming edges
+                        
+                        // Keep if it has other incoming edges in the new set
                         return remainingEdges.some(e => e.target === n.id);
                     });
 

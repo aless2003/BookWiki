@@ -12,11 +12,12 @@
 - [x] Task: Ensure node avatars and actions (view button) follow the established design patterns from the `Worldbuilding` page.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Restyling the Taxonomy Tree View' (Protocol in workflow.md)
 
-## Phase 3: Relationship Network (React Flow) Restyle
+## Phase 3: Relationship Network (React Flow) Restyle [checkpoint: 2e33660]
 - [x] Task: Refactor `SpeciesNode` in `SpeciesFlowDiagram.tsx` to use Material UI `Card` and `Paper` components with `nodrag` on buttons.
 - [x] Task: Implement expansion toggle (collapse) logic in `SpeciesFlowDiagram.tsx`.
 - [x] Task: Implement theme-based colors for edges, markers, and labels (removing all hardcoded hex values).
-- [~] Task: Update the `ReactFlow` container and background to use consistent theme background colors.
+- [x] Task: Update the `ReactFlow` container and background to use consistent theme background colors.
+- [~] Task: Fix bug in collapse logic where connections to the target species are removed.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Relationship Network (React Flow) Restyle' (Protocol in workflow.md)
 
 ## Phase 4: Consistency Audit & Final Polishing
