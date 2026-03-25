@@ -11,8 +11,12 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Node, Edge, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Typography, Avatar, Paper, IconButton, Tooltip } from '@mui/material';
-import { Visibility as ViewIcon, AddCircleOutline as ExpandIcon } from '@mui/icons-material';
+import { Box, Typography, Avatar, Paper, IconButton, Tooltip, useTheme, alpha } from '@mui/material';
+import { 
+    Visibility as ViewIcon, 
+    AddCircleOutline as ExpandIcon,
+    RemoveCircleOutline as CollapseIcon
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { fetchSpeciesFlow } from '../utils/speciesApi';
 import type { SpeciesFlow } from '../utils/speciesApi';
@@ -31,26 +35,34 @@ interface SpeciesNodeData {
     pictureUrl?: string;
     isTarget: boolean;
     storyId: string;
-    onExpand: (id: number) => void;
+    isExpanded?: boolean;
+    onToggle: (id: number, isExpanded: boolean) => void;
 }
 
 const SpeciesNode = ({ data }: { data: SpeciesNodeData }) => {
     const navigate = useNavigate();
+    const theme = useTheme();
     const isTarget = data.isTarget;
 
     return (
         <Paper 
+            elevation={isTarget ? 4 : 1}
             sx={{ 
-                p: 1.5, 
-                minWidth: 160, 
+                p: 1.25, 
+                minWidth: 170, 
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: 1.5,
-                border: isTarget ? '2px solid' : '1px solid',
-                borderColor: isTarget ? 'primary.main' : 'divider',
-                bgcolor: isTarget ? 'rgba(144, 202, 249, 0.08)' : 'background.paper',
+                border: '1px solid',
+                borderColor: isTarget ? 'primary.main' : theme.palette.divider,
+                bgcolor: isTarget ? alpha(theme.palette.primary.main, 0.1) : theme.palette.background.paper,
+                borderRadius: 2,
                 position: 'relative',
-                boxShadow: 2,
+                transition: '0.2s',
+                '&:hover': {
+                    borderColor: isTarget ? 'primary.light' : alpha(theme.palette.primary.main, 0.4),
+                    boxShadow: theme.shadows[4]
+                },
                 '&:hover .node-actions': { opacity: 1 }
             }}
         >
@@ -58,21 +70,42 @@ const SpeciesNode = ({ data }: { data: SpeciesNodeData }) => {
             
             <Avatar 
                 src={data.pictureUrl ? resolveShortcodes(data.pictureUrl) : undefined}
-                sx={{ width: 36, height: 36, bgcolor: 'primary.main', border: '1px solid rgba(255,255,255,0.1)' }}
+                sx={{ 
+                    width: 36, 
+                    height: 36, 
+                    bgcolor: 'primary.main', 
+                    border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+                    fontSize: '1rem'
+                }}
             >
                 {!data.pictureUrl && data.name.charAt(0)}
             </Avatar>
             
             <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: isTarget ? 700 : 500, fontSize: '0.85rem' }}>
+                <Typography variant="subtitle2" noWrap sx={{ fontWeight: isTarget ? 700 : 500, fontSize: '0.875rem' }}>
                     {data.name}
                 </Typography>
             </Box>
 
-            <Box className="node-actions" sx={{ display: 'flex', opacity: 0.3, transition: '0.2s' }}>
-                <Tooltip title="Expand Relationships">
-                    <IconButton size="small" onClick={() => data.onExpand(data.id)}>
-                        <ExpandIcon fontSize="small" />
+            <Box 
+                className="node-actions nodrag" 
+                sx={{ 
+                    display: 'flex', 
+                    opacity: 0.4, 
+                    transition: '0.2s',
+                    position: 'absolute',
+                    top: -12,
+                    right: -12,
+                    bgcolor: theme.palette.background.paper,
+                    borderRadius: 4,
+                    boxShadow: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                    p: 0.25
+                }}
+            >
+                <Tooltip title={data.isExpanded ? "Collapse" : "Expand Relationships"}>
+                    <IconButton size="small" onClick={() => data.onToggle(data.id, !!data.isExpanded)}>
+                        {data.isExpanded ? <CollapseIcon fontSize="small" color="primary" /> : <ExpandIcon fontSize="small" />}
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="View Details">
@@ -94,8 +127,8 @@ const nodeTypes = {
     speciesNode: SpeciesNode,
 };
 
-const nodeWidth = 180;
-const nodeHeight = 60;
+const nodeWidth = 200;
+const nodeHeight = 70;
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -128,20 +161,61 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 };
 
 const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, targetSpeciesId }) => {
+    const theme = useTheme();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const handleExpandRef = React.useRef<(id: number) => Promise<void>>(async () => {});
+    const handleToggleRef = React.useRef<(id: number, isExpanded: boolean) => Promise<void>>(async () => {});
 
     const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
-    const handleExpand = useCallback(async (speciesId: number) => {
+    const handleToggle = useCallback(async (speciesId: number, isExpanded: boolean) => {
+        if (isExpanded) {
+            // Collapse: Remove nodes that were added by this node expansion
+            // For a simple implementation, we remove edges starting from this node 
+            // and nodes that become orphaned (but we want to keep it simple for now).
+            // Better: just remove edges where this node is the source, and if those target nodes 
+            // have no other incoming edges, remove them too.
+            setEdges((eds) => {
+                const edgesToRemove = eds.filter(e => e.source === speciesId.toString());
+                const edgeIdsToRemove = new Set(edgesToRemove.map(e => e.id));
+                const targetNodeIds = new Set(edgesToRemove.map(e => e.target));
+                
+                const remainingEdges = eds.filter(e => !edgeIdsToRemove.has(e.id));
+                
+                setNodes((nds) => {
+                    // Update isExpanded status for the toggled node
+                    const updatedNodes = nds.map(n => 
+                        n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: false } } : n
+                    );
+                    
+                    // Filter out nodes that were targets of removed edges AND have no other incoming edges
+                    const finalNodes = updatedNodes.filter(n => {
+                        if (n.id === speciesId.toString() || n.id === targetSpeciesId.toString()) return true;
+                        if (!targetNodeIds.has(n.id)) return true;
+                        // Keep if it has other incoming edges
+                        return remainingEdges.some(e => e.target === n.id);
+                    });
+
+                    const layoutedNodes = getLayoutedElements(finalNodes, remainingEdges);
+                    setNodes(layoutedNodes);
+                    return finalNodes;
+                });
+                return remainingEdges;
+            });
+            return;
+        }
+
         try {
-            // Get current node IDs to avoid refetching everything if we want to be efficient,
-            // but for now we just fetch the expansion of this one node and merge.
             const flow = await fetchSpeciesFlow([speciesId]);
             
             setNodes((nds) => {
                 const existingIds = new Set(nds.map(n => n.id));
+                
+                // Mark current node as expanded
+                const updatedNds = nds.map(n => 
+                    n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: true } } : n
+                );
+
                 const newNodes = flow.nodes
                     .filter(n => !existingIds.has(n.id.toString()))
                     .map(n => ({
@@ -151,12 +225,13 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                             ...n, 
                             storyId, 
                             isTarget: n.id === targetSpeciesId,
-                            onExpand: (id: number) => handleExpandRef.current(id)
+                            isExpanded: false,
+                            onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
                         },
                         position: { x: 0, y: 0 }
                     }));
                 
-                const combinedNodes = [...nds, ...newNodes];
+                const combinedNodes = [...updatedNds, ...newNodes];
                 
                 setEdges((eds) => {
                     const existingEdgeIds = new Set(eds.map(e => e.id));
@@ -169,17 +244,16 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                             label: e.label,
                             animated: true,
                             type: 'smoothstep',
-                            labelStyle: { fill: '#fff', fontWeight: 600, fontSize: 11 },
+                            labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
                             labelBgPadding: [8, 4] as [number, number],
                             labelBgBorderRadius: 4,
-                            labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.85 },
-                            markerEnd: { type: MarkerType.ArrowClosed, color: '#90caf9', width: 20, height: 20 },
-                            markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: '#90caf9', width: 20, height: 20 } : undefined,
-                            style: { stroke: '#90caf9', strokeWidth: 2.5 },
+                            labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
+                            markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                            markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 } : undefined,
+                            style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
                         }));
                     
                     const combinedEdges = [...eds, ...newEdges];
-                    // Recalculate layout
                     const layoutedNodes = getLayoutedElements(combinedNodes, combinedEdges);
                     setNodes(layoutedNodes);
                     return combinedEdges;
@@ -190,11 +264,11 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
         } catch (err) {
             console.error('Failed to expand species flow', err);
         }
-    }, [storyId, targetSpeciesId, setNodes, setEdges]);
+    }, [storyId, targetSpeciesId, setNodes, setEdges, theme]);
 
     useEffect(() => {
-        handleExpandRef.current = handleExpand;
-    }, [handleExpand]);
+        handleToggleRef.current = handleToggle;
+    }, [handleToggle]);
 
     useEffect(() => {
         if (data) {
@@ -205,7 +279,8 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                     ...s, 
                     storyId, 
                     isTarget: s.id === targetSpeciesId,
-                    onExpand: (id: number) => handleExpandRef.current(id)
+                    isExpanded: false,
+                    onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
                 },
                 position: { x: 0, y: 0 },
             }));
@@ -217,23 +292,34 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 label: e.label,
                 animated: true,
                 type: 'smoothstep',
-                labelStyle: { fill: '#fff', fontWeight: 600, fontSize: 11 },
+                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
                 labelBgPadding: [8, 4] as [number, number],
                 labelBgBorderRadius: 4,
-                labelBgStyle: { fill: '#1e1e1e', fillOpacity: 0.85 },
-                markerEnd: { type: MarkerType.ArrowClosed, color: '#90caf9', width: 20, height: 20 },
-                markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: '#90caf9', width: 20, height: 20 } : undefined,
-                style: { stroke: '#90caf9', strokeWidth: 2.5 },
+                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
+                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 } : undefined,
+                style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
             }));
 
             const layoutedNodes = getLayoutedElements(initialNodes, initialEdges);
             setNodes(layoutedNodes);
             setEdges(initialEdges);
         }
-    }, [data, storyId, targetSpeciesId, handleExpand, setNodes, setEdges]);
+    }, [data, storyId, targetSpeciesId, setNodes, setEdges, theme]);
 
     return (
-        <Box sx={{ width: '100%', height: 500, bgcolor: 'rgba(0,0,0,0.25)', borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <Box 
+            sx={{ 
+                width: '100%', 
+                height: 550, 
+                bgcolor: alpha(theme.palette.background.default, 0.4), 
+                borderRadius: 3, 
+                overflow: 'hidden', 
+                border: `1px solid ${theme.palette.divider}`,
+                position: 'relative',
+                boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+            }}
+        >
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -248,7 +334,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 minZoom={0.1}
                 maxZoom={1.5}
             >
-                <Background color="#444" gap={20} size={1} />
+                <Background color={theme.palette.divider} gap={20} size={1} />
                 <Controls />
             </ReactFlow>
         </Box>
