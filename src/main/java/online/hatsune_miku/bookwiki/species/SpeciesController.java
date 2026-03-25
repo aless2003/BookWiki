@@ -48,9 +48,9 @@ public class SpeciesController {
         return speciesService.getTaxonomy(speciesId);
     }
 
-    @GetMapping("/species/{id}/flow")
-    public SpeciesFlowDTO getSpeciesFlow(@PathVariable Long id) {
-        return speciesService.getSpeciesFlow(id);
+    @GetMapping("/species/flow")
+    public SpeciesFlowDTO getSpeciesFlow(@RequestParam List<Long> ids) {
+        return speciesService.getSpeciesFlow(ids);
     }
 
     @PostMapping("/species/links")

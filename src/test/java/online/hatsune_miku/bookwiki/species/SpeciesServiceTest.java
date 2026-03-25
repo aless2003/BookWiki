@@ -30,6 +30,8 @@ class SpeciesServiceTest {
         SpeciesLink link = new SpeciesLink(null, 1L, 2L, "Evolves", false);
         SpeciesLink savedLink = new SpeciesLink(100L, 1L, 2L, "Evolves", false);
         
+        when(speciesRepository.existsById(1L)).thenReturn(true);
+        when(speciesRepository.existsById(2L)).thenReturn(true);
         when(speciesLinkRepository.save(link)).thenReturn(savedLink);
         
         SpeciesLink result = speciesService.createLink(link);
@@ -78,7 +80,7 @@ class SpeciesServiceTest {
         when(speciesRepository.findById(3L)).thenReturn(Optional.of(targetC));
         when(speciesRepository.findById(4L)).thenReturn(Optional.of(alternateD));
         
-        SpeciesFlowDTO flow = speciesService.getSpeciesFlow(2L);
+        SpeciesFlowDTO flow = speciesService.getSpeciesFlow(List.of(2L));
         
         assertNotNull(flow);
         assertEquals(4, flow.getNodes().size());

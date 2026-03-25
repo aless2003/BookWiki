@@ -40,7 +40,9 @@ import {
     Save as SaveIcon, 
     CloudUpload as CloudUploadIcon,
     Pets as SpeciesIcon,
-    AccountTree as AccountTreeIcon
+    AccountTree as AccountTreeIcon,
+    Link as LinkIcon,
+    LinkOff as LinkOffIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../utils/toast';
@@ -48,6 +50,8 @@ import { WindowService } from '../utils/WindowService';
 import RichTextEditor from '../components/RichTextEditor';
 import { darkTheme } from '../theme';
 import { resolveShortcodes } from '../constants/media';
+import { fetchSpeciesFlow, createSpeciesLink, deleteSpeciesLink } from '../utils/speciesApi';
+import type { SpeciesFlow } from '../utils/speciesApi';
 
 const drawerWidth = 240;
 
@@ -146,10 +150,32 @@ const Worldbuilding: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [newTrait, setNewTrait] = useState('');
 
+    // Species Flow state
+    const [speciesFlow, setSpeciesFlow] = useState<SpeciesFlow | null>(null);
+    const [isFlowLoading, setIsFlowLoading] = useState(false);
+    const [newLink, setNewLink] = useState<{ targetId: number | '', label: string, isBidirectional: boolean }>({
+        targetId: '',
+        label: '',
+        isBidirectional: false
+    });
+
     const markDirty = useCallback((updater: any) => {
         setIsDirty(true);
         setEditEntry(updater);
     }, []);
+
+    const loadSpeciesFlow = useCallback(async (speciesId: number) => {
+        setIsFlowLoading(true);
+        try {
+            const data = await fetchSpeciesFlow([speciesId]);
+            setSpeciesFlow(data);
+        } catch (err) {
+            console.error('Failed to load species flow', err);
+            error('Failed to load related species');
+        } finally {
+            setIsFlowLoading(false);
+        }
+    }, [error]);
 
     const fetchData = useCallback(() => {
         if (!storyId) return;
@@ -198,11 +224,49 @@ const Worldbuilding: React.FC = () => {
                 averageSize: spec.averageSize || '',
                 diet: spec.diet || ''
             });
+            if (spec.id) {
+                loadSpeciesFlow(spec.id);
+            } else {
+                setSpeciesFlow(null);
+            }
         } else {
             setEditEntry({ ...entry });
         }
         setIsEditing(true);
-    }, [activeCategory]);
+    }, [activeCategory, loadSpeciesFlow]);
+
+    const handleCreateLink = async () => {
+        if (!editEntry || !editEntry.id || newLink.targetId === '') return;
+        
+        try {
+            await createSpeciesLink({
+                sourceSpeciesId: editEntry.id,
+                targetSpeciesId: newLink.targetId,
+                label: newLink.label,
+                isBidirectional: newLink.isBidirectional
+            });
+            success('Link added');
+            setNewLink({ targetId: '', label: '', isBidirectional: false });
+            loadSpeciesFlow(editEntry.id);
+        } catch (err) {
+            console.error('Failed to create link', err);
+            error('Failed to add related species');
+        }
+    };
+
+    const handleDeleteLink = async (linkId: number) => {
+        if (!editEntry || !editEntry.id) return;
+        if (!confirm('Are you sure you want to remove this relationship?')) return;
+
+        try {
+            await deleteSpeciesLink(linkId);
+            success('Link removed');
+            loadSpeciesFlow(editEntry.id);
+        } catch (err) {
+            console.error('Failed to delete link', err);
+            error('Failed to remove relationship');
+        }
+    };
 
     // Separate useEffect for Deep Linking to handle state race conditions
     useEffect(() => {
@@ -822,6 +886,102 @@ const Worldbuilding: React.FC = () => {
                                                                     onChange={(e) => markDirty({ ...(editEntry as Species), diet: e.target.value })}    
                                                                     sx={{ mb: 2 }}
                                                                 />
+
+                                                                {editEntry.id && (
+                                                                    <Box sx={{ mt: 4 }}>
+                                                                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                            <LinkIcon /> Related Species
+                                                                        </Typography>
+                                                                        <Divider sx={{ mb: 2 }} />
+                                                                        
+                                                                        {isFlowLoading ? (
+                                                                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                                                                                <CircularProgress size={24} />
+                                                                            </Box>
+                                                                        ) : (
+                                                                            <List>
+                                                                                {speciesFlow?.edges.map(edge => {
+                                                                                    const otherId = edge.sourceSpeciesId === editEntry.id ? edge.targetSpeciesId : edge.sourceSpeciesId;
+                                                                                    const otherSpecies = species.find(s => s.id === otherId);
+                                                                                    const isIncoming = edge.targetSpeciesId === editEntry.id && !edge.isBidirectional;
+                                                                                    
+                                                                                    return (
+                                                                                        <ListItem 
+                                                                                            key={edge.id}
+                                                                                            secondaryAction={
+                                                                                                <IconButton edge="end" size="small" onClick={() => handleDeleteLink(edge.id!)}>
+                                                                                                    <DeleteIcon fontSize="small" />
+                                                                                                </IconButton>
+                                                                                            }
+                                                                                            sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 1 }}
+                                                                                        >
+                                                                                            <ListItemText 
+                                                                                                primary={otherSpecies?.name || 'Unknown'} 
+                                                                                                secondary={
+                                                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                                        {edge.isBidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
+                                                                                                        {edge.label || 'Related'}
+                                                                                                    </Box>
+                                                                                                }
+                                                                                            />
+                                                                                        </ListItem>
+                                                                                    );
+                                                                                })}
+                                                                                {(!speciesFlow || speciesFlow.edges.length === 0) && (
+                                                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', p: 1 }}>
+                                                                                        No relationships defined.
+                                                                                    </Typography>
+                                                                                )}
+                                                                            </List>
+                                                                        )}
+
+                                                                        <Box sx={{ mt: 2, p: 2, border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 1 }}>
+                                                                            <Typography variant="subtitle2" gutterBottom>Add Relationship</Typography>
+                                                                            <TextField
+                                                                                select
+                                                                                fullWidth
+                                                                                size="small"
+                                                                                label="Target Species"
+                                                                                value={newLink.targetId}
+                                                                                onChange={(e) => setNewLink(prev => ({ ...prev, targetId: Number(e.target.value) }))}
+                                                                                sx={{ mb: 1.5 }}
+                                                                            >
+                                                                                {species
+                                                                                    .filter(s => s.id !== editEntry.id)
+                                                                                    .map(s => (
+                                                                                        <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                                                                                    ))
+                                                                                }
+                                                                            </TextField>
+                                                                            <TextField
+                                                                                fullWidth
+                                                                                size="small"
+                                                                                label="Label (e.g. Evolves to)"
+                                                                                value={newLink.label}
+                                                                                onChange={(e) => setNewLink(prev => ({ ...prev, label: e.target.value }))}
+                                                                                sx={{ mb: 1.5 }}
+                                                                            />
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                                <Button 
+                                                                                    size="small" 
+                                                                                    variant={newLink.isBidirectional ? "contained" : "outlined"}
+                                                                                    onClick={() => setNewLink(prev => ({ ...prev, isBidirectional: !prev.isBidirectional }))}
+                                                                                    startIcon={newLink.isBidirectional ? <LinkIcon /> : <LinkOffIcon />}
+                                                                                >
+                                                                                    {newLink.isBidirectional ? "Bidirectional" : "Unidirectional"}
+                                                                                </Button>
+                                                                                <Button 
+                                                                                    variant="contained" 
+                                                                                    size="small"
+                                                                                    disabled={newLink.targetId === ''}
+                                                                                    onClick={handleCreateLink}
+                                                                                >
+                                                                                    Add
+                                                                                </Button>
+                                                                            </Box>
+                                                                        </Box>
+                                                                    </Box>
+                                                                )}
                                                             </>
                                                         )}
                                                         {activeCategory === 'Lore' && (

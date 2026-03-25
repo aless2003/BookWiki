@@ -33,7 +33,7 @@ function BackendStatusGuard({ children }: { children: React.ReactNode }) {
           setIsReady(true);
           return;
         }
-      } catch (_err) {
+      } catch {
         // Not ready yet or timeout
       }
       if (isMounted) {

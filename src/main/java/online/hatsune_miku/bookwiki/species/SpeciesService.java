@@ -38,6 +38,10 @@ public class SpeciesService {
 
     @Transactional
     public SpeciesLink createLink(SpeciesLink link) {
+        if (!speciesRepository.existsById(link.getSourceSpeciesId()) || 
+            !speciesRepository.existsById(link.getTargetSpeciesId())) {
+            throw new RuntimeException("One or both species not found");
+        }
         return speciesLinkRepository.save(link);
     }
 
@@ -50,19 +54,33 @@ public class SpeciesService {
         return speciesLinkRepository.findAllBySpeciesId(speciesId);
     }
 
-    public SpeciesFlowDTO getSpeciesFlow(Long speciesId) {
+    public SpeciesFlowDTO getSpeciesFlow(List<Long> speciesIds) {
         SpeciesFlowDTO flow = new SpeciesFlowDTO();
-        List<SpeciesLink> links = speciesLinkRepository.findAllBySpeciesId(speciesId);
+        java.util.Set<Long> allLinksIds = new java.util.HashSet<>();
+        java.util.List<SpeciesLink> allLinks = new java.util.ArrayList<>();
         
-        // Add the target species node
-        Species target = getSpecies(speciesId);
-        flow.getNodes().add(mapToNodeDTO(target, false));
+        for (Long id : speciesIds) {
+            List<SpeciesLink> speciesLinks = speciesLinkRepository.findAllBySpeciesId(id);
+            for (SpeciesLink link : speciesLinks) {
+                if (allLinksIds.add(link.getId())) {
+                    allLinks.add(link);
+                }
+            }
+        }
         
         // Track added node IDs to avoid duplicates
         java.util.Set<Long> addedNodes = new java.util.HashSet<>();
-        addedNodes.add(speciesId);
         
-        for (SpeciesLink link : links) {
+        // Ensure all requested source IDs are in the nodes list even if they have no links
+        for (Long id : speciesIds) {
+            if (addedNodes.add(id)) {
+                speciesRepository.findById(id).ifPresent(s -> {
+                    flow.getNodes().add(mapToNodeDTO(s, false));
+                });
+            }
+        }
+        
+        for (SpeciesLink link : allLinks) {
             // Add edges
             SpeciesLinkDTO edge = new SpeciesLinkDTO();
             edge.setId(link.getId());
@@ -72,24 +90,26 @@ public class SpeciesService {
             edge.setBidirectional(link.isBidirectional());
             flow.getEdges().add(edge);
             
-            // Add source node if not target and not already added
-            if (!addedNodes.contains(link.getSourceSpeciesId())) {
+            // Add source node if not already added
+            if (addedNodes.add(link.getSourceSpeciesId())) {
                 speciesRepository.findById(link.getSourceSpeciesId()).ifPresent(s -> {
                     flow.getNodes().add(mapToNodeDTO(s, false));
-                    addedNodes.add(s.getId());
                 });
             }
             
-            // Add target node if not target and not already added
-            if (!addedNodes.contains(link.getTargetSpeciesId())) {
+            // Add target node if not already added
+            if (addedNodes.add(link.getTargetSpeciesId())) {
                 speciesRepository.findById(link.getTargetSpeciesId()).ifPresent(s -> {
                     flow.getNodes().add(mapToNodeDTO(s, false));
-                    addedNodes.add(s.getId());
                 });
             }
         }
         
         return flow;
+    }
+
+    public SpeciesFlowDTO getSpeciesFlow(Long speciesId) {
+        return getSpeciesFlow(java.util.List.of(speciesId));
     }
 
     @Transactional
