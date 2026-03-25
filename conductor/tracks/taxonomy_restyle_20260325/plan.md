@@ -1,0 +1,25 @@
+# Implementation Plan: Taxonomy View Design Fix (Dark Mode & MUI)
+
+## Phase 1: Environment Setup & MUI X Integration
+- [ ] Task: Install `@mui/x-tree-view` package for standard Material UI tree structures.
+- [ ] Task: Wrap `SpeciesTaxonomy.tsx` in `ThemeProvider` using the global `darkTheme`.
+- [ ] Task: Add `CssBaseline` to ensure consistent global background and text colors.
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & MUI X Integration' (Protocol in workflow.md)
+
+## Phase 2: Restyling the Taxonomy Tree View
+- [ ] Task: Refactor `TreeNode` in `SpeciesTaxonomy.tsx` to use `useTheme()` for all dynamic styles.
+- [ ] Task: Pilot `@mui/x-tree-view` implementation for the hierarchy tree to replace custom recursive components if applicable.
+- [ ] Task: Ensure node avatars and actions (view button) follow the established design patterns from the `Worldbuilding` page.
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Restyling the Taxonomy Tree View' (Protocol in workflow.md)
+
+## Phase 3: Relationship Network (React Flow) Restyle
+- [ ] Task: Refactor `SpeciesNode` in `SpeciesFlowDiagram.tsx` to use Material UI `Card` and `Paper` components.
+- [ ] Task: Implement theme-based colors for edges, markers, and labels (removing all hardcoded hex values).
+- [ ] Task: Update the `ReactFlow` container and background to use consistent theme background colors.
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Relationship Network (React Flow) Restyle' (Protocol in workflow.md)
+
+## Phase 4: Consistency Audit & Final Polishing
+- [ ] Task: Audit the entire `SpeciesTaxonomy` page for spacing (using `sx` or `Theme`) and font consistency.
+- [ ] Task: Verify that navigation and interactions match the "native" feel of the desktop application.
+- [ ] Task: Perform a side-by-side comparison with the `Worldbuilding` view to ensure seamless visual transition.
+- [ ] Task: Conductor - User Manual Verification 'Phase 4: Consistency Audit & Final Polishing' (Protocol in workflow.md)

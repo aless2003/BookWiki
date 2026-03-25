@@ -24,3 +24,8 @@
 
 - [ ] **Track: Chore: Remove the Command Prompt popping up in the desktop application**
 *Link: [./tracks/remove_sidecar_console_20260325/](./tracks/remove_sidecar_console_20260325/)*
+
+---
+
+- [ ] **Track: Design Fix: Restyle Taxonomy to dark mode and material theme to be consistent with the rest of the application**
+*Link: [./tracks/taxonomy_restyle_20260325/](./tracks/taxonomy_restyle_20260325/)*

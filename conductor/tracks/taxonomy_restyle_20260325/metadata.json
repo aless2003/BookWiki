@@ -1,0 +1,8 @@
+{
+  "track_id": "taxonomy_restyle_20260325",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-03-25T14:30:00Z",
+  "updated_at": "2026-03-25T14:30:00Z",
+  "description": "Design Fix: Restyle Taxonomy to dark mode and material theme to be consistent with the rest of the application"
+}
