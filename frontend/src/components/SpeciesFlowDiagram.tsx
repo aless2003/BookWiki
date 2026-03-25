@@ -190,16 +190,20 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                         n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: false } } : n
                     );
                     
-                    // Filter out nodes that were targets of removed edges AND have no other incoming edges
+                    // Filter out nodes that were targets of removed edges AND have no other connections at all
                     const finalNodes = updatedNodes.filter(n => {
                         // Always keep the toggled node and the target node
                         if (n.id === speciesId.toString() || n.id === targetSpeciesId.toString()) return true;
                         
-                        // If it wasn't a target of a removed edge, keep it
+                        // If it wasn't a target of a removed edge, we generally keep it 
+                        // (it might be part of another branch)
                         if (!targetNodeIds.has(n.id)) return true;
                         
-                        // Keep if it has other incoming edges in the new set
-                        return remainingEdges.some(e => e.target === n.id);
+                        // CRITICAL: Keep if it has ANY connection (incoming or outgoing) in the remaining set
+                        // This ensures that if a parent is collapsed, its children are only removed 
+                        // if they don't lead to anything else (like the target species).
+                        const hasConnections = remainingEdges.some(e => e.target === n.id || e.source === n.id);
+                        return hasConnections;
                     });
 
                     const layoutedNodes = getLayoutedElements(finalNodes, remainingEdges);
