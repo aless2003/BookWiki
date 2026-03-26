@@ -40,3 +40,6 @@
     - [x] Improve Smart Merge to handle exact matches without merge markers.
     - [x] Prevent duplicate sections by title matching.
 - [x] Task: Conductor - User Manual Verification 'Phase 4: UI Implementation' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [61d4110]
