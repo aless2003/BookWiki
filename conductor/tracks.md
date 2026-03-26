@@ -17,7 +17,7 @@
 
 ---
 
-- [ ] **Track: feature: Templates Inheritance from Parent. e.g. A custom section "Stats" of the parent species "Pokemon" can be marked to be inherited by all children so for example "Sylveon" would already have the default "Stats" Template in it on creation/on edit of parent etc.**
+- [x] **Track: feature: Templates Inheritance from Parent. e.g. A custom section "Stats" of the parent species "Pokemon" can be marked to be inherited by all children so for example "Sylveon" would already have the default "Stats" Template in it on creation/on edit of parent etc.**
 *Link: [./tracks/species_template_inheritance_20260322/](./tracks/species_template_inheritance_20260322/)*
 
 ---
