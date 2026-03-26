@@ -31,7 +31,9 @@ public class SpeciesService {
     private SpeciesSectionRepository speciesSectionRepository;
 
     public List<Species> getSpeciesByStory(Long storyId) {
-        return speciesRepository.findByStoryId(storyId);
+        return speciesRepository.findByStoryId(storyId).stream()
+                .map(this::applyInheritance)
+                .toList();
     }
 
     public Optional<Species> getSpeciesById(Long id) {
@@ -53,15 +55,16 @@ public class SpeciesService {
         
         boolean modified = false;
         for (SpeciesSection template : inheritableSections) {
-            // Check if child already has this section (by inheritedFromSectionId)
+            // Check if child already has this section (by inheritedFromSectionId OR title)
             boolean exists = species.getCustomSections().stream()
-                    .anyMatch(s -> template.getId().equals(s.getInheritedFromSectionId()));
+                    .anyMatch(s -> template.getId().equals(s.getInheritedFromSectionId()) || 
+                                  (s.getTitle() != null && s.getTitle().equalsIgnoreCase(template.getTitle())));
             
             if (!exists) {
                 SpeciesSection newSection = new SpeciesSection();
                 newSection.setTitle(template.getTitle());
                 newSection.setContent(template.getContent());
-                newSection.setIsInheritable(false); // Children don't automatically re-inherit unless marked
+                newSection.setIsInheritable(true); // Default to true for recursive inheritance
                 newSection.setInheritedFromSectionId(template.getId());
                 newSection.setSpecies(species);
                 species.getCustomSections().add(newSection);
@@ -259,7 +262,7 @@ public class SpeciesService {
                     if (Boolean.TRUE.equals(section.getIsInheritable())) {
                         String oldContent = oldInheritableContent.get(section.getId());
                         if (oldContent == null || !oldContent.equals(section.getContent())) {
-                            propagateInheritance(section);
+                            propagateInheritance(section, oldContent);
                         }
                     }
                 }
@@ -269,17 +272,48 @@ public class SpeciesService {
         }).orElseThrow(() -> new RuntimeException("Species not found"));
     }
 
-    private void propagateInheritance(SpeciesSection template) {
+    private void propagateInheritance(SpeciesSection template, String oldParentContent) {
+        propagateInheritanceRecursive(template, oldParentContent, new java.util.HashSet<>());
+    }
+
+    private void propagateInheritanceRecursive(SpeciesSection template, String oldParentContent, java.util.Set<Long> visited) {
+        if (!visited.add(template.getId())) {
+            return;
+        }
+
+        // 1. Update existing copies
         List<SpeciesSection> descendants = speciesSectionRepository.findAllByInheritedFromSectionId(template.getId());
         for (SpeciesSection childSection : descendants) {
-            String mergedContent = smartMergeService.merge(template.getContent(), childSection.getContent());
+            String mergedContent = smartMergeService.merge(template.getContent(), oldParentContent, childSection.getContent());
             if (!mergedContent.equals(childSection.getContent())) {
+                String oldChildContent = childSection.getContent();
                 childSection.setContent(mergedContent);
                 speciesSectionRepository.save(childSection);
                 
                 // If this child section is ALSO inheritable, propagate further
                 if (Boolean.TRUE.equals(childSection.getIsInheritable())) {
-                    propagateInheritance(childSection);
+                    propagateInheritanceRecursive(childSection, oldChildContent, visited);
+                }
+            }
+        }
+
+        // 2. Proactively add to children of the owner of this template if they don't have it
+        if (template.getSpecies() != null && template.getSpecies().getId() != null) {
+            List<Species> children = speciesRepository.findByParentId(template.getSpecies().getId());
+            for (Species child : children) {
+                boolean hasSection = child.getCustomSections().stream()
+                        .anyMatch(s -> template.getId().equals(s.getInheritedFromSectionId()));
+                
+                if (!hasSection) {
+                    SpeciesSection newSection = new SpeciesSection();
+                    newSection.setTitle(template.getTitle());
+                    newSection.setContent(template.getContent());
+                    newSection.setIsInheritable(true);
+                    newSection.setInheritedFromSectionId(template.getId());
+                    newSection.setSpecies(child);
+                    child.getCustomSections().add(newSection);
+                    speciesRepository.save(child);
+                    // No need to recurse here, applyInheritance on child will handle its own descendants if fetched
                 }
             }
         }
@@ -289,6 +323,33 @@ public class SpeciesService {
     public void deleteSpecies(Long id) {
         speciesRepository.deleteById(id);
         referenceTrackingService.deleteReferences("SPECIES", id);
+    }
+
+    @Transactional
+    public void depropagateInheritance(Long sectionId, String mode) {
+        SpeciesSection template = speciesSectionRepository.findById(sectionId)
+                .orElseThrow(() -> new RuntimeException("Section not found"));
+        
+        depropagateRecursive(template, mode);
+    }
+
+    private void depropagateRecursive(SpeciesSection current, String mode) {
+        List<SpeciesSection> descendants = speciesSectionRepository.findAllByInheritedFromSectionId(current.getId());
+        
+        for (SpeciesSection childSection : descendants) {
+            if ("ALL".equalsIgnoreCase(mode)) {
+                // Remove recursively first to ensure we find all grand-children
+                depropagateRecursive(childSection, "ALL");
+                speciesSectionRepository.delete(childSection);
+            } else if ("UNEDITED".equalsIgnoreCase(mode)) {
+                // If it matches parent content, it's considered unedited
+                if (childSection.getContent().equals(current.getContent())) {
+                    depropagateRecursive(childSection, "UNEDITED");
+                    speciesSectionRepository.delete(childSection);
+                }
+                // If edited, we stop recursion for this branch
+            }
+        }
     }
 
     private void trackReferences(Species species) {

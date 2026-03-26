@@ -43,6 +43,11 @@ public class SpeciesController {
         return speciesService.addSection(id, section);
     }
 
+    @PostMapping("/species/sections/{id}/depropagate")
+    public void depropagateInheritance(@PathVariable Long id, @RequestParam String mode) {
+        speciesService.depropagateInheritance(id, mode);
+    }
+
     @GetMapping("/stories/{storyId}/species/{speciesId}/taxonomy")
     public SpeciesTaxonomyDTO getTaxonomy(@PathVariable Long storyId, @PathVariable Long speciesId) {
         return speciesService.getTaxonomy(speciesId);

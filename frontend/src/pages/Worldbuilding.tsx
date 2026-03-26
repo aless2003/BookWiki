@@ -27,7 +27,15 @@ import {
     Autocomplete,
     CircularProgress,
     AppBar,
-    Grid
+    Grid,
+    Switch,
+    FormControlLabel,
+    Tooltip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import { 
     Person as PersonIcon, 
@@ -67,6 +75,8 @@ interface Section {
     id?: number;
     title: string;
     content: string;
+    isInheritable?: boolean;
+    inheritedFromSectionId?: number;
 }
 
 interface Character {
@@ -159,10 +169,35 @@ const Worldbuilding: React.FC = () => {
         isBidirectional: false
     });
 
+    // Depropagation state
+    const [depropagateDialog, setDepropagateDialog] = useState<{ open: boolean, sectionId: number | null }>({
+        open: false,
+        sectionId: null
+    });
+
     const markDirty = useCallback((updater: any) => {
         setIsDirty(true);
         setEditEntry(updater);
     }, []);
+
+    const handleDepropagate = async (mode: 'ALL' | 'UNEDITED' | 'NONE') => {
+        if (!depropagateDialog.sectionId) return;
+        
+        if (mode !== 'NONE') {
+            try {
+                const res = await fetch(`http://localhost:3906/api/species/sections/${depropagateDialog.sectionId}/depropagate?mode=${mode}`, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('Depropagation failed');
+                success(`Successfully removed inherited sections (${mode.toLowerCase()})`);
+            } catch (err) {
+                console.error(err);
+                error('Failed to remove inherited sections');
+            }
+        }
+        
+        setDepropagateDialog({ open: false, sectionId: null });
+    };
 
     const loadSpeciesFlow = useCallback(async (speciesId: number) => {
         setIsFlowLoading(true);
@@ -501,7 +536,7 @@ const Worldbuilding: React.FC = () => {
         markDirty({ ...editEntry, traits: newTraits });
     };
 
-    const updateSection = (index: number, field: keyof Section, value: string) => {
+    const updateSection = (index: number, field: keyof Section, value: any) => {
         if (!editEntry) return;
         const newSections = [...editEntry.customSections];
         newSections[index] = { ...newSections[index], [field]: value };
@@ -1110,13 +1145,49 @@ const Worldbuilding: React.FC = () => {
                                 >
                                     <DeleteIcon fontSize="small" />
                                 </IconButton>
-                                <TextField
-                                    variant="standard"
-                                    fullWidth
-                                    value={section.title}
-                                    onChange={(e) => updateSection(index, 'title', e.target.value)}
-                                    sx={{ mb: 2, '& .MuiInput-root': { fontSize: '1.25rem', fontWeight: 600 } }}
-                                />
+                                
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                    <TextField
+                                        variant="standard"
+                                        fullWidth
+                                        value={section.title}
+                                        onChange={(e) => updateSection(index, 'title', e.target.value)}
+                                        sx={{ '& .MuiInput-root': { fontSize: '1.25rem', fontWeight: 600 } }}
+                                    />
+                                    {section.inheritedFromSectionId && (
+                                        <Tooltip title="Inherited from parent. You can edit values here without affecting the master template.">
+                                            <Chip 
+                                                icon={<AccountTreeIcon sx={{ fontSize: '14px !important' }} />}
+                                                label="Inherited" 
+                                                size="small" 
+                                                variant="outlined"
+                                                color="info"
+                                            />
+                                        </Tooltip>
+                                    )}
+                                </Box>
+
+                                {activeCategory === 'Species & Nature' && (
+                                    <Box sx={{ mb: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch 
+                                                    size="small"
+                                                    checked={!!section.isInheritable} 
+                                                    onChange={(e) => {
+                                                        const newValue = e.target.checked;
+                                                        if (!newValue && section.id) {
+                                                            setDepropagateDialog({ open: true, sectionId: section.id });
+                                                        }
+                                                        updateSection(index, 'isInheritable', newValue as any);
+                                                    }} 
+                                                />
+                                            }
+                                            label={<Typography variant="caption">Make Inheritable Template for Sub-Species</Typography>}
+                                        />
+                                    </Box>
+                                )}
+
                                 <RichTextEditor 
                                     key={`section-${index}-${editEntry.id || 'new'}`}
                                     content={section.content} 
@@ -1272,6 +1343,37 @@ const Worldbuilding: React.FC = () => {
                     )}
                 </Box>
             </Box>
+
+            <Dialog open={depropagateDialog.open} onClose={() => handleDepropagate('NONE')}>
+                <DialogTitle>Disable Inheritance?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        You are disabling inheritance for this section. How would you like to handle existing copies in child species?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ flexDirection: 'column', alignItems: 'stretch', p: 3, gap: 1 }}>
+                    <Button 
+                        variant="contained" 
+                        color="error" 
+                        onClick={() => handleDepropagate('ALL')}
+                    >
+                        Remove ALL inherited copies
+                    </Button>
+                    <Button 
+                        variant="outlined" 
+                        color="warning" 
+                        onClick={() => handleDepropagate('UNEDITED')}
+                    >
+                        Remove UNEDITED copies only
+                    </Button>
+                    <Button 
+                        variant="outlined" 
+                        onClick={() => handleDepropagate('NONE')}
+                    >
+                        Keep all (stop syncing)
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </ThemeProvider>
     );
 };

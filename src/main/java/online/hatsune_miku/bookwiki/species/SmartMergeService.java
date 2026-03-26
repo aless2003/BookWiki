@@ -12,21 +12,21 @@ public class SmartMergeService {
     /**
      * Merges structural changes from the parentTemplate into the childContent.
      * 
-     * Strategy:
-     * 1. If childContent is empty, just return parentTemplate.
-     * 2. Parse both as HTML fragments.
-     * 3. Focus on tables: If both have a table, try to align rows and columns.
-     * 4. For non-table content: Currently, we might just append new parent content 
-     *    if it's not found in child, but tables are the primary target for "templates".
-     * 
-     * @param parentTemplate The current HTML from the parent section.
+     * @param parentTemplate The new HTML from the parent section.
+     * @param oldParentTemplate The previous HTML from the parent section (for unedited check).
      * @param childContent The current HTML from the child section.
      * @return Merged HTML.
      */
-    public String merge(String parentTemplate, String childContent) {
+    public String merge(String parentTemplate, String oldParentTemplate, String childContent) {
         if (childContent == null || childContent.trim().isEmpty() || childContent.equals("<p><br></p>")) {
             return parentTemplate;
         }
+
+        // If child matches OLD parent exactly, it's unedited -> just take the NEW parent content
+        if (oldParentTemplate != null && childContent.equals(oldParentTemplate)) {
+            return parentTemplate;
+        }
+
         if (parentTemplate == null || parentTemplate.trim().isEmpty()) {
             return childContent;
         }
