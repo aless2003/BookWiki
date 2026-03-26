@@ -51,7 +51,7 @@ class SpeciesInheritanceTest {
         assertEquals("Stats", inherited.getTitle());
         assertEquals("<p>Parent Stats</p>", inherited.getContent());
         assertEquals(10L, inherited.getInheritedFromSectionId());
-        assertFalse(inherited.getIsInheritable()); // Children don't re-inherit by default
+        assertTrue(inherited.getIsInheritable()); // Children re-inherit by default for deeper propagation
     }
 
     @Test

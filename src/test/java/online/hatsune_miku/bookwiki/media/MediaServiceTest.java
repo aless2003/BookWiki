@@ -3,9 +3,9 @@ package online.hatsune_miku.bookwiki.media;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
 import org.hibernate.jdbc.ReturningWork;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -42,15 +42,19 @@ class MediaServiceTest {
     @Mock
     private Blob blob;
 
-    @InjectMocks
     private MediaService mediaService;
+
+    @BeforeEach
+    void setUp() {
+        mediaService = new MediaService(mediaRepository, entityManager, referenceRepository);
+    }
 
     @Test
     @SuppressWarnings("unchecked")
     void saveMedia() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.png", "image/png", "test data".getBytes());
 
-        doReturn(session).when(entityManager).unwrap(any());
+        when(entityManager.unwrap(Session.class)).thenReturn(session);
         when(session.doReturningWork(any(ReturningWork.class))).thenAnswer(invocation -> {
             ReturningWork<Blob> work = invocation.getArgument(0);
             return work.execute(connection);
