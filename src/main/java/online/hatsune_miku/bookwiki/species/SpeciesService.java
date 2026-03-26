@@ -29,11 +29,75 @@ public class SpeciesService {
     }
 
     public Optional<Species> getSpeciesById(Long id) {
-        return speciesRepository.findById(id);
+        return speciesRepository.findById(id).map(this::applyInheritance);
     }
 
     public Species getSpecies(Long id) {
-        return speciesRepository.findById(id).orElseThrow(() -> new RuntimeException("Species not found"));
+        return speciesRepository.findById(id)
+                .map(this::applyInheritance)
+                .orElseThrow(() -> new RuntimeException("Species not found"));
+    }
+
+    private Species applyInheritance(Species species) {
+        if (species.getParentId() == null) {
+            return species;
+        }
+
+        List<SpeciesSection> inheritableSections = getInheritableSectionsFromAncestors(species.getParentId());
+        
+        boolean modified = false;
+        for (SpeciesSection template : inheritableSections) {
+            // Check if child already has this section (by inheritedFromSectionId)
+            boolean exists = species.getCustomSections().stream()
+                    .anyMatch(s -> template.getId().equals(s.getInheritedFromSectionId()));
+            
+            if (!exists) {
+                SpeciesSection newSection = new SpeciesSection();
+                newSection.setTitle(template.getTitle());
+                newSection.setContent(template.getContent());
+                newSection.setIsInheritable(false); // Children don't automatically re-inherit unless marked
+                newSection.setInheritedFromSectionId(template.getId());
+                newSection.setSpecies(species);
+                species.getCustomSections().add(newSection);
+                modified = true;
+            }
+        }
+
+        if (modified) {
+            return speciesRepository.save(species);
+        }
+        
+        return species;
+    }
+
+    private List<SpeciesSection> getInheritableSectionsFromAncestors(Long parentId) {
+        java.util.List<SpeciesSection> allInheritable = new java.util.ArrayList<>();
+        Long currentParentId = parentId;
+        java.util.Set<Long> visited = new java.util.HashSet<>();
+
+        while (currentParentId != null && visited.add(currentParentId)) {
+            Optional<Species> parentOpt = speciesRepository.findById(currentParentId);
+            if (parentOpt.isPresent()) {
+                Species parent = parentOpt.get();
+                if (parent.getCustomSections() != null) {
+                    for (SpeciesSection section : parent.getCustomSections()) {
+                        if (Boolean.TRUE.equals(section.getIsInheritable())) {
+                            // Only add if we don't have a section with this title yet 
+                            // (closer ancestors override further ones)
+                            boolean alreadyAdded = allInheritable.stream()
+                                    .anyMatch(s -> s.getTitle().equals(section.getTitle()));
+                            if (!alreadyAdded) {
+                                allInheritable.add(section);
+                            }
+                        }
+                    }
+                }
+                currentParentId = parent.getParentId();
+            } else {
+                break;
+            }
+        }
+        return allInheritable;
     }
 
     @Transactional

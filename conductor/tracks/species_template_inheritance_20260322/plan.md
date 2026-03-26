@@ -9,12 +9,12 @@
 - [x] Task: Write tests for backend model changes.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Model Updates' (Protocol in workflow.md)
 
-## Phase 2: Core Inheritance Logic (Initial Copy)
-- [ ] Task: Implement backend logic for initial inheritance.
-    - [ ] Modify the logic for fetching/saving a Species. When a child species is loaded or saved, verify if its parent has `isInheritable` sections that the child does not yet possess (matching by section title or `inheritedFromSectionId`).
-    - [ ] If missing, automatically instantiate these sections on the child, copying the HTML content from the parent, and setting `inheritedFromSectionId`.
-- [ ] Task: Write tests for initial inheritance logic.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Core Inheritance Logic (Initial Copy)' (Protocol in workflow.md)
+## Phase 2: Core Inheritance Logic (Initial Copy) [checkpoint: 6e49522]
+- [x] Task: Implement backend logic for initial inheritance.
+    - [x] Modify the logic for fetching/saving a Species. When a child species is loaded or saved, verify if its parent has `isInheritable` sections that the child does not yet possess (matching by section title or `inheritedFromSectionId`).
+    - [x] If missing, automatically instantiate these sections on the child, copying the HTML content from the parent, and setting `inheritedFromSectionId`.
+- [x] Task: Write tests for initial inheritance logic.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Core Inheritance Logic (Initial Copy)' (Protocol in workflow.md)
 
 ## Phase 3: Smart Merge Logic (Updates)
 - [ ] Task: Research and implement HTML/Rich Text Smart Merge algorithm.
