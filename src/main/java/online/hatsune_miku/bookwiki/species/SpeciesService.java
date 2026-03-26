@@ -24,6 +24,12 @@ public class SpeciesService {
     @Autowired
     private ReferenceTrackingService referenceTrackingService;
 
+    @Autowired
+    private SmartMergeService smartMergeService;
+
+    @Autowired
+    private SpeciesSectionRepository speciesSectionRepository;
+
     public List<Species> getSpeciesByStory(Long storyId) {
         return speciesRepository.findByStoryId(storyId);
     }
@@ -193,6 +199,16 @@ public class SpeciesService {
     @Transactional
     public Species updateSpecies(Long id, Species updated) {
         return speciesRepository.findById(id).map(s -> {
+            // Store old inheritable sections content for comparison
+            java.util.Map<Long, String> oldInheritableContent = new java.util.HashMap<>();
+            if (s.getCustomSections() != null) {
+                for (SpeciesSection section : s.getCustomSections()) {
+                    if (Boolean.TRUE.equals(section.getIsInheritable())) {
+                        oldInheritableContent.put(section.getId(), section.getContent());
+                    }
+                }
+            }
+
             s.setName(updated.getName());
             s.setPictureUrl(updated.getPictureUrl());
             s.setCategory(updated.getCategory());
@@ -203,17 +219,70 @@ public class SpeciesService {
             s.setDescription(updated.getDescription());
             s.setHabitatId(updated.getHabitatId());
 
-            // Handle Custom Sections
-            s.getCustomSections().clear();
-            if (updated.getCustomSections() != null) {
-                s.getCustomSections().addAll(updated.getCustomSections());
-                s.getCustomSections().forEach(section -> section.setSpecies(s));
+            // Handle Custom Sections carefully to preserve IDs for propagation
+            java.util.List<SpeciesSection> existingSections = s.getCustomSections();
+            java.util.List<SpeciesSection> updatedSections = updated.getCustomSections();
+            
+            if (updatedSections == null) {
+                existingSections.clear();
+            } else {
+                // Remove sections not in updated list
+                existingSections.removeIf(existing -> updatedSections.stream()
+                        .noneMatch(u -> u.getId() != null && u.getId().equals(existing.getId())));
+
+                for (SpeciesSection uSection : updatedSections) {
+                    if (uSection.getId() == null) {
+                        // New section
+                        uSection.setSpecies(s);
+                        existingSections.add(uSection);
+                    } else {
+                        // Update existing section
+                        existingSections.stream()
+                                .filter(e -> e.getId().equals(uSection.getId()))
+                                .findFirst()
+                                .ifPresent(e -> {
+                                    e.setTitle(uSection.getTitle());
+                                    e.setContent(uSection.getContent());
+                                    e.setIsInheritable(uSection.getIsInheritable());
+                                    e.setInheritedFromSectionId(uSection.getInheritedFromSectionId());
+                                });
+                    }
+                }
             }
 
             Species saved = speciesRepository.save(s);
             trackReferences(saved);
+
+            // Propagate changes if inheritable sections were modified
+            if (saved.getCustomSections() != null) {
+                for (SpeciesSection section : saved.getCustomSections()) {
+                    if (Boolean.TRUE.equals(section.getIsInheritable())) {
+                        String oldContent = oldInheritableContent.get(section.getId());
+                        if (oldContent == null || !oldContent.equals(section.getContent())) {
+                            propagateInheritance(section);
+                        }
+                    }
+                }
+            }
+
             return saved;
         }).orElseThrow(() -> new RuntimeException("Species not found"));
+    }
+
+    private void propagateInheritance(SpeciesSection template) {
+        List<SpeciesSection> descendants = speciesSectionRepository.findAllByInheritedFromSectionId(template.getId());
+        for (SpeciesSection childSection : descendants) {
+            String mergedContent = smartMergeService.merge(template.getContent(), childSection.getContent());
+            if (!mergedContent.equals(childSection.getContent())) {
+                childSection.setContent(mergedContent);
+                speciesSectionRepository.save(childSection);
+                
+                // If this child section is ALSO inheritable, propagate further
+                if (Boolean.TRUE.equals(childSection.getIsInheritable())) {
+                    propagateInheritance(childSection);
+                }
+            }
+        }
     }
 
     @Transactional

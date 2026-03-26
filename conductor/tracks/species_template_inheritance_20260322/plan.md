@@ -9,7 +9,7 @@
 - [x] Task: Write tests for backend model changes.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Model Updates' (Protocol in workflow.md)
 
-## Phase 2: Core Inheritance Logic (Initial Copy) [checkpoint: 6e49522]
+## Phase 2: Core Inheritance Logic (Initial Copy) [checkpoint: d47d010]
 - [x] Task: Implement backend logic for initial inheritance.
     - [x] Modify the logic for fetching/saving a Species. When a child species is loaded or saved, verify if its parent has `isInheritable` sections that the child does not yet possess (matching by section title or `inheritedFromSectionId`).
     - [x] If missing, automatically instantiate these sections on the child, copying the HTML content from the parent, and setting `inheritedFromSectionId`.
@@ -17,10 +17,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Core Inheritance Logic (Initial Copy)' (Protocol in workflow.md)
 
 ## Phase 3: Smart Merge Logic (Updates)
-- [ ] Task: Research and implement HTML/Rich Text Smart Merge algorithm.
+- [x] Task: Research and implement HTML/Rich Text Smart Merge algorithm.
     - [ ] **Crucial:** Develop an algorithm (likely in the backend using `jsoup` or similar HTML parsing) that can take an updated Parent HTML string and a customized Child HTML string, and intelligently merge new structural elements (e.g., table rows/columns) without destroying text nodes in the Child.
     - [ ] *Alternative:* If full smart merge is too complex for rich text, implement a fallback strategy (e.g., appending the new parent template below the child's content with a warning).
-- [ ] Task: Implement Parent Update propagation.
+- [~] Task: Implement Parent Update propagation.
     - [ ] When a parent species is saved, detect if any `isInheritable` sections were modified.
     - [ ] If so, find all descendant child sections matching the `inheritedFromSectionId`.
     - [ ] Apply the Smart Merge algorithm and save the updated child sections.
