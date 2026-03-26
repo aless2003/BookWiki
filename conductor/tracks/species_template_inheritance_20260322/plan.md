@@ -1,13 +1,13 @@
 # Implementation Plan: Species Custom Section Template Inheritance
 
 ## Phase 1: Database and Backend Model Updates
-- [ ] Task: Update `CustomSection` entity.
-    - [ ] Add `boolean isInheritable` flag.
-    - [ ] Add `UUID inheritedFromSectionId` (nullable) to track lineage and facilitate updates.
-- [ ] Task: Update DTOs and Mappers.
-    - [ ] Expose the new properties in API responses.
-- [ ] Task: Write tests for backend model changes.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Model Updates' (Protocol in workflow.md)
+- [x] Task: Update `CustomSection` entity.
+    - [x] Add `boolean isInheritable` flag.
+    - [x] Add `Long inheritedFromSectionId` (nullable) to track lineage and facilitate updates.
+- [x] Task: Update DTOs and Mappers. (N/A - entities used directly)
+    - [x] Expose the new properties in API responses.
+- [x] Task: Write tests for backend model changes.
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Backend Model Updates' (Protocol in workflow.md)
 
 ## Phase 2: Core Inheritance Logic (Initial Copy)
 - [ ] Task: Implement backend logic for initial inheritance.

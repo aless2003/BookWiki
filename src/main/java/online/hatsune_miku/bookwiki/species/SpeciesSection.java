@@ -24,6 +24,10 @@ public class SpeciesSection {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private Boolean isInheritable = false;
+
+    private Long inheritedFromSectionId;
+
     @ManyToOne
     @JoinColumn(name = "species_id")
     @JsonBackReference
