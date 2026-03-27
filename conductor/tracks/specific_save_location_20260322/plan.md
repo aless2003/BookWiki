@@ -19,14 +19,14 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Integration' (Protocol in workflow.md)
 
 ## Phase 3: Testing and Refinement
-- [ ] Task: Test Desktop Wrapper.
-    - [ ] Build and run the Tauri app.
-    - [ ] Verify that exporting a document triggers the native OS "Save As" dialog and saves correctly.
-    - [ ] Verify that exporting a backup triggers the native OS "Save As" dialog and saves correctly.
-- [ ] Task: Test Web Browser (Modern).
-    - [ ] Run the app in a browser that supports `showSaveFilePicker` (e.g., Chrome/Edge).
-    - [ ] Verify that exports trigger the browser's save picker.
-- [ ] Task: Test Web Browser (Fallback).
-    - [ ] Run the app in a browser that does not support `showSaveFilePicker` (e.g., Firefox or mock the API absence).
-    - [ ] Verify that exports gracefully fallback to standard downloads.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Testing and Refinement' (Protocol in workflow.md)
+- [x] Task: Test Desktop Wrapper.
+    - [x] Build and run the Tauri app.
+    - [x] Verify that exporting a document triggers the native OS "Save As" dialog and saves correctly.
+    - [x] Verify that exporting a backup triggers the native OS "Save As" dialog and saves correctly.
+- [x] Task: Test Web Browser (Modern).
+    - [x] Run the app in a browser that supports `showSaveFilePicker` (e.g., Chrome/Edge).
+    - [x] Verify that exports trigger the browser's save picker.
+- [x] Task: Test Web Browser (Fallback).
+    - [x] Run the app in a browser that does not support `showSaveFilePicker` (e.g., Firefox or mock the API absence).
+    - [x] Verify that exports gracefully fallback to standard downloads.
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Testing and Refinement' (Protocol in workflow.md)
