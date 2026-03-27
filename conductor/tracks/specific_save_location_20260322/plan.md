@@ -18,7 +18,7 @@
     - [x] Refactor to use the `downloadFile` utility.
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Integration' (Protocol in workflow.md)
 
-## Phase 3: Testing and Refinement
+## Phase 3: Testing and Refinement [checkpoint: a3f0704]
 - [x] Task: Test Desktop Wrapper.
     - [x] Build and run the Tauri app.
     - [x] Verify that exporting a document triggers the native OS "Save As" dialog and saves correctly.
