@@ -12,11 +12,6 @@
 
 ---
 
-- [x] **Track: Feature: Desktop App save at specific location (browser too if possible)**
-*Link: [./tracks/specific_save_location_20260322/](./tracks/specific_save_location_20260322/)*
-
----
-
 - [ ] **Track: Chore: Remove the Command Prompt popping up in the desktop application**
 *Link: [./tracks/remove_sidecar_console_20260325/](./tracks/remove_sidecar_console_20260325/)*
 
