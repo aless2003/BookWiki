@@ -12,7 +12,7 @@
 
 ---
 
-- [~] **Track: Feature: Desktop App save at specific location (browser too if possible)**
+- [x] **Track: Feature: Desktop App save at specific location (browser too if possible)**
 *Link: [./tracks/specific_save_location_20260322/](./tracks/specific_save_location_20260322/)*
 
 ---
