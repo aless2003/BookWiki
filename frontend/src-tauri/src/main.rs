@@ -1,12 +1,14 @@
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::CommandChild;
-use tauri::Manager;
 use std::sync::Mutex;
+use tauri::Manager;
+use tauri_plugin_shell::process::CommandChild;
+use tauri_plugin_shell::ShellExt;
 
 struct SidecarState(Mutex<Option<CommandChild>>);
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .manage(SidecarState(Mutex::new(None)))
         .setup(|app| {
