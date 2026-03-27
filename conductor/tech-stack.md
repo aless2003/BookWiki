@@ -33,7 +33,11 @@
 - `Custom InlineImage`: Tiptap extension for emoji-like inline images/emotes.
 - **Routing:** React Router DOM
 
-## Desktop Wrapper`n- **Framework:** Tauri v2 (Rust-based native wrapper)`n- **Sidecar:** Rust-based process orchestrator for the Spring Boot backend`n- **Bundled Runtime:** Minimal Java Runtime (JRE) generated via jlink`n`n## Infrastructure & DevOps
+## Desktop Wrapper`n- **Framework:** Tauri v2 (Rust-based native wrapper)`n- **Sidecar:** Rust-based process orchestrator for the Spring Boot backend`n- **Bundled Runtime:** Minimal Java Runtime (JRE) generated via jlink
+- **Key Plugins:**
+  - `@tauri-apps/plugin-dialog`: For native system file selection and save dialogs.
+  - `@tauri-apps/plugin-fs`: For secure filesystem access and file writing.
+`n`n## Infrastructure & DevOps
 - **Database:** H2 (File-based)`n- **Persistence:** System-standard AppData folder for database and uploads in standalone mode
 - **Portable Data Format:** `.bwiki` archives (ZIP-compressed JSON + Binary blobs) for backups and data exchange.
 - **Development Environment:** Zero-install local development (Docker Compose no longer required for DB).

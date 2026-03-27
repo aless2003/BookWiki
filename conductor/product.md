@@ -18,8 +18,8 @@ BookWiki is a platform designed to empower writers and worldbuilders by providin
 - **Inheritable Data Templates:** Support for defining inheritable custom sections (e.g., "Stats" tables) in species hierarchies, with automatic propagation and structural "Smart Merge" to preserve child-specific data.
 - **Enhanced Writing Studio:** A feature-rich editor utilizing Tiptap with custom extensions (including arbitrary image resizing with aspect ratio control), ensuring a high-quality writing experience.
 - **Inline Emote System:** Support for converting images into inline, non-resizable "emotes" with a dedicated management interface for renaming and deleting them.
-- **Manuscript Export:** Ability to export chapters or full stories into standard PDF and DOCX formats with high-fidelity formatting.
+- **Manuscript Export:** Ability to export chapters or full stories into standard PDF and DOCX formats with high-fidelity formatting and user-specified save locations.
 - **Deep Integration:** Bi-directional navigation and deep-linking between the writing studio and the worldbuilding wiki to facilitate an efficient creative workflow.
 - **Multi-Window Support:** The ability to pop-out worldbuilding entries or chapters into secondary OS-level windows via middle-click, allowing for parallel referencing and editing across multiple monitors.
-- **Data Portability & Backups:** A robust system for exporting entire projects or individual stories into portable `.bwiki` archives, with full import and merge capabilities to ensure data safety and easy project sharing.
+- **Data Portability & Backups:** A robust system for exporting entire projects or individual stories into portable `.bwiki` archives with a "Save As" location prompt, featuring full import and merge capabilities to ensure data safety and easy project sharing.
 - **Global Save Indicators:** Real-time visual feedback via toast notifications and "Unsaved" state indicators across all modules, ensuring users are always aware of their data's sync status.
