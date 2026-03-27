@@ -1,16 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Mutex;
-use tauri::Manager;
-use tauri_plugin_shell::process::CommandChild;
 use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::process::CommandChild;
+use tauri::Manager;
+use std::sync::Mutex;
 
 struct SidecarState(Mutex<Option<CommandChild>>);
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .manage(SidecarState(Mutex::new(None)))
         .setup(|app| {
@@ -24,11 +22,9 @@ fn main() {
 
             Ok(())
         })
-        .build(tauri::generate_context!())
-        .expect("error while building tauri application")
-        .run(|app_handle, event| match event {
-            tauri::RunEvent::Exit => {
-                let state = app_handle.state::<SidecarState>();
+        .on_window_event(|app, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let state = app.state::<SidecarState>();
                 let maybe_child = {
                     let mut lock = state.0.lock().unwrap();
                     lock.take()
@@ -38,6 +34,7 @@ fn main() {
                     let _ = child.kill();
                 }
             }
-            _ => {}
-        });
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

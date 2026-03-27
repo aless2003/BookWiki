@@ -1,6 +1,9 @@
+#![windows_subsystem = "windows"]
 use std::process::{Command, Stdio};
 use std::env;
 use std::os::windows::io::AsRawHandle;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use winapi::um::jobapi2::{AssignProcessToJobObject, SetInformationJobObject};
 use winapi::um::winnt::{
     JobObjectExtendedLimitInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
@@ -14,7 +17,7 @@ use std::fs::OpenOptions;
 fn main() {
     let exe_path = env::current_exe().expect("Failed to get current exe path");
     let app_dir = exe_path.parent().expect("Failed to get parent dir");
-    
+
     const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
     let jar_filename = format!("BookWiki-{}.jar", APP_VERSION);
 
@@ -28,13 +31,13 @@ fn main() {
     }
 
     let args: Vec<String> = env::args().skip(1).collect();
-    
+
     // Create job object for cleanup (ensures child process dies if this wrapper is killed)
     let job = unsafe { CreateJobObjectA(null_mut(), null_mut()) };
     if job != null_mut() {
         let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
         info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-        
+
         unsafe {
             SetInformationJobObject(
                 job,
@@ -50,6 +53,10 @@ fn main() {
     let err_file = OpenOptions::new().create(true).append(true).open(app_dir.join("backend.err")).ok();
 
     let mut cmd = Command::new(jre_path);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(0x08000000);
+    }
     cmd.arg("-Dbookwiki.standalone=true");
     cmd.arg("-jar").arg(jar_path);
     cmd.args(&args);
