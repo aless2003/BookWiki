@@ -1,0 +1,8 @@
+{
+  "track_id": "remove_sidecar_console_20260325",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-03-25T14:30:00Z",
+  "updated_at": "2026-03-25T14:30:00Z",
+  "description": "Chore: Remove the Command Prompt popping up in the desktop application"
+}
