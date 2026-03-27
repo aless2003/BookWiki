@@ -1,8 +1,0 @@
-{
-  "track_id": "species_template_inheritance_20260322",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-03-22T00:00:00Z",
-  "updated_at": "2026-03-22T00:00:00Z",
-  "description": "feature: Templates Inheritance from Parent. e.g. A custom section \"Stats\" of the parent species \"Pokemon\" can be marked to be inherited by all children so for example \"Sylveon\" would already have the default \"Stats\" Template in it on creation/on edit of parent etc."
-}

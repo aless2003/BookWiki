@@ -1,6 +1,6 @@
 {
   "productName": "BookWiki",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "identifier": "com.bookwiki.app",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -35,7 +35,7 @@
     ],
     "resources": [
       "../../scripts/dist/jre/**/*",
-      "../../scripts/dist/BookWiki-0.5.1.jar"
+      "../../scripts/dist/BookWiki-0.6.0.jar"
     ]
   },
   "plugins": {
