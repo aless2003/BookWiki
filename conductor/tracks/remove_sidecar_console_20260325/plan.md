@@ -1,6 +1,6 @@
 # Implementation Plan: Remove Command Prompt for Sidecar
 
-## Phase 1: Implementation
+## Phase 1: Implementation [checkpoint: 259828f]
 - [x] Task: Modify `frontend/src-tauri/src/main.rs` to hide the console for the sidecar process.
     - [ ] Add `#[cfg(windows)] use std::os::windows::process::CommandExt;`
     - [ ] Update the `sidecar_command` spawn logic to include `creation_flags(0x08000000)` (CREATE_NO_WINDOW) on Windows.
