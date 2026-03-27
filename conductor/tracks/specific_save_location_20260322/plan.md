@@ -9,7 +9,7 @@
     - [x] Update the `downloadFile` helper to use the Tauri `save` API when running in the desktop wrapper.
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Research and Utility Implementation' (Protocol in workflow.md)
 
-## Phase 2: Integration
+## Phase 2: Integration [checkpoint: 4c8418e]
 - [x] Task: Update Document Export flows.
     - [x] Locate the PDF and DOCX export features in the frontend.
     - [x] Refactor these features to use the new `downloadFile` utility instead of standard browser downloads.
