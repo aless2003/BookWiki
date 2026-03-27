@@ -1,6 +1,6 @@
 # Implementation Plan: Specific Save Location for Downloads
 
-## Phase 1: Research and Utility Implementation
+## Phase 1: Research and Utility Implementation [checkpoint: 7ba689d]
 - [x] Task: Create a unified Download/Save utility for the frontend.
     - [x] Create a `downloadFile` helper function (e.g., in `src/utils/download.ts`) that handles both Tauri and Web browser environments.
     - [x] Implement Web browser fallback logic: Try `window.showSaveFilePicker`, catch exceptions/unsupported environments, and fallback to `<a>` tag triggering a standard download.
