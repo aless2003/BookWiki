@@ -77,7 +77,7 @@ export async function downloadFile(
         console.log('File saved via File System Access API');
       } else {
         // Fallback to standard <a> tag download
-        const blob = data instanceof Blob ? data : new Blob([data]);
+        const blob = data instanceof Blob ? data : new Blob([data as any]);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -98,7 +98,7 @@ export async function downloadFile(
       console.error('Web save error:', error);
       
       // Secondary fallback if showSaveFilePicker failed for some other reason
-      const blob = data instanceof Blob ? data : new Blob([data]);
+      const blob = data instanceof Blob ? data : new Blob([data as any]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

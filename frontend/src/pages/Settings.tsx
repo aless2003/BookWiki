@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, ListGroup, Spinner, Alert } from 're
 import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck, MdErrorOutline } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../constants/api';
+import { downloadFile } from '../utils/download';
 
 interface Story {
   id: number;
@@ -50,13 +51,9 @@ const Settings: React.FC = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/data/export/full`);
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `bookwiki_full_backup_${new Date().toISOString().split('T')[0]}.bwiki`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const filename = `bookwiki_full_backup_${new Date().toISOString().split('T')[0]}.bwiki`;
+      const filters = [{ name: 'BookWiki Backup', extensions: ['bwiki'] }];
+      await downloadFile(blob, filename, filters);
     } catch (err) {
       console.error('Full export failed', err);
       alert('Export failed. Please check the console for details.');
@@ -75,13 +72,9 @@ const Settings: React.FC = () => {
         body: JSON.stringify(selectedStoryIds)
       });
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `bookwiki_stories_export_${new Date().toISOString().split('T')[0]}.bwiki`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const filename = `bookwiki_stories_export_${new Date().toISOString().split('T')[0]}.bwiki`;
+      const filters = [{ name: 'BookWiki Backup', extensions: ['bwiki'] }];
+      await downloadFile(blob, filename, filters);
     } catch (err) {
       console.error('Selected export failed', err);
       alert('Export failed. Please check the console for details.');

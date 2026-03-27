@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, ListGroup } from 'react-bootstrap';
 import { MdGetApp } from 'react-icons/md';
+import { downloadFile } from '../utils/download';
 
 interface Chapter {
     id: number;
@@ -50,9 +51,6 @@ const ExportModal: React.FC<ExportModalProps> = ({ show, onHide, storyId, chapte
 
             if (response.ok) {
                 const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
                 
                 // Try to get filename from header
                 const contentDisposition = response.headers.get('Content-Disposition');
@@ -61,11 +59,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ show, onHide, storyId, chapte
                     filename = contentDisposition.split('filename=')[1].replace(/"/g, '');
                 }
                 
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
+                const filters = format === 'pdf' 
+                    ? [{ name: 'PDF Document', extensions: ['pdf'] }]
+                    : [{ name: 'Word Document', extensions: ['docx'] }];
+
+                await downloadFile(blob, filename, filters);
                 onHide();
             } else {
                 console.error('Export failed');

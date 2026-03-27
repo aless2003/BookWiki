@@ -10,13 +10,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Research and Utility Implementation' (Protocol in workflow.md)
 
 ## Phase 2: Integration
-- [ ] Task: Update Document Export flows.
-    - [ ] Locate the PDF and DOCX export features in the frontend.
-    - [ ] Refactor these features to use the new `downloadFile` utility instead of standard browser downloads.
-- [ ] Task: Update Backup Export flow.
-    - [ ] Locate the `.bwiki` project/story backup export feature.
-    - [ ] Refactor to use the `downloadFile` utility.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Integration' (Protocol in workflow.md)
+- [x] Task: Update Document Export flows.
+    - [x] Locate the PDF and DOCX export features in the frontend.
+    - [x] Refactor these features to use the new `downloadFile` utility instead of standard browser downloads.
+- [x] Task: Update Backup Export flow.
+    - [x] Locate the `.bwiki` project/story backup export feature.
+    - [x] Refactor to use the `downloadFile` utility.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Integration' (Protocol in workflow.md)
 
 ## Phase 3: Testing and Refinement
 - [ ] Task: Test Desktop Wrapper.
