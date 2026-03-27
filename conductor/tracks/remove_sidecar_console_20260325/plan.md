@@ -9,8 +9,11 @@
 - [x] Task: Ensure that the lifecycle logic (kill on exit) is still robust.
 
 ## Phase 2: Verification
-- [ ] Task: Launch the application on Windows.
-- [ ] Task: Confirm no persistent Command Prompt appears for the sidecar.
-- [ ] Task: Verify the backend is functional (check API response).
-- [ ] Task: Close the application and verify the backend process is terminated.
-- [ ] Task: Conductor - User Manual Verification 'Verification' (Protocol in workflow.md)
+- [x] Task: Launch the application on Windows.
+- [x] Task: Confirm no persistent Command Prompt appears for the sidecar.
+- [x] Task: Verify the backend is functional (check API response).
+- [x] Task: Close the application and verify the backend process is terminated.
+- [x] Task: Conductor - User Manual Verification 'Verification' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [45cd821]
