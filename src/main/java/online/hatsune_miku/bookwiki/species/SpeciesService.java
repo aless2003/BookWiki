@@ -12,23 +12,26 @@ import java.util.Optional;
 
 @Service
 public class SpeciesService {
-    @Autowired
-    private SpeciesRepository speciesRepository;
+    private final SpeciesRepository speciesRepository;
 
-    @Autowired
-    private StoryRepository storyRepository;
+    private final StoryRepository storyRepository;
 
-    @Autowired
-    private SpeciesLinkRepository speciesLinkRepository;
+    private final SpeciesLinkRepository speciesLinkRepository;
 
-    @Autowired
-    private ReferenceTrackingService referenceTrackingService;
+    private final ReferenceTrackingService referenceTrackingService;
 
-    @Autowired
-    private SmartMergeService smartMergeService;
+    private final SmartMergeService smartMergeService;
 
-    @Autowired
-    private SpeciesSectionRepository speciesSectionRepository;
+    private final SpeciesSectionRepository speciesSectionRepository;
+
+    public SpeciesService(SpeciesRepository speciesRepository, StoryRepository storyRepository, SpeciesLinkRepository speciesLinkRepository, ReferenceTrackingService referenceTrackingService, SmartMergeService smartMergeService, SpeciesSectionRepository speciesSectionRepository) {
+        this.speciesRepository = speciesRepository;
+        this.storyRepository = storyRepository;
+        this.speciesLinkRepository = speciesLinkRepository;
+        this.referenceTrackingService = referenceTrackingService;
+        this.smartMergeService = smartMergeService;
+        this.speciesSectionRepository = speciesSectionRepository;
+    }
 
     public List<Species> getSpeciesByStory(Long storyId) {
         return speciesRepository.findByStoryId(storyId).stream()

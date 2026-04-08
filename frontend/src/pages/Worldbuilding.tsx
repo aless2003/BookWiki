@@ -163,10 +163,10 @@ const Worldbuilding: React.FC = () => {
     // Species Flow state
     const [speciesFlow, setSpeciesFlow] = useState<SpeciesFlow | null>(null);
     const [isFlowLoading, setIsFlowLoading] = useState(false);
-    const [newLink, setNewLink] = useState<{ targetId: number | '', label: string, isBidirectional: boolean }>({
+    const [newLink, setNewLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean }>({
         targetId: '',
         label: '',
-        isBidirectional: false
+        bidirectional: false
     });
 
     // Depropagation state
@@ -278,10 +278,10 @@ const Worldbuilding: React.FC = () => {
                 sourceSpeciesId: editEntry.id,
                 targetSpeciesId: newLink.targetId,
                 label: newLink.label,
-                isBidirectional: newLink.isBidirectional
+                bidirectional: newLink.bidirectional
             });
             success('Link added');
-            setNewLink({ targetId: '', label: '', isBidirectional: false });
+            setNewLink({ targetId: '', label: '', bidirectional: false });
             loadSpeciesFlow(editEntry.id);
         } catch (err) {
             console.error('Failed to create link', err);
@@ -938,7 +938,7 @@ const Worldbuilding: React.FC = () => {
                                                                                 {speciesFlow?.edges.map(edge => {
                                                                                     const otherId = edge.sourceSpeciesId === editEntry.id ? edge.targetSpeciesId : edge.sourceSpeciesId;
                                                                                     const otherSpecies = species.find(s => s.id === otherId);
-                                                                                    const isIncoming = edge.targetSpeciesId === editEntry.id && !edge.isBidirectional;
+                                                                                    const isIncoming = edge.targetSpeciesId === editEntry.id && !edge.bidirectional;
                                                                                     
                                                                                     return (
                                                                                         <ListItem 
@@ -954,7 +954,7 @@ const Worldbuilding: React.FC = () => {
                                                                                                 primary={otherSpecies?.name || 'Unknown'} 
                                                                                                 secondary={
                                                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                                                        {edge.isBidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
+                                                                                                        {edge.bidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
                                                                                                         {edge.label || 'Related'}
                                                                                                     </Box>
                                                                                                 }
@@ -999,11 +999,11 @@ const Worldbuilding: React.FC = () => {
                                                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                                                 <Button 
                                                                                     size="small" 
-                                                                                    variant={newLink.isBidirectional ? "contained" : "outlined"}
-                                                                                    onClick={() => setNewLink(prev => ({ ...prev, isBidirectional: !prev.isBidirectional }))}
-                                                                                    startIcon={newLink.isBidirectional ? <LinkIcon /> : <LinkOffIcon />}
+                                                                                    variant={newLink.bidirectional ? "contained" : "outlined"}
+                                                                                    onClick={() => setNewLink(prev => ({ ...prev, bidirectional: !prev.bidirectional }))}
+                                                                                    startIcon={newLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
                                                                                 >
-                                                                                    {newLink.isBidirectional ? "Bidirectional" : "Unidirectional"}
+                                                                                    {newLink.bidirectional ? "Bidirectional" : "Unidirectional"}
                                                                                 </Button>
                                                                                 <Button 
                                                                                     variant="contained" 

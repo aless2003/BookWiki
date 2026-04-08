@@ -5,7 +5,7 @@ export interface SpeciesLink {
     sourceSpeciesId: number;
     targetSpeciesId: number;
     label: string;
-    isBidirectional: boolean;
+    bidirectional: boolean;
 }
 
 export interface SpeciesNode {

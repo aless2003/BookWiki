@@ -3,6 +3,7 @@ package online.hatsune_miku.bookwiki.species;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "species_links")
@@ -24,5 +25,6 @@ public class SpeciesLink {
     @NotNull(message = "targetSpeciesId is required")
     private Long targetSpeciesId;
     private String label;
+    @JsonProperty("isBidirectional")
     private boolean isBidirectional;
 }

@@ -67,7 +67,49 @@ const SpeciesNode = ({ data }: { data: SpeciesNodeData }) => {
                 '&:hover .node-actions': { opacity: 1 }
             }}
         >
-            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+            {/* Target Handles (Top) */}
+            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
+                <Handle
+                    key={`t-${i}`}
+                    type="target"
+                    position={Position.Top}
+                    id={`t-${i}`}
+                    style={{ left: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
+                />
+            ))}
+            
+            {/* Source Handles (Bottom) */}
+            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
+                <Handle
+                    key={`s-${i}`}
+                    type="source"
+                    position={Position.Bottom}
+                    id={`s-${i}`}
+                    style={{ left: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
+                />
+            ))}
+
+            {/* Target Handles (Left) for horizontal layout */}
+            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
+                <Handle
+                    key={`tl-${i}`}
+                    type="target"
+                    position={Position.Left}
+                    id={`tl-${i}`}
+                    style={{ top: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
+                />
+            ))}
+            
+            {/* Source Handles (Right) for horizontal layout */}
+            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
+                <Handle
+                    key={`sr-${i}`}
+                    type="source"
+                    position={Position.Right}
+                    id={`sr-${i}`}
+                    style={{ top: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
+                />
+            ))}
             
             <Avatar 
                 src={data.pictureUrl ? resolveShortcodes(data.pictureUrl) : undefined}
@@ -118,8 +160,6 @@ const SpeciesNode = ({ data }: { data: SpeciesNodeData }) => {
                     </IconButton>
                 </Tooltip>
             </Box>
-
-            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
         </Paper>
     );
 };
@@ -130,6 +170,113 @@ const nodeTypes = {
 
 const nodeWidth = 200;
 const nodeHeight = 70;
+const MAX_HANDLES = 15;
+
+/** How far along the rank axis before we treat an edge as “forward/back” vs same-rank cross traffic. */
+const FLOW_AXIS_THRESHOLD = 40;
+
+/**
+ * Handle indices: bi vs uni buckets along the main dagre axis; lateral split only when nearly same rank.
+ */
+const HANDLE = {
+    tb: {
+        srcBi: 7,
+        srcUniDown: 8,
+        srcUniUp: 2,
+        srcUniCrossNeg: 3,
+        srcUniCrossPos: 13,
+        tgtBi: 7,
+        tgtUniFromAbove: 6,
+        tgtUniFromBelow: 11,
+        tgtUniCrossNegDx: 11,
+        tgtUniCrossPosDx: 1,
+    },
+    lr: {
+        srcBi: 7,
+        srcUniForward: 8,
+        srcUniBackward: 2,
+        srcUniCrossNeg: 3,
+        srcUniCrossPos: 13,
+        tgtBi: 7,
+        tgtUniFromForward: 6,
+        tgtUniFromBackward: 11,
+        tgtUniCrossNegDy: 11,
+        tgtUniCrossPosDy: 1,
+    },
+} as const;
+
+/**
+ * Groups edges onto shared handles by type:
+ * - Bidirectional → one point per node side
+ * - Unidirectional → one point per rank direction (TB: below vs above vs same-row left/right; LR: right vs left vs same-column up/down)
+ */
+const assignHandleIds = (nodes: Node[], edges: Edge[], direction: string = 'TB') => {
+    const isHorizontal = direction === 'LR';
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+    return edges.map(e => {
+        const sourceNode = nodeMap.get(e.source);
+        const targetNode = nodeMap.get(e.target);
+
+        if (!sourceNode || !targetNode) return e;
+
+        const isBi = !!e.markerStart;
+        const dx = targetNode.position.x - sourceNode.position.x;
+        const dy = targetNode.position.y - sourceNode.position.y;
+
+        if (isHorizontal) {
+            const H = HANDLE.lr;
+            const srcIdx = isBi
+                ? H.srcBi
+                : dx > FLOW_AXIS_THRESHOLD
+                  ? H.srcUniForward
+                  : dx < -FLOW_AXIS_THRESHOLD
+                    ? H.srcUniBackward
+                    : dy <= 0
+                      ? H.srcUniCrossNeg
+                      : H.srcUniCrossPos;
+            const tgtIdx = isBi
+                ? H.tgtBi
+                : dx > FLOW_AXIS_THRESHOLD
+                  ? H.tgtUniFromForward
+                  : dx < -FLOW_AXIS_THRESHOLD
+                    ? H.tgtUniFromBackward
+                    : dy > 0
+                      ? H.tgtUniCrossPosDy
+                      : H.tgtUniCrossNegDy;
+            return {
+                ...e,
+                sourceHandle: `sr-${srcIdx}`,
+                targetHandle: `tl-${tgtIdx}`,
+            };
+        }
+
+        const H = HANDLE.tb;
+        const srcIdx = isBi
+            ? H.srcBi
+            : dy > FLOW_AXIS_THRESHOLD
+              ? H.srcUniDown
+              : dy < -FLOW_AXIS_THRESHOLD
+                ? H.srcUniUp
+                : dx <= 0
+                  ? H.srcUniCrossNeg
+                  : H.srcUniCrossPos;
+        const tgtIdx = isBi
+            ? H.tgtBi
+            : dy > FLOW_AXIS_THRESHOLD
+              ? H.tgtUniFromAbove
+              : dy < -FLOW_AXIS_THRESHOLD
+                ? H.tgtUniFromBelow
+                : dx > 0
+                  ? H.tgtUniCrossPosDx
+                  : H.tgtUniCrossNegDx;
+        return {
+            ...e,
+            sourceHandle: `s-${srcIdx}`,
+            targetHandle: `t-${tgtIdx}`,
+        };
+    });
+};
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -167,7 +314,10 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const handleToggleRef = React.useRef<(id: number, isExpanded: boolean) => Promise<void>>(async () => {});
 
-    const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+    const onConnect = useCallback((params: Connection) => setEdges((eds) => {
+        const combinedEdges = addEdge(params, eds);
+        return assignHandleIds(nodes, combinedEdges, 'TB');
+    }), [setEdges, nodes]);
 
     const handleToggle = useCallback(async (speciesId: number, isExpanded: boolean) => {
         if (isExpanded) {
@@ -213,10 +363,11 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 legitNodes.has(e.source) && legitNodes.has(e.target)
             );
 
-            // 4. Layout and update both states
+            // 4. Layout and update both states with unique handles
             const layoutedNodes = getLayoutedElements(finalNodes, finalEdges);
+            const edgesWithHandles = assignHandleIds(layoutedNodes, finalEdges, 'TB');
             setNodes(layoutedNodes);
-            setEdges(finalEdges);
+            setEdges(edgesWithHandles);
             return;
         }
 
@@ -253,26 +404,30 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                     const existingEdgeIds = new Set(eds.map(e => e.id));
                     const newEdges = flow.edges
                         .filter(e => !existingEdgeIds.has(`e-${e.id}`))
-                        .map(e => ({
-                            id: `e-${e.id}`,
-                            source: e.sourceSpeciesId.toString(),
-                            target: e.targetSpeciesId.toString(),
-                            label: e.label,
-                            animated: true,
-                            type: 'smoothstep',
-                            labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
-                            labelBgPadding: [8, 4] as [number, number],
-                            labelBgBorderRadius: 4,
-                            labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
-                            markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                            markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 } : undefined,
-                            style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
-                        }));
+                        .map(e => {
+                            console.log(`Connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
+                            return {
+                                id: `e-${e.id}`,
+                                source: e.sourceSpeciesId.toString(),
+                                target: e.targetSpeciesId.toString(),
+                                label: e.label,
+                                animated: true,
+                                type: 'smoothstep',
+                                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
+                                labelBgPadding: [8, 4] as [number, number],
+                                labelBgBorderRadius: 4,
+                                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
+                                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                                style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
+                            };
+                        });
                     
                     const combinedEdges = [...eds, ...newEdges];
                     const layoutedNodes = getLayoutedElements(combinedNodes, combinedEdges);
+                    const edgesWithHandles = assignHandleIds(layoutedNodes, combinedEdges, 'TB');
                     setNodes(layoutedNodes);
-                    return combinedEdges;
+                    return edgesWithHandles;
                 });
 
                 return combinedNodes;
@@ -302,25 +457,29 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 position: { x: 0, y: 0 },
             }));
 
-            const initialEdges: Edge[] = data.edges.map(e => ({
-                id: `e-${e.id}`,
-                source: e.sourceSpeciesId.toString(),
-                target: e.targetSpeciesId.toString(),
-                label: e.label,
-                animated: true,
-                type: 'smoothstep',
-                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
-                labelBgPadding: [8, 4] as [number, number],
-                labelBgBorderRadius: 4,
-                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
-                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 } : undefined,
-                style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
-            }));
+            const initialEdges: Edge[] = data.edges.map(e => {
+                console.log(`Initial connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
+                return {
+                    id: `e-${e.id}`,
+                    source: e.sourceSpeciesId.toString(),
+                    target: e.targetSpeciesId.toString(),
+                    label: e.label,
+                    animated: true,
+                    type: 'smoothstep',
+                    labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
+                    labelBgPadding: [8, 4] as [number, number],
+                    labelBgBorderRadius: 4,
+                    labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
+                    markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                    markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                    style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
+                };
+            });
 
             const layoutedNodes = getLayoutedElements(initialNodes, initialEdges);
+            const edgesWithHandles = assignHandleIds(layoutedNodes, initialEdges, 'TB');
             setNodes(layoutedNodes);
-            setEdges(initialEdges);
+            setEdges(edgesWithHandles);
         }
     }, [data, storyId, targetSpeciesId, setNodes, setEdges, theme]);
 
