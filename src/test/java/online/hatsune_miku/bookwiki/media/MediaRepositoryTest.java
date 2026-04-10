@@ -1,16 +1,13 @@
 package online.hatsune_miku.bookwiki.media;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import org.hibernate.Session;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.sql.Blob;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,9 +18,6 @@ class MediaRepositoryTest {
     @Autowired
     private MediaRepository mediaRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Test
     void testCRUD() throws Exception {
         Media media = new Media();
@@ -31,12 +25,7 @@ class MediaRepositoryTest {
         media.setContentType("image/png");
         
         byte[] content = "Hello World".getBytes();
-        Session session = entityManager.unwrap(Session.class);
-        Blob blob = session.doReturningWork(connection -> {
-            Blob b = connection.createBlob();
-            b.setBytes(1, content);
-            return b;
-        });
+        Blob blob = Hibernate.getLobHelper().createBlob(content);
         media.setData(blob);
 
         Media savedMedia = mediaRepository.save(media);

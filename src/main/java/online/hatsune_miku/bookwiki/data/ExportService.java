@@ -2,7 +2,11 @@ package online.hatsune_miku.bookwiki.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import online.hatsune_miku.bookwiki.media.Media;
+import online.hatsune_miku.bookwiki.media.MediaReference;
+import online.hatsune_miku.bookwiki.media.MediaReferenceRepository;
 import online.hatsune_miku.bookwiki.media.MediaRepository;
+import online.hatsune_miku.bookwiki.species.SpeciesLink;
+import online.hatsune_miku.bookwiki.species.SpeciesLinkRepository;
 import online.hatsune_miku.bookwiki.story.Story;
 import online.hatsune_miku.bookwiki.story.StoryRepository;
 import org.springframework.stereotype.Service;
@@ -21,38 +25,79 @@ public class ExportService {
 
     private final StoryRepository storyRepository;
     private final MediaRepository mediaRepository;
+    private final SpeciesLinkRepository speciesLinkRepository;
+    private final MediaReferenceRepository mediaReferenceRepository;
     private final ObjectMapper objectMapper;
 
     private static final Pattern IMAGE_PATTERN = Pattern.compile("#\\{image:([a-fA-F0-9-]{36})\\}");
 
-    public ExportService(StoryRepository storyRepository, MediaRepository mediaRepository, ObjectMapper objectMapper) {
+    public ExportService(StoryRepository storyRepository, 
+                         MediaRepository mediaRepository, 
+                         SpeciesLinkRepository speciesLinkRepository,
+                         MediaReferenceRepository mediaReferenceRepository,
+                         ObjectMapper objectMapper) {
         this.storyRepository = storyRepository;
         this.mediaRepository = mediaRepository;
+        this.speciesLinkRepository = speciesLinkRepository;
+        this.mediaReferenceRepository = mediaReferenceRepository;
         this.objectMapper = objectMapper;
     }
 
     public byte[] exportFull() throws IOException {
         List<Story> allStories = storyRepository.findAll();
         List<Media> allMedia = mediaRepository.findAll();
-        return createZip(allStories, allMedia);
+        List<SpeciesLink> allLinks = speciesLinkRepository.findAll();
+        List<MediaReference> allRefs = mediaReferenceRepository.findAll();
+        return createZip(allStories, allMedia, allLinks, allRefs);
     }
 
     public byte[] exportStories(List<Long> storyIds) throws IOException {
         List<Story> stories = storyRepository.findAllById(storyIds);
         Set<UUID> mediaIds = new HashSet<>();
-        
+        Set<Long> speciesIds = new HashSet<>();
+        Set<Long> chapterIds = new HashSet<>();
+        Set<Long> characterIds = new HashSet<>();
+        Set<Long> locationIds = new HashSet<>();
+        Set<Long> itemIds = new HashSet<>();
+        Set<Long> loreIds = new HashSet<>();
+
         for (Story story : stories) {
             collectMediaIds(story, mediaIds);
+            story.getSpecies().forEach(s -> speciesIds.add(s.getId()));
+            story.getChapters().forEach(c -> chapterIds.add(c.getId()));
+            story.getCharacters().forEach(c -> characterIds.add(c.getId()));
+            story.getLocations().forEach(l -> locationIds.add(l.getId()));
+            story.getItems().forEach(i -> itemIds.add(i.getId()));
+            story.getLores().forEach(l -> loreIds.add(l.getId()));
         }
         
         List<Media> referencedMedia = mediaRepository.findAllById(mediaIds);
-        return createZip(stories, referencedMedia);
+        
+        // Filter SpeciesLinks: both source and target must be in the exported species
+        List<SpeciesLink> filteredLinks = speciesLinkRepository.findAll().stream()
+                .filter(link -> speciesIds.contains(link.getSourceSpeciesId()) && speciesIds.contains(link.getTargetSpeciesId()))
+                .toList();
+                
+        // Filter MediaReferences: entity must be one of the exported ones
+        List<MediaReference> filteredRefs = mediaReferenceRepository.findAll().stream()
+                .filter(ref -> {
+                    switch (ref.getEntityType()) {
+                        case "STORY": return storyIds.contains(ref.getEntityId());
+                        case "CHAPTER": return chapterIds.contains(ref.getEntityId());
+                        case "CHARACTER": return characterIds.contains(ref.getEntityId());
+                        case "LOCATION": return locationIds.contains(ref.getEntityId());
+                        case "ITEM": return itemIds.contains(ref.getEntityId());
+                        case "LORE": return loreIds.contains(ref.getEntityId());
+                        case "SPECIES": return speciesIds.contains(ref.getEntityId());
+                        default: return false;
+                    }
+                })
+                .toList();
+
+        return createZip(stories, referencedMedia, filteredLinks, filteredRefs);
     }
 
     private void collectMediaIds(Story story, Set<UUID> mediaIds) {
-        // This is a bit manual but necessary since we use shortcodes in strings
-        // In a real app we might have a better reference tracking system
-        
         // Scan story description
         extractIds(story.getDescription(), mediaIds);
         
@@ -92,6 +137,8 @@ public class ExportService {
             extractIds(s.getDescription(), mediaIds);
             s.getCustomSections().forEach(cs -> extractIds(cs.getContent(), mediaIds));
         });
+
+        story.getEmotes().forEach(e -> extractIds(e.getImageUrl(), mediaIds));
     }
 
     private void extractIds(String text, Set<UUID> mediaIds) {
@@ -106,7 +153,7 @@ public class ExportService {
         }
     }
 
-    private byte[] createZip(List<Story> stories, List<Media> media) throws IOException {
+    private byte[] createZip(List<Story> stories, List<Media> media, List<SpeciesLink> links, List<MediaReference> refs) throws IOException {
         List<MediaDTO> mediaDTOs = new ArrayList<>();
         for (Media m : media) {
             try {
@@ -124,9 +171,11 @@ public class ExportService {
         }
 
         DataPackage dataPackage = DataPackage.builder()
-                .version("1.0")
+                .version("1.1")
                 .stories(stories)
                 .media(mediaDTOs)
+                .speciesLinks(links)
+                .mediaReferences(refs)
                 .build();
 
         String json = objectMapper.writeValueAsString(dataPackage);

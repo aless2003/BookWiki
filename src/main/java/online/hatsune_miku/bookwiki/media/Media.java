@@ -14,12 +14,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
-@AllArgsConstructor
 public class Media {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String filename;
@@ -33,7 +30,22 @@ public class Media {
 
     @PrePersist
     protected void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
         createdAt = LocalDateTime.now();
+    }
+
+    public Media() {
+        this.id = UUID.randomUUID();
+    }
+
+    public Media(UUID id, String filename, String contentType, Blob data, LocalDateTime createdAt) {
+        this.id = id;
+        this.filename = filename;
+        this.contentType = contentType;
+        this.data = data;
+        this.createdAt = createdAt;
     }
 
     @Override
