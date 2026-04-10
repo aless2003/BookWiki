@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.sql.rowset.serial.SerialBlob;
+import org.hibernate.Session;
+import java.sql.Blob;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -79,27 +81,35 @@ public class ImportService {
             
             // 1. Import Media first
             if (dataPackage.getMedia() != null) {
+                Session session = entityManager.unwrap(Session.class);
                 for (MediaDTO mediaDTO : dataPackage.getMedia()) {
                     System.out.println("Merging media: " + mediaDTO.getId());
                     
-                    // Check if exists in DB
-                    Media media = mediaRepository.findById(mediaDTO.getId()).orElse(new Media());
-                    
+                    // Use a clean merge approach: merge always checks if entity exists and updates or inserts accordingly.
+                    // We create a new instance each time to avoid any side effects from previously managed instances.
+                    Media media = new Media();
                     media.setId(mediaDTO.getId());
                     media.setFilename(mediaDTO.getFilename());
                     media.setContentType(mediaDTO.getContentType());
-                    media.setCreatedAt(mediaDTO.getCreatedAt());
+                    media.setCreatedAt(mediaDTO.getCreatedAt() != null ? mediaDTO.getCreatedAt() : LocalDateTime.now());
                     
-                    try {
-                        media.setData(new SerialBlob(mediaDTO.getData()));
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to create blob", e);
+                    if (mediaDTO.getData() != null) {
+                        // Use the same robust pattern as MigrationService to create Blobs
+                        Blob blob = session.doReturningWork(connection -> {
+                            try {
+                                Blob b = connection.createBlob();
+                                b.setBytes(1, mediaDTO.getData());
+                                return b;
+                            } catch (Exception e) {
+                                throw new RuntimeException("Could not create blob from data", e);
+                            }
+                        });
+                        media.setData(blob);
                     }
                     
-                    mediaRepository.save(media);
+                    entityManager.merge(media);
                 }
-                mediaRepository.flush();
-                // Removed entityManager.clear() to prevent "Detached entity" errors when saving stories
+                entityManager.flush();
             }
 
             // 2. Import Stories
@@ -107,9 +117,9 @@ public class ImportService {
                 for (Story story : dataPackage.getStories()) {
                     System.out.println("Importing story: " + story.getTitle());
                     prepareForImport(story);
-                    storyRepository.save(story); // Using repository save instead of entityManager.persist
+                    entityManager.persist(story);
                 }
-                storyRepository.flush();
+                entityManager.flush();
             }
         } catch (Exception e) {
             System.err.println("FATAL ERROR DURING IMPORT:");
