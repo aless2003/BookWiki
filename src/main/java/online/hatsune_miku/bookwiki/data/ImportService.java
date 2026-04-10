@@ -83,8 +83,7 @@ public class ImportService {
                     System.out.println("Merging media: " + mediaDTO.getId());
                     
                     // Check if exists in DB
-                    Media existing = entityManager.find(Media.class, mediaDTO.getId());
-                    Media media = (existing != null) ? existing : new Media();
+                    Media media = mediaRepository.findById(mediaDTO.getId()).orElse(new Media());
                     
                     media.setId(mediaDTO.getId());
                     media.setFilename(mediaDTO.getFilename());
@@ -92,21 +91,15 @@ public class ImportService {
                     media.setCreatedAt(mediaDTO.getCreatedAt());
                     
                     try {
-                        // For H2/Hibernate, sometimes a simple byte array cast or SerialBlob is fine
-                        // but let's try to be as direct as possible.
                         media.setData(new SerialBlob(mediaDTO.getData()));
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to create blob", e);
                     }
                     
-                    if (existing == null) {
-                        entityManager.persist(media);
-                    } else {
-                        entityManager.merge(media);
-                    }
+                    mediaRepository.save(media);
                 }
-                entityManager.flush();
-                entityManager.clear(); // Clear after media to avoid conflicts with stories
+                mediaRepository.flush();
+                // Removed entityManager.clear() to prevent "Detached entity" errors when saving stories
             }
 
             // 2. Import Stories
@@ -114,9 +107,9 @@ public class ImportService {
                 for (Story story : dataPackage.getStories()) {
                     System.out.println("Importing story: " + story.getTitle());
                     prepareForImport(story);
-                    entityManager.persist(story); // Always persist as they are new (IDs were nullified)
+                    storyRepository.save(story); // Using repository save instead of entityManager.persist
                 }
-                entityManager.flush();
+                storyRepository.flush();
             }
         } catch (Exception e) {
             System.err.println("FATAL ERROR DURING IMPORT:");
