@@ -278,13 +278,51 @@ const assignHandleIds = (nodes: Node[], edges: Edge[], direction: string = 'TB')
     });
 };
 
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+const getConnectedComponents = (nodes: Node[], edges: Edge[]) => {
+    const adj = new Map<string, string[]>();
+    nodes.forEach(n => adj.set(n.id, []));
+    edges.forEach(e => {
+        if (adj.has(e.source) && adj.has(e.target)) {
+            adj.get(e.source)!.push(e.target);
+            adj.get(e.target)!.push(e.source);
+        }
+    });
+
+    const visited = new Set<string>();
+    const components: string[][] = [];
+
+    nodes.forEach(n => {
+        if (!visited.has(n.id) && n.type !== 'group') {
+            const comp: string[] = [];
+            const q = [n.id];
+            visited.add(n.id);
+
+            while (q.length > 0) {
+                const curr = q.shift()!;
+                comp.push(curr);
+                for (const neighbor of adj.get(curr)!) {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        q.push(neighbor);
+                    }
+                }
+            }
+            components.push(comp);
+        }
+    });
+
+    return components;
+};
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], theme: any, direction = 'TB') => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     const isHorizontal = direction === 'LR';
     dagreGraph.setGraph({ rankdir: direction });
 
-    nodes.forEach((node) => {
+    const realNodes = nodes.filter(n => n.type !== 'group');
+
+    realNodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
     });
 
@@ -294,18 +332,77 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 
     dagre.layout(dagreGraph);
 
-    return nodes.map((node) => {
+    const layoutedNodes = realNodes.map((node) => {
         const nodeWithPosition = dagreGraph.node(node.id);
-        node.targetPosition = isHorizontal ? Position.Left : Position.Top;
-        node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
-
-        node.position = {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
+        return {
+            ...node,
+            targetPosition: isHorizontal ? Position.Left : Position.Top,
+            sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
+            position: {
+                x: nodeWithPosition.x - nodeWidth / 2,
+                y: nodeWithPosition.y - nodeHeight / 2,
+            }
         };
-
-        return node;
     });
+
+    const components = getConnectedComponents(layoutedNodes, edges);
+    const finalNodes: Node[] = [];
+    const padding = 50;
+
+    components.forEach((compNodes, index) => {
+        const compId = `group-${index}`;
+        const cNodes = layoutedNodes.filter(n => compNodes.includes(n.id));
+        
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        cNodes.forEach(n => {
+            if (n.position.x < minX) minX = n.position.x;
+            if (n.position.y < minY) minY = n.position.y;
+            if (n.position.x + nodeWidth > maxX) maxX = n.position.x + nodeWidth;
+            if (n.position.y + nodeHeight > maxY) maxY = n.position.y + nodeHeight;
+        });
+
+        minX -= padding;
+        minY -= padding;
+        maxX += padding;
+        maxY += padding;
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        finalNodes.push({
+            id: compId,
+            type: 'group',
+            data: {},
+            position: { x: minX, y: minY },
+            style: {
+                width,
+                height,
+                backgroundColor: alpha(theme.palette.primary.main, 0.03),
+                border: `2px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
+                borderRadius: 16,
+                zIndex: -1,
+            },
+        });
+
+        cNodes.forEach(n => {
+            finalNodes.push({
+                ...n,
+                parentNode: compId,
+                extent: 'parent',
+                position: {
+                    x: n.position.x - minX,
+                    y: n.position.y - minY,
+                },
+                zIndex: 1
+            });
+        });
+    });
+
+    return finalNodes;
 };
 
 const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, targetSpeciesId }) => {
@@ -364,7 +461,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
             );
 
             // 4. Layout and update both states with unique handles
-            const layoutedNodes = getLayoutedElements(finalNodes, finalEdges);
+            const layoutedNodes = getLayoutedElements(finalNodes, finalEdges, theme);
             const edgesWithHandles = assignHandleIds(layoutedNodes, finalEdges, 'TB');
             setNodes(layoutedNodes);
             setEdges(edgesWithHandles);
@@ -374,64 +471,59 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
         try {
             const flow = await fetchSpeciesFlow([speciesId]);
             
-            setNodes((nds) => {
-                const existingIds = new Set(nds.map(n => n.id));
-                
-                // Mark current node as expanded
-                const updatedNds = nds.map(n => 
-                    n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: true } } : n
-                );
+            const existingIds = new Set(nodes.map(n => n.id));
+            
+            // Mark current node as expanded
+            const updatedNodes = nodes.map(n => 
+                n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: true } } : n
+            );
 
-                const newNodes = flow.nodes
-                    .filter(n => !existingIds.has(n.id.toString()))
-                    .map(n => ({
-                        id: n.id.toString(),
-                        type: 'speciesNode',
-                        data: { 
-                            ...n, 
-                            storyId, 
-                            isTarget: n.id === targetSpeciesId,
-                            isExpanded: false,
-                            isInitial: false,
-                            onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
-                        },
-                        position: { x: 0, y: 0 }
-                    }));
-                
-                const combinedNodes = [...updatedNds, ...newNodes];
-                
-                setEdges((eds) => {
-                    const existingEdgeIds = new Set(eds.map(e => e.id));
-                    const newEdges = flow.edges
-                        .filter(e => !existingEdgeIds.has(`e-${e.id}`))
-                        .map(e => {
-                            console.log(`Connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
-                            return {
-                                id: `e-${e.id}`,
-                                source: e.sourceSpeciesId.toString(),
-                                target: e.targetSpeciesId.toString(),
-                                label: e.label,
-                                animated: true,
-                                type: 'smoothstep',
-                                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
-                                labelBgPadding: [8, 4] as [number, number],
-                                labelBgBorderRadius: 4,
-                                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
-                                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
-                                style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
-                            };
-                        });
-                    
-                    const combinedEdges = [...eds, ...newEdges];
-                    const layoutedNodes = getLayoutedElements(combinedNodes, combinedEdges);
-                    const edgesWithHandles = assignHandleIds(layoutedNodes, combinedEdges, 'TB');
-                    setNodes(layoutedNodes);
-                    return edgesWithHandles;
+            const newNodes = flow.nodes
+                .filter(n => !existingIds.has(n.id.toString()))
+                .map(n => ({
+                    id: n.id.toString(),
+                    type: 'speciesNode',
+                    data: { 
+                        ...n, 
+                        storyId, 
+                        isTarget: n.id === targetSpeciesId,
+                        isExpanded: false,
+                        isInitial: false,
+                        onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
+                    },
+                    position: { x: 0, y: 0 }
+                }));
+            
+            const combinedNodes = [...updatedNodes, ...newNodes];
+            
+            const existingEdgeIds = new Set(edges.map(e => e.id));
+            const newEdges = flow.edges
+                .filter(e => !existingEdgeIds.has(`e-${e.id}`))
+                .map(e => {
+                    console.log(`Connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
+                    return {
+                        id: `e-${e.id}`,
+                        source: e.sourceSpeciesId.toString(),
+                        target: e.targetSpeciesId.toString(),
+                        label: e.label,
+                        animated: true,
+                        type: 'smoothstep',
+                        labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
+                        labelBgPadding: [8, 4] as [number, number],
+                        labelBgBorderRadius: 4,
+                        labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
+                        markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                        markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                        style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
+                    };
                 });
-
-                return combinedNodes;
-            });
+            
+            const combinedEdges = [...edges, ...newEdges];
+            const layoutedNodes = getLayoutedElements(combinedNodes, combinedEdges, theme);
+            const edgesWithHandles = assignHandleIds(layoutedNodes, combinedEdges, 'TB');
+            
+            setNodes(layoutedNodes);
+            setEdges(edgesWithHandles);
         } catch (err) {
             console.error('Failed to expand species flow', err);
         }
@@ -476,7 +568,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 };
             });
 
-            const layoutedNodes = getLayoutedElements(initialNodes, initialEdges);
+            const layoutedNodes = getLayoutedElements(initialNodes, initialEdges, theme);
             const edgesWithHandles = assignHandleIds(layoutedNodes, initialEdges, 'TB');
             setNodes(layoutedNodes);
             setEdges(edgesWithHandles);
