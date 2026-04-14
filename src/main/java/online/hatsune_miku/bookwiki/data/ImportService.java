@@ -7,15 +7,8 @@ import online.hatsune_miku.bookwiki.media.MediaReferenceRepository;
 import online.hatsune_miku.bookwiki.media.MediaRepository;
 import online.hatsune_miku.bookwiki.story.Story;
 import online.hatsune_miku.bookwiki.story.StoryRepository;
-import online.hatsune_miku.bookwiki.species.Species;
 import online.hatsune_miku.bookwiki.species.SpeciesLink;
 import online.hatsune_miku.bookwiki.species.SpeciesLinkRepository;
-import online.hatsune_miku.bookwiki.chapter.Chapter;
-import online.hatsune_miku.bookwiki.chapter.ChapterNote;
-import online.hatsune_miku.bookwiki.character.Character;
-import online.hatsune_miku.bookwiki.location.Location;
-import online.hatsune_miku.bookwiki.item.Item;
-import online.hatsune_miku.bookwiki.lore.Lore;
 import org.hibernate.Hibernate;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -232,7 +225,7 @@ public class ImportService {
 
     private void recordMapping(String type, Long oldId, Long newId) {
         if (oldId == null || newId == null) return;
-        idMap.computeIfAbsent(type, k -> new HashMap<>()).put(oldId, newId);
+        idMap.computeIfAbsent(type, _ -> new HashMap<>()).put(oldId, newId);
     }
 
     private Long getNewId(String type, Long oldId) {
@@ -243,18 +236,14 @@ public class ImportService {
 
     private void fixupRelationships(Story story) {
         if (story.getCharacters() != null) {
-            story.getCharacters().forEach(c -> {
-                c.setSpeciesId(getNewId("SPECIES", c.getSpeciesId()));
-            });
+            story.getCharacters().forEach(c -> c.setSpeciesId(getNewId("SPECIES", c.getSpeciesId())));
         }
         if (story.getSpecies() != null) {
             story.getSpecies().forEach(s -> {
                 s.setParentId(getNewId("SPECIES", s.getParentId()));
                 s.setHabitatId(getNewId("LOCATION", s.getHabitatId()));
                 if (s.getCustomSections() != null) {
-                    s.getCustomSections().forEach(cs -> {
-                        cs.setInheritedFromSectionId(getNewId("SPECIES_SECTION", cs.getInheritedFromSectionId()));
-                    });
+                    s.getCustomSections().forEach(cs -> cs.setInheritedFromSectionId(getNewId("SPECIES_SECTION", cs.getInheritedFromSectionId())));
                 }
             });
         }
@@ -318,7 +307,7 @@ public class ImportService {
     private String replaceShortcodes(String text) {
         if (text == null || text.isEmpty()) return text;
 
-        Pattern pattern = Pattern.compile("#\\{(\\w+):([\\w\\-]+)\\}");
+        Pattern pattern = Pattern.compile("#\\{(\\w+):([\\w\\-]+)}");
         Matcher matcher = pattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {

@@ -401,7 +401,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
         } finally {
             setLoading(false);
         }
-    }, [nodes, edges, targetSpeciesId, storyId, navigate, updateGraphLayout, theme]);
+    }, [nodes, edges, targetSpeciesId, setNodes, updateGraphLayout, storyId, navigate, theme.palette.text.primary, theme.palette.background.paper, theme.palette.primary.main]);
 
     useEffect(() => {
         handleToggleRef.current = handleToggle;
