@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEditor, EditorContent, ReactRenderer } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -11,6 +11,9 @@ import FileHandler from '@tiptap/extension-file-handler';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { PaginationPlus } from 'tiptap-pagination-plus';
 import { resolveShortcodes } from '../constants/media';
+import { Dropdown } from 'react-bootstrap';
+import { MdFormatBold, MdFormatItalic, MdFormatUnderlined, MdInsertPageBreak, MdArrowDropDown } from 'react-icons/md';
+
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -651,36 +654,107 @@ const TiptapPagedEditor = ({
     }
   }, [content, editor, toBubbles]);
 
+  const [currentHeading, setCurrentHeading] = useState('Normal');
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateHeading = () => {
+      if (editor.isActive('heading', { level: 1 })) {
+        setCurrentHeading('H1');
+      } else if (editor.isActive('heading', { level: 2 })) {
+        setCurrentHeading('H2');
+      } else if (editor.isActive('heading', { level: 3 })) {
+        setCurrentHeading('H3');
+      } else {
+        setCurrentHeading('Normal');
+      }
+    };
+
+    editor.on('selectionUpdate', updateHeading);
+    editor.on('transaction', updateHeading);
+    
+    // Initial check
+    updateHeading();
+
+    return () => {
+      editor.off('selectionUpdate', updateHeading);
+      editor.off('transaction', updateHeading);
+    };
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
 
   return (
     <div className="tiptap-paged-editor-wrapper">
-      <BubbleMenu editor={editor}>
+      <BubbleMenu {...({ editor, tippyOptions: { duration: 100, zIndex: 10000, appendTo: document.body } } as any)}>
         <div className="bubble-menu">
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={editor.isActive('bold') ? 'is-active' : ''}
+            title="Bold"
           >
-            Bold
+            <MdFormatBold />
           </button>
           <button
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={editor.isActive('italic') ? 'is-active' : ''}
+            title="Italic"
           >
-            Italic
+            <MdFormatItalic />
           </button>
           <button
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             className={editor.isActive('underline') ? 'is-active' : ''}
+            title="Underline"
           >
-            Underline
+            <MdFormatUnderlined />
           </button>
+          <div className="menu-divider" />
+          
+          <Dropdown>
+            <Dropdown.Toggle as="button" className="bubble-menu-dropdown-toggle">
+              <span>{currentHeading}</span>
+              <MdArrowDropDown style={{ fontSize: '1rem' }} />
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="bubble-menu-dropdown-menu">
+              <Dropdown.Header style={{ color: '#888', fontSize: '0.7rem', textTransform: 'uppercase', padding: '0.4rem 1rem' }}>Text Style</Dropdown.Header>
+              <Dropdown.Item 
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                active={editor.isActive('heading', { level: 1 })}
+              >
+                <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Heading 1</span>
+              </Dropdown.Item>
+              <Dropdown.Item 
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                active={editor.isActive('heading', { level: 2 })}
+              >
+                <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Heading 2</span>
+              </Dropdown.Item>
+              <Dropdown.Item 
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                active={editor.isActive('heading', { level: 3 })}
+              >
+                <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>Heading 3</span>
+              </Dropdown.Item>
+              <Dropdown.Divider style={{ borderColor: '#444' }} />
+              <Dropdown.Item 
+                onClick={() => editor.chain().focus().setParagraph().run()}
+                active={editor.isActive('paragraph')}
+              >
+                Normal Text
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+
+          <div className="menu-divider" />
           <button
             onClick={() => editor.chain().focus().setPageBreak().run()}
+            title="Page Break"
           >
-            Page Break
+            <MdInsertPageBreak />
           </button>
         </div>
       </BubbleMenu>
@@ -688,12 +762,19 @@ const TiptapPagedEditor = ({
       <EditorContent editor={editor} />
 
       <style>{`
+        /* Global z-index fix for all tippy instances (BubbleMenu, Mentions, etc.) */
+        .tippy-box {
+          z-index: 10000 !important;
+          position: relative !important;
+        }
+
         .tiptap-paged-editor-wrapper {
           width: 100%;
           background-color: #000;
           display: flex;
           flex-direction: column;
           align-items: center;
+          position: relative;
         }
 
         .ProseMirror {
@@ -706,6 +787,10 @@ const TiptapPagedEditor = ({
           box-shadow: 0 0 20px rgba(0,0,0,0.5);
           min-height: 1123px;
         }
+
+        .ProseMirror h1 { font-size: 2.2rem; margin-top: 1.5rem; margin-bottom: 1rem; color: #fff; }
+        .ProseMirror h2 { font-size: 1.8rem; margin-top: 1.2rem; margin-bottom: 0.8rem; color: #fff; }
+        .ProseMirror h3 { font-size: 1.5rem; margin-top: 1rem; margin-bottom: 0.6rem; color: #fff; }
 
         .ProseMirror img {
           /* max-width: 100%;
@@ -766,6 +851,9 @@ const TiptapPagedEditor = ({
           padding: 0.2rem;
           border-radius: 0.5rem;
           border: 1px solid #444;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+          z-index: 10000;
+          position: relative;
         }
 
         .bubble-menu button {
@@ -775,11 +863,88 @@ const TiptapPagedEditor = ({
           padding: 0.4rem 0.6rem;
           border-radius: 0.3rem;
           cursor: pointer;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+        }
+
+        .bubble-menu button:hover {
+          background-color: #333;
         }
 
         .bubble-menu button.is-active {
           color: #90caf9;
           background-color: rgba(144, 202, 249, 0.1);
+        }
+
+        .bubble-menu-dropdown-toggle {
+          border: 1px solid #444;
+          background-color: #333;
+          color: #eee;
+          padding: 0.2rem 0.5rem;
+          margin: 0 0.2rem;
+          border-radius: 0.3rem;
+          cursor: pointer;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          min-width: 65px;
+          justify-content: space-between;
+          font-size: 0.85rem;
+          transition: all 0.2s;
+          height: 28px;
+          align-self: center;
+        }
+
+        .bubble-menu-dropdown-toggle:hover {
+          background-color: #444;
+          border-color: #555;
+          color: #fff;
+        }
+
+        .bubble-menu-dropdown-toggle span {
+          flex: 1;
+          text-align: center;
+        }
+
+        .bubble-menu-dropdown-toggle::after {
+          display: none !important;
+        }
+
+        .bubble-menu-dropdown-menu {
+          background-color: #252525 !important;
+          border: 1px solid #444 !important;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.5) !important;
+          z-index: 10001 !important;
+          padding: 0.5rem 0 !important;
+        }
+
+        .bubble-menu-dropdown-menu .dropdown-item {
+          color: #eee !important;
+          font-size: 0.95rem;
+          padding: 0.6rem 1.2rem;
+          display: flex;
+          align-items: center;
+        }
+
+        .bubble-menu-dropdown-menu .dropdown-item:hover {
+          background-color: #333 !important;
+          color: #fff !important;
+        }
+
+        .bubble-menu-dropdown-menu .dropdown-item.active {
+          background-color: rgba(144, 202, 249, 0.2) !important;
+          color: #90caf9 !important;
+        }
+
+        .menu-divider {
+          width: 1px;
+          background-color: #444;
+          margin: 0.2rem 0.4rem;
+          align-self: stretch;
         }
       `}</style>
     </div>
