@@ -41,6 +41,22 @@ const Writing: React.FC = () => {
   const [showEmoteModal, setShowEmoteModal] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; chapterId: number } | null>(null);
 
+  // Visual Settings
+  const [settings, setSettings] = useState({
+    renderDeepLinkImages: localStorage.getItem('settings_renderDeepLinkImages') !== 'false'
+  });
+
+  useEffect(() => {
+    // Poll for settings changes in localStorage (simple way for a prototype)
+    const interval = setInterval(() => {
+        const current = localStorage.getItem('settings_renderDeepLinkImages') !== 'false';
+        if (current !== settings.renderDeepLinkImages) {
+            setSettings({ renderDeepLinkImages: current });
+        }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [settings.renderDeepLinkImages]);
+
   const isPopup = searchParams.get('popup') === 'true';
   const initialChapterId = searchParams.get('chapterId');
 
@@ -468,7 +484,7 @@ const Writing: React.FC = () => {
                       <div className="nav-drawer-item" onClick={() => setShowEmoteModal(true)}>
                           <MdEmojiEmotions /> Emotes
                       </div>
-                      <div className="nav-drawer-item">
+                      <div className="nav-drawer-item" onClick={() => navigate('/settings')}>
                           <MdSettings /> Document Settings
                       </div>
                   </div>
@@ -493,6 +509,7 @@ const Writing: React.FC = () => {
                       onSave={debouncedSave}
                       onMentionClick={handleMentionClick}
                       storyId={storyId}
+                      settings={settings}
                     />
                 ) : (
                     <div className="text-center text-secondary mt-5">

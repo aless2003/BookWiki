@@ -16,7 +16,7 @@ QuillInstance.register({
 QuillInstance.register(WidthStyle, true);
 import 'react-quill-new/dist/quill.bubble.css';
 import 'quill-mention/dist/quill.mention.css';
-import {API_BASE_URL} from '../constants/media';
+import {API_BASE_URL, resolveShortcodes} from '../constants/media';
 
 interface Entity {
     id?: number;
@@ -35,6 +35,9 @@ interface RichTextEditorProps {
     onSave?: () => void;
     onMentionClick?: (id: number, type: string, isMiddleClick?: boolean) => void;
     minHeight?: string | number;
+    settings?: {
+        renderDeepLinkImages?: boolean;
+    };
 }
 
 const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
@@ -48,7 +51,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                                                                  onChange,
                                                                  onSave,
                                                                  onMentionClick,
-                                                                 minHeight
+                                                                 minHeight,
+                                                                 settings = { renderDeepLinkImages: true }
                                                              }, _ref) => {
     const quillRef = useRef<ReactQuill>(null);
     const onSaveRef = useRef(onSave);
@@ -58,14 +62,18 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
     const allEntities = useMemo(() => {
         const filter = (e: Entity) => e.id !== undefined;
+        const resolveEntityImage = (e: any) => {
+            const url = (e as any).pictureUrl || e.imageUrl;
+            return url ? resolveShortcodes(url) : undefined;
+        };
         return [
-            ...characters.filter(filter).map(e => ({...e, type: 'character', icon: '👤'})),
-            ...items.filter(filter).map(e => ({...e, type: 'item', icon: '📦'})),
-            ...locations.filter(filter).map(e => ({...e, type: 'location', icon: '📍'})),
-            ...lore.filter(filter).map(e => ({...e, type: 'lore', icon: '📜'})),
-            ...species.filter(filter).map(e => ({...e, type: 'species', icon: '🐾'}))
+            ...characters.filter(filter).map(e => ({...e, type: 'character', icon: '👤', resolvedImageUrl: resolveEntityImage(e)})),
+            ...items.filter(filter).map(e => ({...e, type: 'item', icon: '📦', resolvedImageUrl: resolveEntityImage(e)})),
+            ...locations.filter(filter).map(e => ({...e, type: 'location', icon: '📍', resolvedImageUrl: resolveEntityImage(e)})),
+            ...lore.filter(filter).map(e => ({...e, type: 'lore', icon: '📜', resolvedImageUrl: resolveEntityImage(e)})),
+            ...species.filter(filter).map(e => ({...e, type: 'species', icon: '🐾', resolvedImageUrl: resolveEntityImage(e)}))
         ];
-    }, [characters, items, locations, lore, species]);
+    }, [characters, items, locations, lore, species, settings]);
 
     const dataRef = useRef(allEntities);
     useEffect(() => {
@@ -97,7 +105,19 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         processed = processed.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
             const entity = allEntities.find(e => e.type === type.toLowerCase() && e.id === parseInt(id));
             const name = entity ? entity.name : `Unknown ${type}`;
-            return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}">${name}</span>`;
+            const imageUrl = entity ? (entity as any).resolvedImageUrl : '';
+            const icon = entity ? (entity as any).icon : (type === 'location' ? '📍' : '👤');
+            const renderImages = settings.renderDeepLinkImages;
+
+            if (!renderImages) {
+                return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}" data-render-images="false">${name}</span>`;
+            }
+
+            const visual = imageUrl
+                ? `<span class="mention-visual"><img src="${imageUrl}" class="mention-image" /></span>`
+                : `<span class="mention-visual"><span class="mention-icon-text">${icon}</span></span>`;
+
+            return `<span class="mention" data-index="0" data-denotation-char="#" data-id="${id}" data-type="${type.toLowerCase()}" data-value="${name}" data-render-images="true">${visual}<span class="mention-label">${name}</span></span>`;
         });
 
         // 3. Fallback for raw image shortcodes
@@ -173,7 +193,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 lastSentContent.current = content;
             }
         }
-    }, [content, allEntities]);
+    }, [content, allEntities, settings]);
 
     const handleChange = (html: string, _delta: any, source: string) => {
         setValue(html);
@@ -394,7 +414,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                     id: e.id,
                     value: e.name,
                     type: e.type,
-                    icon: e.icon
+                    icon: e.icon,
+                    resolvedImageUrl: (e as any).resolvedImageUrl
                 }));
 
                 if (searchTerm.length === 0) {
@@ -414,7 +435,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 insertItem(item);
             },
             positioningStrategy: 'fixed',
-            dataAttributes: ['id', 'value', 'denotationChar', 'type'],
+            dataAttributes: ['id', 'value', 'denotationChar', 'type', 'resolvedImageUrl', 'icon'],
         },
         keyboard: {
             bindings: {
@@ -702,10 +723,10 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         .mention {
             display: inline-flex !important;
             align-items: center !important;
-            justify-content: center !important;
+            gap: 4px !important;
             color: #90caf9 !important;
             background-color: rgba(144, 202, 249, 0.1) !important;
-            padding: 0 6px !important;
+            padding: 2px 8px 2px 4px !important;
             margin: 0 2px !important;
             border-radius: 4px !important;
             border-bottom: 1px dashed rgba(144, 202, 249, 0.4) !important;
@@ -715,9 +736,38 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             transition: all 0.2s ease !important;
             text-decoration: none !important;
             white-space: nowrap !important;
-            vertical-align: middle !important;
-            height: 1.5em !important;
+            vertical-align: baseline !important;
+            width: fit-content !important;
+        }
+        .mention[data-render-images="false"] {
+            padding: 2px 6px !important;
+            gap: 0 !important;
             width: auto !important;
+        }
+        .mention-visual {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 1.1em !important;
+            width: 1.1em !important;
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
+            vertical-align: middle !important;
+        }
+        .mention-image {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 2px !important;
+            display: block !important;
+        }
+        .mention-label {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            line-height: 1 !important;
+        }
+        .mention-icon-text {
+            font-size: 0.9em !important;
         }
         .ql-mention-denotation-char {
             display: none !important;

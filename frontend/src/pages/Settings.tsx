@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Button, ListGroup, Spinner, Alert } from 'react-bootstrap';
-import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck, MdErrorOutline } from 'react-icons/md';
+import React, {useState, useRef, useEffect} from 'react';
+import { Container, Row, Col, Card, Button, ListGroup, Spinner, Alert, Form } from 'react-bootstrap';
+import { MdSettings, MdCloudDownload, MdCloudUpload, MdArrowBack, MdCheck, MdErrorOutline, MdRemoveRedEye } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../constants/api';
 import { downloadFile } from '../utils/download';
@@ -21,6 +21,18 @@ const Settings: React.FC = () => {
   
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'danger', message: string } | null>(null);
+
+  // Visual Settings
+  const [renderDeepLinkImages, setRenderDeepLinkImages] = useState(() => {
+    const saved = localStorage.getItem('settings_renderDeepLinkImages');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const handleToggleDeepLinkImages = () => {
+    const newValue = !renderDeepLinkImages;
+    setRenderDeepLinkImages(newValue);
+    localStorage.setItem('settings_renderDeepLinkImages', newValue.toString());
+  };
 
   useEffect(() => {
     fetchStories();
@@ -141,6 +153,34 @@ const Settings: React.FC = () => {
       </Alert>
 
       <Row className="g-4 mb-5">
+        <Col md={12}>
+          <Card className="bg-dark border-secondary">
+            <Card.Body className="p-4">
+              <div className="d-flex align-items-center mb-3">
+                <MdRemoveRedEye size={32} className="text-info me-2" />
+                <Card.Title className="fs-4 m-0">Visual Settings</Card.Title>
+              </div>
+              <Card.Text className="text-secondary mb-3">
+                Configure how the application renders visual elements.
+              </Card.Text>
+              
+              <Form.Group className="mb-0">
+                <Form.Check 
+                  type="switch"
+                  id="render-deeplink-images"
+                  label="Show images/emotes in deep links"
+                  checked={renderDeepLinkImages}
+                  onChange={handleToggleDeepLinkImages}
+                  className="fs-5"
+                />
+                <Form.Text className="text-muted ms-5 d-block">
+                  When enabled, links to entities will include their profile image or type icon. When disabled, only the plain name is shown.
+                </Form.Text>
+              </Form.Group>
+            </Card.Body>
+          </Card>
+        </Col>
+
         <Col md={6}>
           <Card className="h-100 bg-dark border-secondary">
             <Card.Body className="p-4 d-flex flex-column">

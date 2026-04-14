@@ -72,6 +72,9 @@ interface TiptapPagedEditorProps {
   onSave?: () => void;
   onMentionClick?: (id: number, type: string, isMiddleClick?: boolean) => void;
   storyId?: string; // Add storyId to interface
+  settings?: {
+    renderDeepLinkImages?: boolean;
+  };
 }
 
 const TiptapPagedEditor = ({
@@ -88,6 +91,7 @@ const TiptapPagedEditor = ({
   onSave,
   onMentionClick,
   storyId,
+  settings = { renderDeepLinkImages: true },
 }: TiptapPagedEditorProps) => {
   const onSaveRef = useRef(onSave);
   const onChangeRef = useRef(onChange);
@@ -102,20 +106,25 @@ const TiptapPagedEditor = ({
   
     const allEntities = useMemo(() => {
       const filter = (e: Entity) => e.id !== undefined;
+      const resolveEntityImage = (e: any) => {
+        const url = (e as any).pictureUrl || e.imageUrl;
+        return url ? resolveShortcodes(url) : undefined;
+      };
+
       return [
-        ...characters.filter(filter).map(e => ({ ...e, type: 'character', icon: '👤' })),
-        ...items.filter(filter).map(e => ({ ...e, type: 'item', icon: '📦' })),
-        ...locations.filter(filter).map(e => ({ ...e, type: 'location', icon: '📍' })),
-        ...lore.filter(filter).map(e => ({ ...e, type: 'lore', icon: '📜' })),
-        ...species.filter(filter).map(e => ({ ...e, type: 'species', icon: '🐾' })),
-        ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', imageUrl: resolveShortcodes(e.imageUrl) }))
+        ...characters.filter(filter).map(e => ({ ...e, type: 'character', icon: '👤', resolvedImageUrl: resolveEntityImage(e) })),
+        ...items.filter(filter).map(e => ({ ...e, type: 'item', icon: '📦', resolvedImageUrl: resolveEntityImage(e) })),
+        ...locations.filter(filter).map(e => ({ ...e, type: 'location', icon: '📍', resolvedImageUrl: resolveEntityImage(e) })),
+        ...lore.filter(filter).map(e => ({ ...e, type: 'lore', icon: '📜', resolvedImageUrl: resolveEntityImage(e) })),
+        ...species.filter(filter).map(e => ({ ...e, type: 'species', icon: '🐾', resolvedImageUrl: resolveEntityImage(e) })),
+        ...emotes.map((e: Entity) => ({ ...e, id: e.imageUrl!, type: 'emote', icon: e.icon || '😁', resolvedImageUrl: resolveShortcodes(e.imageUrl) }))
       ];
-    }, [characters, items, locations, lore, species, emotes]);
+    }, [characters, items, locations, lore, species, emotes, settings]);
   
     const allEntitiesRef = useRef(allEntities);
     useEffect(() => {
       allEntitiesRef.current = allEntities;
-    }, [allEntities]);
+    }, [allEntities, settings]);
 
     const toBubbles = useMemo(() => (text: string) => {
       if (!text) return '';
@@ -141,9 +150,16 @@ const TiptapPagedEditor = ({
       processed = processed.replace(/#\{(\w+):(\d+)\}/g, (_match, type, id) => {
         const entity = allEntities.find(e => e.id !== undefined && e.type === type.toLowerCase() && e.id.toString() === id);
         const name = entity ? entity.name : `Unknown ${type}`;
-        return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}">${name}</span>`;
-      });
-      processed = processed.replace(/#\{pagebreak\}/g, '<div data-type="page-break"></div>');
+        const imageUrl = entity ? (entity as any).resolvedImageUrl : '';
+        const icon = entity ? (entity as any).icon : (type === 'location' ? '📍' : '👤');
+        const renderImages = settings.renderDeepLinkImages;
+
+        if (!renderImages) {
+           return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}" data-render-images="false">${name}</span>`;
+        }
+
+        return `<span data-type="mention" data-id="${id}" data-entity-type="${type.toLowerCase()}" data-label="${name}" data-resolved-image-url="${imageUrl || ''}" data-icon="${icon || ''}" data-render-images="true"><span class="mention-visual">${imageUrl ? `<img src="${imageUrl}" class="mention-image" />` : `<span class="mention-icon-text">${icon}</span>`}</span><span class="mention-label">${name}</span></span>`;
+      });      processed = processed.replace(/#\{pagebreak\}/g, '<div data-type="page-break"></div>');
       
       // 3. Fallback for raw image shortcodes not in img tags
       processed = processed.replace(/#\{image:([\w\-]+)\}/g, (_match, id) => {
@@ -308,7 +324,62 @@ const TiptapPagedEditor = ({
                       }
                     },
                   },
+                  'resolved-image-url': {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-resolved-image-url'),
+                    renderHTML: attributes => {
+                      if (!attributes['resolved-image-url']) {
+                        return {}
+                      }
+                      return {
+                        'data-resolved-image-url': attributes['resolved-image-url'],
+                      }
+                    },
+                  },
+                  icon: {
+                    default: null,
+                    parseHTML: element => element.getAttribute('data-icon'),
+                    renderHTML: attributes => {
+                      if (!attributes.icon) {
+                        return {}
+                      }
+                      return {
+                        'data-icon': attributes.icon,
+                      }
+                    },
+                  },
                 }
+              },
+              renderHTML({ node, HTMLAttributes }) {
+                const renderImages = settings.renderDeepLinkImages;
+                const hasImage = !!node.attrs['resolved-image-url'];
+                const icon = node.attrs.icon || (node.attrs['entity-type'] === 'location' ? '📍' : '👤');
+                
+                if (!renderImages) {
+                  return [
+                    'span',
+                    mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+                    node.attrs.label ?? node.attrs.id,
+                  ]
+                }
+
+                return [
+                  'span',
+                  mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+                  [
+                    'span',
+                    { 
+                      class: 'mention-visual',
+                    },
+                    hasImage
+                      ? ['img', { 
+                          src: node.attrs['resolved-image-url'], 
+                          class: 'mention-image'
+                        }]
+                      : ['span', { class: 'mention-icon-text' }, icon]
+                  ],
+                  ['span', { class: 'mention-label' }, node.attrs.label ?? node.attrs.id],
+                ]
               },
             }).configure({
               HTMLAttributes: {
@@ -324,7 +395,8 @@ const TiptapPagedEditor = ({
                       label: e.name,
                       name: e.name,
                       type: e.type,
-                      icon: e.icon
+                      icon: e.icon,
+                      resolvedImageUrl: e.resolvedImageUrl
                     }));
       
                   if (query.length === 0) {
@@ -346,6 +418,8 @@ const TiptapPagedEditor = ({
                           id: props.id,
                           label: props.label,
                           'entity-type': props.type,
+                          'resolved-image-url': props.resolvedImageUrl,
+                          icon: props.icon
                         },
                       },
                       {
@@ -812,10 +886,10 @@ const TiptapPagedEditor = ({
         .mention {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
+          gap: 4px;
           color: #90caf9;
           background-color: rgba(144, 202, 249, 0.1);
-          padding: 0 6px;
+          padding: 2px 8px 2px 4px;
           margin: 0 2px;
           border-radius: 4px;
           border-bottom: 1px dashed rgba(144, 202, 249, 0.4);
@@ -825,10 +899,45 @@ const TiptapPagedEditor = ({
           transition: all 0.2s ease;
           text-decoration: none;
           white-space: nowrap;
-          vertical-align: middle;
-          height: 1.5em;
-          width: auto;
+          vertical-align: baseline;
+          width: fit-content;
         }
+
+        .mention[data-render-images="false"] {
+            padding: 2px 6px;
+            gap: 0;
+            width: auto;
+        }
+
+        .mention-visual {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 1.1em;
+          width: 1.1em;
+          flex-shrink: 0;
+          overflow: hidden;
+          vertical-align: middle;
+        }
+
+        .mention-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 2px;
+          display: block;
+        }
+
+        .mention-label {
+          display: inline-block;
+          vertical-align: middle;
+          line-height: 1;
+        }
+
+        .mention-icon-text {
+          font-size: 0.9em;
+        }
+
         .mention:hover {
           background-color: rgba(144, 202, 249, 0.2);
           color: #fff;

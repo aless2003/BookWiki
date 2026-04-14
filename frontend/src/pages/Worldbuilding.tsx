@@ -175,6 +175,21 @@ const Worldbuilding: React.FC = () => {
         sectionId: null
     });
 
+    // Visual Settings
+    const [settings, setSettings] = useState({
+        renderDeepLinkImages: localStorage.getItem('settings_renderDeepLinkImages') !== 'false'
+    });
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const current = localStorage.getItem('settings_renderDeepLinkImages') !== 'false';
+            if (current !== settings.renderDeepLinkImages) {
+                setSettings({ renderDeepLinkImages: current });
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [settings.renderDeepLinkImages]);
+
     const markDirty = useCallback((updater: any) => {
         setIsDirty(true);
         setEditEntry(updater);
@@ -1073,6 +1088,7 @@ const Worldbuilding: React.FC = () => {
                                 onMentionClick={handleMentionClick}
                                 minHeight={300}
                                 onSave={handleSave}
+                                settings={settings}
                             />
                         </Paper>
 
@@ -1092,6 +1108,7 @@ const Worldbuilding: React.FC = () => {
                                     onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
+                                    settings={settings}
                                 />
                             </Paper>
                         )}
@@ -1113,6 +1130,7 @@ const Worldbuilding: React.FC = () => {
                                         onMentionClick={handleMentionClick}
                                         minHeight={150}
                                         onSave={handleSave}
+                                        settings={settings}
                                     />
                                 </Paper>
                                 <Paper sx={{ p: 3, mb: 3 }}>
@@ -1130,6 +1148,7 @@ const Worldbuilding: React.FC = () => {
                                         onMentionClick={handleMentionClick}
                                         minHeight={200}
                                         onSave={handleSave}
+                                        settings={settings}
                                     />
                                 </Paper>
                             </>
@@ -1201,6 +1220,7 @@ const Worldbuilding: React.FC = () => {
                                     onMentionClick={handleMentionClick}
                                     minHeight={200}
                                     onSave={handleSave}
+                                    settings={settings}
                                 />
                             </Paper>
                         ))}
