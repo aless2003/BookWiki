@@ -222,8 +222,8 @@ const SpeciesTaxonomy: React.FC = () => {
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
-            <Box sx={{ flexGrow: 1, bgcolor: 'background.default', minHeight: '100vh', color: 'text.primary' }}>
-                <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
+            <Box sx={{ flexGrow: 1, bgcolor: 'background.default', height: '100%', color: 'text.primary', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper' }}>
                     <Toolbar>
                         <IconButton
                             edge="start"
@@ -240,92 +240,94 @@ const SpeciesTaxonomy: React.FC = () => {
                     </Toolbar>
                 </AppBar>
 
-                <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-                        <Box>
-                            <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-                                <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature`}>
-                                    Species List
-                                </MuiLink>
-                                <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature&id=${speciesId}`}>
-                                    {taxonomy?.targetNode.name || 'Species'}
-                                </MuiLink>
-                                <Typography color="text.primary">{view === 'tree' ? 'Taxonomy Tree' : 'Relationship Network'}</Typography>
-                            </Breadcrumbs>
-                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                {taxonomy?.targetNode.name} {view === 'tree' ? 'Hierarchy' : 'Relationships'}
-                            </Typography>
+                <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+                    <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+                            <Box>
+                                <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+                                    <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature`}>
+                                        Species List
+                                    </MuiLink>
+                                    <MuiLink component={Link} underline="hover" color="inherit" to={`/world/${storyId}?category=Species%20%26%20Nature&id=${speciesId}`}>
+                                        {taxonomy?.targetNode.name || 'Species'}
+                                    </MuiLink>
+                                    <Typography color="text.primary">{view === 'tree' ? 'Taxonomy Tree' : 'Relationship Network'}</Typography>
+                                </Breadcrumbs>
+                                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                                    {taxonomy?.targetNode.name} {view === 'tree' ? 'Hierarchy' : 'Relationships'}
+                                </Typography>
+                            </Box>
+
+                            <ToggleButtonGroup
+                                value={view}
+                                exclusive
+                                onChange={(_e, newView) => newView && setView(newView)}
+                                size="small"
+                                aria-label="view switch"
+                            >
+                                <ToggleButton value="tree" aria-label="tree view">
+                                    <TreeIcon sx={{ mr: 1 }} /> Tree
+                                </ToggleButton>
+                                <ToggleButton value="flow" aria-label="network view">
+                                    <FlowIcon sx={{ mr: 1 }} /> Network
+                                </ToggleButton>
+                            </ToggleButtonGroup>
                         </Box>
 
-                        <ToggleButtonGroup
-                            value={view}
-                            exclusive
-                            onChange={(_e, newView) => newView && setView(newView)}
-                            size="small"
-                            aria-label="view switch"
-                        >
-                            <ToggleButton value="tree" aria-label="tree view">
-                                <TreeIcon sx={{ mr: 1 }} /> Tree
-                            </ToggleButton>
-                            <ToggleButton value="flow" aria-label="network view">
-                                <FlowIcon sx={{ mr: 1 }} /> Network
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                    </Box>
+                        {error ? (
+                            <Paper sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.error.main, 0.1), border: `1px solid ${alpha(theme.palette.error.main, 0.3)}` }}>
+                                <Typography color="error">{error}</Typography>
+                                <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>Retry</Button>
+                            </Paper>
+                        ) : taxonomy ? (
+                            <Box>
+                                {view === 'tree' ? (
+                                    <Paper sx={{ p: 4, borderRadius: 2 }}>
+                                        <SimpleTreeView defaultExpandedItems={expandedIds}>
+                                            {taxonomy.parentNode && (
+                                                <>
+                                                    <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block', pl: 1 }}>
+                                                        Parent Species
+                                                    </Typography>
+                                                    <RenderTreeItem 
+                                                        node={taxonomy.parentNode} 
+                                                        storyId={storyId!} 
+                                                    />
+                                                    <Box sx={{ ml: 4, my: 1, height: 20, borderLeft: `1px dashed ${alpha(theme.palette.divider, 0.5)}` }} />
+                                                </>
+                                            )}
 
-                    {error ? (
-                        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: alpha(theme.palette.error.main, 0.1), border: `1px solid ${alpha(theme.palette.error.main, 0.3)}` }}>
-                            <Typography color="error">{error}</Typography>
-                            <Button onClick={() => window.location.reload()} sx={{ mt: 2 }}>Retry</Button>
-                        </Paper>
-                    ) : taxonomy ? (
-                        <Box>
-                            {view === 'tree' ? (
-                                <Paper sx={{ p: 4, borderRadius: 2 }}>
-                                    <SimpleTreeView defaultExpandedItems={expandedIds}>
-                                        {taxonomy.parentNode && (
-                                            <>
-                                                <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block', pl: 1 }}>
-                                                    Parent Species
-                                                </Typography>
-                                                <RenderTreeItem 
-                                                    node={taxonomy.parentNode} 
-                                                    storyId={storyId!} 
-                                                />
-                                                <Box sx={{ ml: 4, my: 1, height: 20, borderLeft: `1px dashed ${alpha(theme.palette.divider, 0.5)}` }} />
-                                            </>
-                                        )}
-
-                                        <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block', pl: 1 }}>
-                                            {taxonomy.parentNode ? 'Current & Descendants' : 'Species Tree'}
-                                        </Typography>
-                                        <RenderTreeItem 
-                                            node={taxonomy.targetNode} 
-                                            isTarget={true}
-                                            storyId={storyId!} 
-                                        />
-                                    </SimpleTreeView>
-                                </Paper>
-                            ) : (
-                                <Box>
-                                    <Paper sx={{ p: 2, mb: 2, bgcolor: alpha(theme.palette.action.hover, 0.5) }}>
-                                        <Typography variant="body2" color="text.secondary">
-                                            This diagram shows relationships between species, such as evolution, growth stages, variants, or social dynamics.
-                                            The diagram is automatically laid out to prevent overlaps. You can pan and zoom.
-                                        </Typography>
+                                            <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, display: 'block', pl: 1 }}>
+                                                {taxonomy.parentNode ? 'Current & Descendants' : 'Species Tree'}
+                                            </Typography>
+                                            <RenderTreeItem 
+                                                node={taxonomy.targetNode} 
+                                                isTarget={true}
+                                                storyId={storyId!} 
+                                            />
+                                        </SimpleTreeView>
                                     </Paper>
-                                    {flowData && (
-                                        <SpeciesFlowDiagram 
-                                            data={flowData} 
-                                            storyId={storyId!} 
-                                            targetSpeciesId={Number(speciesId)} 
-                                        />
-                                    )}
-                                </Box>
-                            )}
-                        </Box>
-                    ) : null}
-                </Container>
+                                ) : (
+                                    <Box>
+                                        <Paper sx={{ p: 2, mb: 2, bgcolor: alpha(theme.palette.action.hover, 0.5) }}>
+                                            <Typography variant="body2" color="text.secondary">
+                                                This diagram shows relationships between species, such as evolution, growth stages, variants, or social dynamics.
+                                                The diagram is automatically laid out to prevent overlaps. You can pan and zoom.
+                                            </Typography>
+                                        </Paper>
+                                        {flowData && (
+                                            <SpeciesFlowDiagram 
+                                                data={flowData} 
+                                                storyId={storyId!} 
+                                                targetSpeciesId={Number(speciesId)} 
+                                            />
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        ) : null}
+                    </Container>
+                </Box>
             </Box>
         </ThemeProvider>
     );

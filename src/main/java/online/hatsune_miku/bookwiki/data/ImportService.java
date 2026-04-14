@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -139,6 +141,7 @@ public class ImportService {
             // 3. Fixup relationships in stories
             for (Story story : importedStories) {
                 fixupRelationships(story);
+                fixupShortcodes(story);
             }
             storyRepository.saveAll(importedStories);
 
@@ -255,6 +258,100 @@ public class ImportService {
                 }
             });
         }
+    }
+
+    private void fixupShortcodes(Story story) {
+        story.setDescription(replaceShortcodes(story.getDescription()));
+        if (story.getChapters() != null) {
+            story.getChapters().forEach(c -> {
+                c.setContent(replaceShortcodes(c.getContent()));
+                if (c.getNotes() != null) {
+                    c.getNotes().forEach(n -> n.setContent(replaceShortcodes(n.getContent())));
+                }
+            });
+        }
+        if (story.getCharacters() != null) {
+            story.getCharacters().forEach(c -> {
+                c.setDescription(replaceShortcodes(c.getDescription()));
+                c.setAppearance(replaceShortcodes(c.getAppearance()));
+                if (c.getCustomSections() != null) {
+                    c.getCustomSections().forEach(s -> s.setContent(replaceShortcodes(s.getContent())));
+                }
+            });
+        }
+        if (story.getLocations() != null) {
+            story.getLocations().forEach(l -> {
+                l.setDescription(replaceShortcodes(l.getDescription()));
+                l.setWhereItIs(replaceShortcodes(l.getWhereItIs()));
+                l.setDetails(replaceShortcodes(l.getDetails()));
+                if (l.getCustomSections() != null) {
+                    l.getCustomSections().forEach(s -> s.setContent(replaceShortcodes(s.getContent())));
+                }
+            });
+        }
+        if (story.getItems() != null) {
+            story.getItems().forEach(i -> {
+                i.setDescription(replaceShortcodes(i.getDescription()));
+                if (i.getCustomSections() != null) {
+                    i.getCustomSections().forEach(s -> s.setContent(replaceShortcodes(s.getContent())));
+                }
+            });
+        }
+        if (story.getLores() != null) {
+            story.getLores().forEach(l -> {
+                l.setDescription(replaceShortcodes(l.getDescription()));
+                if (l.getCustomSections() != null) {
+                    l.getCustomSections().forEach(s -> s.setContent(replaceShortcodes(s.getContent())));
+                }
+            });
+        }
+        if (story.getSpecies() != null) {
+            story.getSpecies().forEach(s -> {
+                s.setDescription(replaceShortcodes(s.getDescription()));
+                if (s.getCustomSections() != null) {
+                    s.getCustomSections().forEach(cs -> cs.setContent(replaceShortcodes(cs.getContent())));
+                }
+            });
+        }
+    }
+
+    private String replaceShortcodes(String text) {
+        if (text == null || text.isEmpty()) return text;
+
+        Pattern pattern = Pattern.compile("#\\{(\\w+):([\\w\\-]+)\\}");
+        Matcher matcher = pattern.matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String type = matcher.group(1).toLowerCase();
+            String idStr = matcher.group(2);
+
+            String mapKey = switch (type) {
+                case "character" -> "CHARACTER";
+                case "item" -> "ITEM";
+                case "location" -> "LOCATION";
+                case "lore" -> "LORE";
+                case "species" -> "SPECIES";
+                default -> null;
+            };
+
+            if (mapKey != null) {
+                try {
+                    Long oldId = Long.parseLong(idStr);
+                    Long newId = getNewId(mapKey, oldId);
+                    if (newId != null) {
+                        matcher.appendReplacement(sb, Matcher.quoteReplacement("#{" + type + ":" + newId + "}"));
+                    } else {
+                        matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)));
+                    }
+                } catch (NumberFormatException e) {
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)));
+                }
+            } else {
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)));
+            }
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private void prepareForImport(@NonNull Story story) {

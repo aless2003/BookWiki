@@ -1,27 +1,43 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import ReactFlow, { 
     Background, 
     Controls, 
+    MiniMap,
     MarkerType,
     Handle,
     Position,
     useNodesState,
     useEdgesState,
-    addEdge
+    Panel
 } from 'reactflow';
-import type { Node, Edge, Connection } from 'reactflow';
+import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Typography, Avatar, Paper, IconButton, Tooltip, useTheme, alpha } from '@mui/material';
+import { 
+    Box, 
+    Typography, 
+    Avatar, 
+    Paper, 
+    IconButton, 
+    Tooltip, 
+    useTheme, 
+    alpha,
+    ToggleButton,
+    ToggleButtonGroup,
+    Chip,
+    CircularProgress
+} from '@mui/material';
 import { 
     Visibility as ViewIcon, 
     AddCircleOutline as ExpandIcon,
-    RemoveCircleOutline as CollapseIcon
+    RemoveCircleOutline as CollapseIcon,
+    VerticalAlignBottom as VerticalIcon,
+    SwapHoriz as HorizontalIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { fetchSpeciesFlow } from '../utils/speciesApi';
 import type { SpeciesFlow } from '../utils/speciesApi';
 import { resolveShortcodes } from '../constants/media';
-import dagre from 'dagre';
+import ELK from 'elkjs/lib/elk.bundled.js';
 
 interface SpeciesFlowDiagramProps {
     data: SpeciesFlow;
@@ -37,124 +53,139 @@ interface SpeciesNodeData {
     storyId: string;
     isExpanded?: boolean;
     isInitial?: boolean;
+    isHighlighted?: boolean;
+    isDimmed?: boolean;
     onToggle: (id: number, isExpanded: boolean) => void;
+    onNavigate: (id: number) => void;
 }
 
+const nodeWidth = 220;
+const nodeHeight = 80;
+
 const SpeciesNode = ({ data }: { data: SpeciesNodeData }) => {
-    const navigate = useNavigate();
     const theme = useTheme();
     const isTarget = data.isTarget;
 
     return (
         <Paper 
-            elevation={isTarget ? 4 : 1}
+            elevation={isTarget ? 6 : 2}
             sx={{ 
-                p: 1.25, 
-                minWidth: 170, 
+                p: 1.5, 
+                width: nodeWidth, 
+                height: nodeHeight,
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: 1.5,
-                border: '1px solid',
-                borderColor: isTarget ? 'primary.main' : theme.palette.divider,
-                bgcolor: isTarget ? alpha(theme.palette.primary.main, 0.1) : theme.palette.background.paper,
-                borderRadius: 2,
+                border: '2px solid',
+                borderColor: isTarget 
+                    ? theme.palette.primary.main 
+                    : data.isHighlighted 
+                        ? alpha(theme.palette.primary.main, 0.6)
+                        : theme.palette.divider,
+                bgcolor: isTarget 
+                    ? alpha(theme.palette.primary.main, 0.08) 
+                    : theme.palette.background.paper,
+                borderRadius: 3,
                 position: 'relative',
-                transition: '0.2s',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: data.isDimmed ? 0.4 : 1,
+                transform: data.isHighlighted ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isTarget 
+                    ? `0 0 15px ${alpha(theme.palette.primary.main, 0.3)}`
+                    : data.isHighlighted
+                        ? `0 0 10px ${alpha(theme.palette.primary.main, 0.2)}`
+                        : theme.shadows[2],
                 '&:hover': {
-                    borderColor: isTarget ? 'primary.light' : alpha(theme.palette.primary.main, 0.4),
-                    boxShadow: theme.shadows[4]
+                    borderColor: theme.palette.primary.main,
+                    boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.15)}`,
+                    transform: 'translateY(-2px) scale(1.02)',
+                    zIndex: 10
                 },
                 '&:hover .node-actions': { opacity: 1 }
             }}
         >
-            {/* Target Handles (Top) */}
-            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
-                <Handle
-                    key={`t-${i}`}
-                    type="target"
-                    position={Position.Top}
-                    id={`t-${i}`}
-                    style={{ left: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
-                />
-            ))}
-            
-            {/* Source Handles (Bottom) */}
-            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
-                <Handle
-                    key={`s-${i}`}
-                    type="source"
-                    position={Position.Bottom}
-                    id={`s-${i}`}
-                    style={{ left: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
-                />
-            ))}
-
-            {/* Target Handles (Left) for horizontal layout */}
-            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
-                <Handle
-                    key={`tl-${i}`}
-                    type="target"
-                    position={Position.Left}
-                    id={`tl-${i}`}
-                    style={{ top: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
-                />
-            ))}
-            
-            {/* Source Handles (Right) for horizontal layout */}
-            {Array.from({ length: MAX_HANDLES }).map((_, i) => (
-                <Handle
-                    key={`sr-${i}`}
-                    type="source"
-                    position={Position.Right}
-                    id={`sr-${i}`}
-                    style={{ top: `${(i + 1) * (100 / (MAX_HANDLES + 1))}%`, visibility: 'hidden' }}
-                />
-            ))}
+            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
+            <Handle type="target" position={Position.Left} style={{ visibility: 'hidden' }} />
+            <Handle type="source" position={Position.Right} style={{ visibility: 'hidden' }} />
             
             <Avatar 
                 src={data.pictureUrl ? resolveShortcodes(data.pictureUrl) : undefined}
                 sx={{ 
-                    width: 36, 
-                    height: 36, 
-                    bgcolor: 'primary.main', 
-                    border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
-                    fontSize: '1rem'
+                    width: 48, 
+                    height: 48, 
+                    bgcolor: isTarget ? 'primary.main' : alpha(theme.palette.primary.main, 0.1),
+                    color: isTarget ? 'white' : 'primary.main',
+                    border: `2px solid ${isTarget ? 'white' : alpha(theme.palette.primary.main, 0.2)}`,
+                    boxShadow: 1,
+                    fontSize: '1.25rem',
+                    fontWeight: 700
                 }}
             >
                 {!data.pictureUrl && data.name.charAt(0)}
             </Avatar>
             
             <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: isTarget ? 700 : 500, fontSize: '0.875rem' }}>
+                <Typography 
+                    variant="subtitle1" 
+                    noWrap 
+                    sx={{ 
+                        fontWeight: isTarget ? 700 : 600, 
+                        fontSize: '0.9rem',
+                        color: isTarget ? 'primary.main' : 'text.primary',
+                        lineHeight: 1.2
+                    }}
+                >
                     {data.name}
                 </Typography>
+                {isTarget && (
+                    <Chip 
+                        label="Primary" 
+                        size="small" 
+                        color="primary" 
+                        sx={{ height: 16, fontSize: '0.65rem', fontWeight: 700, mt: 0.5 }} 
+                    />
+                )}
             </Box>
 
             <Box 
                 className="node-actions nodrag" 
                 sx={{ 
                     display: 'flex', 
-                    opacity: 0.4, 
+                    flexDirection: 'column',
+                    opacity: 0, 
                     transition: '0.2s',
                     position: 'absolute',
-                    top: -12,
-                    right: -12,
+                    top: -10,
+                    right: -10,
                     bgcolor: theme.palette.background.paper,
-                    borderRadius: 4,
-                    boxShadow: 2,
+                    borderRadius: 2,
+                    boxShadow: 3,
                     border: `1px solid ${theme.palette.divider}`,
-                    p: 0.25
+                    p: 0.5,
+                    gap: 0.5,
+                    zIndex: 20
                 }}
             >
-                <Tooltip title={data.isExpanded ? "Collapse" : "Expand Relationships"}>
-                    <IconButton size="small" onClick={() => data.onToggle(data.id, !!data.isExpanded)}>
-                        {data.isExpanded ? <CollapseIcon fontSize="small" color="primary" /> : <ExpandIcon fontSize="small" />}
+                <Tooltip title={data.isExpanded ? "Collapse Connections" : "Expand Connections"}>
+                    <IconButton 
+                        size="small" 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            data.onToggle(data.id, !!data.isExpanded);
+                        }}
+                        sx={{ color: data.isExpanded ? 'secondary.main' : 'primary.main' }}
+                    >
+                        {data.isExpanded ? <CollapseIcon fontSize="small" /> : <ExpandIcon fontSize="small" />}
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="View Details">
                     <IconButton 
                         size="small" 
-                        onClick={() => navigate(`/world/${data.storyId}?category=Species%20%26%20Nature&id=${data.id}`)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            data.onNavigate(data.id);
+                        }}
                     >
                         <ViewIcon fontSize="small" />
                     </IconButton>
@@ -168,269 +199,111 @@ const nodeTypes = {
     speciesNode: SpeciesNode,
 };
 
-const nodeWidth = 200;
-const nodeHeight = 70;
-const MAX_HANDLES = 15;
+const elk = new ELK();
 
-/** How far along the rank axis before we treat an edge as “forward/back” vs same-rank cross traffic. */
-const FLOW_AXIS_THRESHOLD = 40;
+const elkOptions = {
+    'elk.algorithm': 'layered',
+    'elk.direction': 'DOWN',
+    'elk.padding': '[top=50,left=50,bottom=50,right=50]',
 
-/**
- * Handle indices: bi vs uni buckets along the main dagre axis; lateral split only when nearly same rank.
- */
-const HANDLE = {
-    tb: {
-        srcBi: 7,
-        srcUniDown: 8,
-        srcUniUp: 2,
-        srcUniCrossNeg: 3,
-        srcUniCrossPos: 13,
-        tgtBi: 7,
-        tgtUniFromAbove: 6,
-        tgtUniFromBelow: 11,
-        tgtUniCrossNegDx: 11,
-        tgtUniCrossPosDx: 1,
-    },
-    lr: {
-        srcBi: 7,
-        srcUniForward: 8,
-        srcUniBackward: 2,
-        srcUniCrossNeg: 3,
-        srcUniCrossPos: 13,
-        tgtBi: 7,
-        tgtUniFromForward: 6,
-        tgtUniFromBackward: 11,
-        tgtUniCrossNegDy: 11,
-        tgtUniCrossPosDy: 1,
-    },
-} as const;
+    // 1. IMPROVE PLACEMENT STRATEGY (The "Fixer")
+    // BRANDES_KOEPF is much smarter about centering nodes relative to their edges
+    'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
 
-/**
- * Groups edges onto shared handles by type:
- * - Bidirectional → one point per node side
- * - Unidirectional → one point per rank direction (TB: below vs above vs same-row left/right; LR: right vs left vs same-column up/down)
- */
-const assignHandleIds = (nodes: Node[], edges: Edge[], direction: string = 'TB') => {
-    const isHorizontal = direction === 'LR';
-    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    // 2. STRENGTHEN EDGE ROUTING
+    'elk.edgeRouting': 'ORTHOGONAL',
+    // Ensures edges keep a distance from nodes even during the routing phase
+    'elk.layered.edgeRouting.combinedStrategy': 'true',
 
-    return edges.map(e => {
-        const sourceNode = nodeMap.get(e.source);
-        const targetNode = nodeMap.get(e.target);
+    // 3. AGGRESSIVE SPACING
+    'elk.spacing.nodeNode': '120',
+    'elk.spacing.edgeNode': '80', // Increased to give labels room
+    'elk.layered.spacing.nodeNodeBetweenLayers': '150', // Vertical gap for labels
 
-        if (!sourceNode || !targetNode) return e;
+    // 4. LABEL HANDLING
+    // This tells ELK to actually reserve space for the text on the lines
+    'elk.edgeLabels.placement': 'CENTER',
+    'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
 
-        const isBi = !!e.markerStart;
-        const dx = targetNode.position.x - sourceNode.position.x;
-        const dy = targetNode.position.y - sourceNode.position.y;
-
-        if (isHorizontal) {
-            const H = HANDLE.lr;
-            const srcIdx = isBi
-                ? H.srcBi
-                : dx > FLOW_AXIS_THRESHOLD
-                  ? H.srcUniForward
-                  : dx < -FLOW_AXIS_THRESHOLD
-                    ? H.srcUniBackward
-                    : dy <= 0
-                      ? H.srcUniCrossNeg
-                      : H.srcUniCrossPos;
-            const tgtIdx = isBi
-                ? H.tgtBi
-                : dx > FLOW_AXIS_THRESHOLD
-                  ? H.tgtUniFromForward
-                  : dx < -FLOW_AXIS_THRESHOLD
-                    ? H.tgtUniFromBackward
-                    : dy > 0
-                      ? H.tgtUniCrossPosDy
-                      : H.tgtUniCrossNegDy;
-            return {
-                ...e,
-                sourceHandle: `sr-${srcIdx}`,
-                targetHandle: `tl-${tgtIdx}`,
-            };
-        }
-
-        const H = HANDLE.tb;
-        const srcIdx = isBi
-            ? H.srcBi
-            : dy > FLOW_AXIS_THRESHOLD
-              ? H.srcUniDown
-              : dy < -FLOW_AXIS_THRESHOLD
-                ? H.srcUniUp
-                : dx <= 0
-                  ? H.srcUniCrossNeg
-                  : H.srcUniCrossPos;
-        const tgtIdx = isBi
-            ? H.tgtBi
-            : dy > FLOW_AXIS_THRESHOLD
-              ? H.tgtUniFromAbove
-              : dy < -FLOW_AXIS_THRESHOLD
-                ? H.tgtUniFromBelow
-                : dx > 0
-                  ? H.tgtUniCrossPosDx
-                  : H.tgtUniCrossNegDx;
-        return {
-            ...e,
-            sourceHandle: `s-${srcIdx}`,
-            targetHandle: `t-${tgtIdx}`,
-        };
-    });
+    // Keep your existing helpful flags
+    'elk.layered.unnecessaryBendpoints': 'true',
+    'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
 };
 
-const getConnectedComponents = (nodes: Node[], edges: Edge[]) => {
-    const adj = new Map<string, string[]>();
-    nodes.forEach(n => adj.set(n.id, []));
-    edges.forEach(e => {
-        if (adj.has(e.source) && adj.has(e.target)) {
-            adj.get(e.source)!.push(e.target);
-            adj.get(e.target)!.push(e.source);
-        }
-    });
-
-    const visited = new Set<string>();
-    const components: string[][] = [];
-
-    nodes.forEach(n => {
-        if (!visited.has(n.id) && n.type !== 'group') {
-            const comp: string[] = [];
-            const q = [n.id];
-            visited.add(n.id);
-
-            while (q.length > 0) {
-                const curr = q.shift()!;
-                comp.push(curr);
-                for (const neighbor of adj.get(curr)!) {
-                    if (!visited.has(neighbor)) {
-                        visited.add(neighbor);
-                        q.push(neighbor);
-                    }
-                }
-            }
-            components.push(comp);
-        }
-    });
-
-    return components;
-};
-
-const getLayoutedElements = (nodes: Node[], edges: Edge[], theme: any, direction = 'TB') => {
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
+const getLayoutedElements = async (nodes: Node[], edges: Edge[], direction: 'TB' | 'LR' = 'TB') => {
     const isHorizontal = direction === 'LR';
-    dagreGraph.setGraph({ rankdir: direction });
+    
+    const elkNodes = nodes.map((node) => ({
+        id: node.id,
+        width: nodeWidth,
+        height: nodeHeight,
+    }));
 
-    const realNodes = nodes.filter(n => n.type !== 'group');
+    const elkEdges = edges.map((edge) => ({
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+    }));
 
-    realNodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    const layout = await elk.layout({
+        id: 'root',
+        layoutOptions: {
+            ...elkOptions,
+            'elk.direction': isHorizontal ? 'RIGHT' : 'DOWN',
+        },
+        children: elkNodes,
+        edges: elkEdges,
     });
 
-    edges.forEach((edge) => {
-        dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    const layoutedNodes = realNodes.map((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
+    return nodes.map((node) => {
+        const elkNode = layout.children?.find((n) => n.id === node.id);
+        if (elkNode) {
+            node.position = { x: elkNode.x || 0, y: elkNode.y || 0 };
+        }
         return {
             ...node,
             targetPosition: isHorizontal ? Position.Left : Position.Top,
             sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-            position: {
-                x: nodeWithPosition.x - nodeWidth / 2,
-                y: nodeWithPosition.y - nodeHeight / 2,
-            }
         };
     });
-
-    const components = getConnectedComponents(layoutedNodes, edges);
-    const finalNodes: Node[] = [];
-    const padding = 50;
-
-    components.forEach((compNodes, index) => {
-        const compId = `group-${index}`;
-        const cNodes = layoutedNodes.filter(n => compNodes.includes(n.id));
-        
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        cNodes.forEach(n => {
-            if (n.position.x < minX) minX = n.position.x;
-            if (n.position.y < minY) minY = n.position.y;
-            if (n.position.x + nodeWidth > maxX) maxX = n.position.x + nodeWidth;
-            if (n.position.y + nodeHeight > maxY) maxY = n.position.y + nodeHeight;
-        });
-
-        minX -= padding;
-        minY -= padding;
-        maxX += padding;
-        maxY += padding;
-
-        const width = maxX - minX;
-        const height = maxY - minY;
-
-        finalNodes.push({
-            id: compId,
-            type: 'group',
-            data: {},
-            position: { x: minX, y: minY },
-            style: {
-                width,
-                height,
-                backgroundColor: alpha(theme.palette.primary.main, 0.03),
-                border: `2px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
-                borderRadius: 16,
-                zIndex: -1,
-            },
-        });
-
-        cNodes.forEach(n => {
-            finalNodes.push({
-                ...n,
-                parentNode: compId,
-                extent: 'parent',
-                position: {
-                    x: n.position.x - minX,
-                    y: n.position.y - minY,
-                },
-                zIndex: 1
-            });
-        });
-    });
-
-    return finalNodes;
 };
 
 const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, targetSpeciesId }) => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [loading, setLoading] = useState(false);
+    const [direction, setDirection] = useState<'TB' | 'LR'>('TB');
+    const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
     const handleToggleRef = React.useRef<(id: number, isExpanded: boolean) => Promise<void>>(async () => {});
 
-    const onConnect = useCallback((params: Connection) => setEdges((eds) => {
-        const combinedEdges = addEdge(params, eds);
-        return assignHandleIds(nodes, combinedEdges, 'TB');
-    }), [setEdges, nodes]);
+    const updateGraphLayout = useCallback(async (newNodes: Node[], newEdges: Edge[], dir: 'TB' | 'LR' = direction) => {
+        setLoading(true);
+        try {
+            const layoutedNodes = await getLayoutedElements(newNodes, newEdges, dir);
+            setNodes(layoutedNodes);
+            setEdges(newEdges);
+        } catch (err) {
+            console.error('Layout failed', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [direction, setNodes, setEdges]);
 
     const handleToggle = useCallback(async (speciesId: number, isExpanded: boolean) => {
         if (isExpanded) {
-            // 1. Mark the node as no longer expanded in current nodes state
+            // Collapse logic
             const updatedNodes = nodes.map(n => 
                 n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: false } } : n
             );
 
-            // 2. BFS to find reachable nodes starting from the core (initial nodes + the toggled node)
-            // A node is reachable if it's initial OR if it's connected to a reachable expanded node.
             const legitNodes = new Set<string>();
             const queue: string[] = [];
 
-            // Add all initial nodes and the toggled node to the start of BFS
             updatedNodes.forEach(n => {
-                if (n.data.isInitial || n.id === speciesId.toString()) {
+                if (n.data.isInitial || n.id === targetSpeciesId.toString()) {
                     legitNodes.add(n.id);
                     queue.push(n.id);
                 }
@@ -440,7 +313,6 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 const currId = queue.shift()!;
                 const currNode = updatedNodes.find(n => n.id === currId);
                 
-                // If the current node is expanded, all its neighbors become legit
                 if (currNode && currNode.data.isExpanded) {
                     for (const edge of edges) {
                         if (edge.source === currId && !legitNodes.has(edge.target)) {
@@ -454,80 +326,82 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 }
             }
 
-            // 3. Filter nodes and edges based on the legit set
             const finalNodes = updatedNodes.filter(n => legitNodes.has(n.id));
             const finalEdges = edges.filter(e => 
                 legitNodes.has(e.source) && legitNodes.has(e.target)
             );
 
-            // 4. Layout and update both states with unique handles
-            const layoutedNodes = getLayoutedElements(finalNodes, finalEdges, theme);
-            const edgesWithHandles = assignHandleIds(layoutedNodes, finalEdges, 'TB');
-            setNodes(layoutedNodes);
-            setEdges(edgesWithHandles);
+            // If no nodes or edges were removed, just update the expansion state without re-layout
+            if (finalNodes.length === nodes.length && finalEdges.length === edges.length) {
+                setNodes(updatedNodes);
+            } else {
+                await updateGraphLayout(finalNodes, finalEdges);
+            }
             return;
         }
 
         try {
+            setLoading(true);
             const flow = await fetchSpeciesFlow([speciesId]);
             
             const existingIds = new Set(nodes.map(n => n.id));
-            
-            // Mark current node as expanded
+            const existingEdgeIds = new Set(edges.map(e => e.id));
+
+            const newNodesData = flow.nodes.filter(n => !existingIds.has(n.id.toString()));
+            const newEdgesData = flow.edges.filter(e => !existingEdgeIds.has(`e-${e.id}`));
+
             const updatedNodes = nodes.map(n => 
                 n.id === speciesId.toString() ? { ...n, data: { ...n.data, isExpanded: true } } : n
             );
 
-            const newNodes = flow.nodes
-                .filter(n => !existingIds.has(n.id.toString()))
-                .map(n => ({
-                    id: n.id.toString(),
-                    type: 'speciesNode',
-                    data: { 
-                        ...n, 
-                        storyId, 
-                        isTarget: n.id === targetSpeciesId,
-                        isExpanded: false,
-                        isInitial: false,
-                        onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
-                    },
-                    position: { x: 0, y: 0 }
-                }));
+            // If no new nodes or edges were added, just update the expansion state without re-layout
+            if (newNodesData.length === 0 && newEdgesData.length === 0) {
+                setNodes(updatedNodes);
+                setLoading(false);
+                return;
+            }
+
+            const newNodes = newNodesData.map(n => ({
+                id: n.id.toString(),
+                type: 'speciesNode',
+                data: { 
+                    ...n, 
+                    storyId, 
+                    isTarget: n.id === targetSpeciesId,
+                    isExpanded: false,
+                    isInitial: false,
+                    onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp),
+                    onNavigate: (id: number) => navigate(`/world/${storyId}?category=Species%20%26%20Nature&id=${id}`)
+                },
+                position: { x: 0, y: 0 }
+            }));
             
             const combinedNodes = [...updatedNodes, ...newNodes];
             
-            const existingEdgeIds = new Set(edges.map(e => e.id));
-            const newEdges = flow.edges
-                .filter(e => !existingEdgeIds.has(`e-${e.id}`))
-                .map(e => {
-                    console.log(`Connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
-                    return {
-                        id: `e-${e.id}`,
-                        source: e.sourceSpeciesId.toString(),
-                        target: e.targetSpeciesId.toString(),
-                        label: e.label,
-                        animated: true,
-                        type: 'smoothstep',
-                        labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
-                        labelBgPadding: [8, 4] as [number, number],
-                        labelBgBorderRadius: 4,
-                        labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
-                        markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                        markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
-                        style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
-                    };
-                });
+            const newEdges = newEdgesData.map(e => ({
+                id: `e-${e.id}`,
+                source: e.sourceSpeciesId.toString(),
+                target: e.targetSpeciesId.toString(),
+                label: e.label,
+                animated: true,
+                type: 'smoothstep',
+                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 10 },
+                labelBgPadding: [6, 3] as [number, number],
+                labelBgBorderRadius: 4,
+                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.8 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                style: { stroke: alpha(theme.palette.primary.main, 0.5), strokeWidth: 2 },
+            }));
             
             const combinedEdges = [...edges, ...newEdges];
-            const layoutedNodes = getLayoutedElements(combinedNodes, combinedEdges, theme);
-            const edgesWithHandles = assignHandleIds(layoutedNodes, combinedEdges, 'TB');
-            
-            setNodes(layoutedNodes);
-            setEdges(edgesWithHandles);
+            await updateGraphLayout(combinedNodes, combinedEdges);
         } catch (err) {
             console.error('Failed to expand species flow', err);
+        } finally {
+            setLoading(false);
         }
-    }, [storyId, targetSpeciesId, setNodes, setEdges, theme, nodes, edges]);
+    }, [nodes, edges, targetSpeciesId, storyId, navigate, updateGraphLayout, theme]);
 
     useEffect(() => {
         handleToggleRef.current = handleToggle;
@@ -544,66 +418,224 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                     isTarget: s.id === targetSpeciesId,
                     isExpanded: false,
                     isInitial: true,
-                    onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp)
+                    onToggle: (id: number, exp: boolean) => handleToggleRef.current(id, exp),
+                    onNavigate: (id: number) => navigate(`/world/${storyId}?category=Species%20%26%20Nature&id=${id}`)
                 },
                 position: { x: 0, y: 0 },
             }));
 
-            const initialEdges: Edge[] = data.edges.map(e => {
-                console.log(`Initial connection [e-${e.id}] between ${e.sourceSpeciesId} and ${e.targetSpeciesId} - bidirectional: ${e.bidirectional}`);
-                return {
-                    id: `e-${e.id}`,
-                    source: e.sourceSpeciesId.toString(),
-                    target: e.targetSpeciesId.toString(),
-                    label: e.label,
-                    animated: true,
-                    type: 'smoothstep',
-                    labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 11 },
-                    labelBgPadding: [8, 4] as [number, number],
-                    labelBgBorderRadius: 4,
-                    labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.9, border: `1px solid ${theme.palette.divider}` },
-                    markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                    markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
-                    style: { stroke: theme.palette.primary.main, strokeWidth: 2.5 },
-                };
-            });
+            const initialEdges: Edge[] = data.edges.map(e => ({
+                id: `e-${e.id}`,
+                source: e.sourceSpeciesId.toString(),
+                target: e.targetSpeciesId.toString(),
+                label: e.label,
+                animated: true,
+                type: 'smoothstep',
+                labelStyle: { fill: theme.palette.text.primary, fontWeight: 600, fontSize: 10 },
+                labelBgPadding: [6, 3] as [number, number],
+                labelBgBorderRadius: 4,
+                labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.8 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
+                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                style: { stroke: alpha(theme.palette.primary.main, 0.5), strokeWidth: 2 },
+            }));
 
-            const layoutedNodes = getLayoutedElements(initialNodes, initialEdges, theme);
-            const edgesWithHandles = assignHandleIds(layoutedNodes, initialEdges, 'TB');
-            setNodes(layoutedNodes);
-            setEdges(edgesWithHandles);
+            updateGraphLayout(initialNodes, initialEdges);
         }
-    }, [data, storyId, targetSpeciesId, setNodes, setEdges, theme]);
+    }, [data, storyId, targetSpeciesId, updateGraphLayout, navigate, theme]);
+
+    // Highlighting logic
+    const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
+        setHoveredNode(node.id);
+    }, []);
+
+    const onNodeMouseLeave = useCallback(() => {
+        setHoveredNode(null);
+    }, []);
+
+    const highlightedEdges = useMemo(() => {
+        if (!hoveredNode) return edges;
+        return edges.map(edge => {
+            const isConnected = edge.source === hoveredNode || edge.target === hoveredNode;
+            return {
+                ...edge,
+                animated: isConnected,
+                style: {
+                    ...edge.style,
+                    stroke: isConnected ? theme.palette.secondary.main : alpha(theme.palette.primary.main, 0.1),
+                    strokeWidth: isConnected ? 3 : 1,
+                    zIndex: isConnected ? 10 : 0
+                }
+            };
+        });
+    }, [edges, hoveredNode, theme]);
+
+    const highlightedNodes = useMemo(() => {
+        if (!hoveredNode) return nodes;
+        
+        const connectedNodeIds = new Set<string>([hoveredNode]);
+        edges.forEach(edge => {
+            if (edge.source === hoveredNode) connectedNodeIds.add(edge.target);
+            if (edge.target === hoveredNode) connectedNodeIds.add(edge.source);
+        });
+
+        return nodes.map(node => ({
+            ...node,
+            data: {
+                ...node.data,
+                isHighlighted: node.id === hoveredNode,
+                isDimmed: !connectedNodeIds.has(node.id)
+            }
+        }));
+    }, [nodes, edges, hoveredNode]);
 
     return (
         <Box 
             sx={{ 
                 width: '100%', 
-                height: 550, 
-                bgcolor: alpha(theme.palette.background.default, 0.4), 
-                borderRadius: 3, 
+                height: 600, 
+                bgcolor: alpha(theme.palette.background.paper, 0.5), 
+                borderRadius: 4, 
                 overflow: 'hidden', 
                 border: `1px solid ${theme.palette.divider}`,
                 position: 'relative',
-                boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                '& .react-flow__controls': {
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 1,
+                    bgcolor: alpha(theme.palette.background.paper, 0.9),
+                    backdropFilter: 'blur(8px)',
+                    p: 0.5,
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                    boxShadow: 4,
+                },
+                '& .react-flow__controls-button': {
+                    bgcolor: 'transparent',
+                    border: 'none',
+                    borderBottom: 'none',
+                    color: theme.palette.text.secondary,
+                    transition: '0.2s',
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 1,
+                    '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                    },
+                    '& svg': {
+                        fill: 'currentColor',
+                    }
+                }
             }}
         >
+            {loading && (
+                <Box sx={{ 
+                    position: 'absolute', 
+                    top: 0, left: 0, right: 0, bottom: 0, 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.background.paper, 0.7),
+                    zIndex: 1000,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <CircularProgress color="primary" />
+                </Box>
+            )}
+            
             <ReactFlow
-                nodes={nodes}
-                edges={edges}
+                nodes={highlightedNodes}
+                edges={highlightedEdges}
                 nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
+                onNodeMouseEnter={onNodeMouseEnter}
+                onNodeMouseLeave={onNodeMouseLeave}
                 fitView
-                zoomOnScroll={false}
-                preventScrolling={false}
+                zoomOnScroll={true}
                 fitViewOptions={{ padding: 0.2 }}
                 minZoom={0.1}
-                maxZoom={1.5}
+                maxZoom={2}
             >
-                <Background color={theme.palette.divider} gap={20} size={1} />
-                <Controls />
+                <Background 
+                    color={theme.palette.divider} 
+                    gap={20} 
+                    size={1} 
+                />
+                
+                <Panel position="top-right">
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Paper 
+                            elevation={4} 
+                            sx={{ 
+                                p: 0.5, 
+                                display: 'flex', 
+                                gap: 0.5, 
+                                borderRadius: 2,
+                                bgcolor: alpha(theme.palette.background.paper, 0.9),
+                                backdropFilter: 'blur(8px)',
+                                border: `1px solid ${theme.palette.divider}`,
+                            }}
+                        >
+                            <ToggleButtonGroup
+                                value={direction}
+                                exclusive
+                                onChange={(_, val) => {
+                                    if (val) {
+                                        setDirection(val);
+                                        updateGraphLayout(nodes, edges, val);
+                                    }
+                                }}
+                                size="small"
+                                sx={{
+                                    '& .MuiToggleButton-root': {
+                                        border: 'none',
+                                        color: theme.palette.text.secondary,
+                                        '&.Mui-selected': {
+                                            bgcolor: alpha(theme.palette.primary.main, 0.15),
+                                            color: theme.palette.primary.main,
+                                        }
+                                    }
+                                }}
+                            >
+                                <ToggleButton value="TB" aria-label="Vertical Layout">
+                                    <Tooltip title="Vertical Layout"><VerticalIcon fontSize="small" /></Tooltip>
+                                </ToggleButton>
+                                <ToggleButton value="LR" aria-label="Horizontal Layout">
+                                    <Tooltip title="Horizontal Layout"><HorizontalIcon fontSize="small" /></Tooltip>
+                                </ToggleButton>
+                            </ToggleButtonGroup>
+                        </Paper>
+                    </Box>
+                </Panel>
+
+                <Controls 
+                    showInteractive={false} 
+                    style={{ 
+                        display: 'flex', 
+                        flexDirection: 'row',
+                        bottom: 10,
+                        left: 10,
+                        margin: 0
+                    }}
+                />
+                <MiniMap 
+                    nodeColor={(n) => {
+                        if (n.data?.isTarget) return theme.palette.primary.main;
+                        return alpha(theme.palette.text.disabled, 0.3);
+                    }}
+                    maskColor={alpha(theme.palette.background.default, 0.7)}
+                    style={{ 
+                        height: 120, 
+                        width: 160,
+                        borderRadius: 12, 
+                        border: `1px solid ${theme.palette.divider}`,
+                        backgroundColor: theme.palette.background.paper,
+                    }}
+                />
             </ReactFlow>
         </Box>
     );
