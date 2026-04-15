@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "predev": "powershell -Command \"Copy-Item -Path '..\\scripts\\wrapper\\target\\release\\bookwiki-backend.exe' -Destination '.\\src-tauri\\bookwiki-backend-x86_64-pc-windows-gnu.exe' -Force\"",

@@ -32,4 +32,24 @@ public class LocationController {
     public void deleteLocation(@PathVariable Long id) {
         locationService.deleteLocation(id);
     }
+
+    @GetMapping("/locations/{id}/taxonomy")
+    public LocationTaxonomyDTO getTaxonomy(@PathVariable Long id) {
+        return locationService.getTaxonomy(id);
+    }
+
+    @GetMapping("/locations/flow")
+    public LocationFlowDTO getLocationFlow(@RequestParam List<Long> ids) {
+        return locationService.getLocationFlow(ids);
+    }
+
+    @PostMapping("/locations/links")
+    public LocationLink createLink(@RequestBody LocationLink link) {
+        return locationService.createLink(link);
+    }
+
+    @DeleteMapping("/locations/links/{id}")
+    public void deleteLink(@PathVariable Long id) {
+        locationService.deleteLink(id);
+    }
 }

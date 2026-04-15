@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
     List<Location> findByStoryId(Long storyId);
+    List<Location> findByParentId(Long parentId);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
 import Navigation from './components/Navigation';
@@ -8,6 +8,7 @@ import Writing from './pages/Writing';
 import StorySelector from './pages/StorySelector';
 import Settings from './pages/Settings';
 import SpeciesTaxonomy from './pages/SpeciesTaxonomy';
+import LocationHierarchy from './pages/LocationHierarchy';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { API_BASE_URL } from './constants/api';
 
@@ -81,6 +82,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/world/:storyId" element={<Worldbuilding />} />
               <Route path="/world/:storyId/species/:speciesId/taxonomy" element={<SpeciesTaxonomy />} />
+              <Route path="/world/:storyId/locations/:locationId/hierarchy" element={<LocationHierarchy />} />
               <Route path="/world" element={<StorySelector mode="world" />} />
               <Route path="/stories" element={<StorySelector mode="write" />} />
               <Route path="/write/:storyId" element={<Writing />} />

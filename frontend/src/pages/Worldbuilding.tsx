@@ -35,7 +35,9 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions
+    DialogActions,
+    Slider,
+    Alert
 } from '@mui/material';
 import { 
     Person as PersonIcon, 
@@ -60,6 +62,8 @@ import { darkTheme } from '../theme';
 import { resolveShortcodes } from '../constants/media';
 import { fetchSpeciesFlow, createSpeciesLink, deleteSpeciesLink } from '../utils/speciesApi';
 import type { SpeciesFlow } from '../utils/speciesApi';
+import { fetchLocationFlow, createLocationLink, deleteLocationLink } from '../utils/locationApi';
+import type { LocationFlow } from '../utils/locationApi';
 
 const drawerWidth = 240;
 
@@ -111,6 +115,9 @@ interface Location {
     id?: number;
     name: string;
     pictureUrl: string;
+    parentId?: number;
+    parentAreaPercentage?: number;
+    forceOverpartition?: boolean;
     description: string;
     whereItIs: string;
     details: string;
@@ -169,11 +176,22 @@ const Worldbuilding: React.FC = () => {
         bidirectional: false
     });
 
+    // Location Flow state
+    const [locationFlow, setLocationFlow] = useState<LocationFlow | null>(null);
+    const [isLocFlowLoading, setIsLocFlowLoading] = useState(false);
+    const [newLocLink, setNewLocLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean }>({
+        targetId: '',
+        label: '',
+        bidirectional: false
+    });
+
     // Depropagation state
     const [depropagateDialog, setDepropagateDialog] = useState<{ open: boolean, sectionId: number | null }>({
         open: false,
         sectionId: null
     });
+
+    const lastErrorShownTime = useRef<number>(0);
 
     // Visual Settings
     const [settings, setSettings] = useState({
@@ -224,6 +242,19 @@ const Worldbuilding: React.FC = () => {
             error('Failed to load related species');
         } finally {
             setIsFlowLoading(false);
+        }
+    }, [error]);
+
+    const loadLocationFlow = useCallback(async (locationId: number) => {
+        setIsLocFlowLoading(true);
+        try {
+            const data = await fetchLocationFlow([locationId]);
+            setLocationFlow(data);
+        } catch (err) {
+            console.error('Failed to load location flow', err);
+            error('Failed to load related locations');
+        } finally {
+            setIsLocFlowLoading(false);
         }
     }, [error]);
 
@@ -279,11 +310,19 @@ const Worldbuilding: React.FC = () => {
             } else {
                 setSpeciesFlow(null);
             }
+        } else if (activeCategory === 'Locations') {
+            const loc = entry as Location;
+            setEditEntry({ ...loc });
+            if (loc.id) {
+                loadLocationFlow(loc.id);
+            } else {
+                setLocationFlow(null);
+            }
         } else {
             setEditEntry({ ...entry });
         }
         setIsEditing(true);
-    }, [activeCategory, loadSpeciesFlow]);
+    }, [activeCategory, loadSpeciesFlow, loadLocationFlow]);
 
     const handleCreateLink = async () => {
         if (!editEntry || !editEntry.id || newLink.targetId === '') return;
@@ -312,6 +351,39 @@ const Worldbuilding: React.FC = () => {
             await deleteSpeciesLink(linkId);
             success('Link removed');
             loadSpeciesFlow(editEntry.id);
+        } catch (err) {
+            console.error('Failed to delete link', err);
+            error('Failed to remove relationship');
+        }
+    };
+
+    const handleCreateLocLink = async () => {
+        if (!editEntry || !editEntry.id || newLocLink.targetId === '') return;
+        
+        try {
+            await createLocationLink({
+                sourceLocationId: editEntry.id,
+                targetLocationId: newLocLink.targetId as number,
+                label: newLocLink.label,
+                isBidirectional: newLocLink.bidirectional
+            });
+            success('Link added');
+            setNewLocLink({ targetId: '', label: '', bidirectional: false });
+            loadLocationFlow(editEntry.id);
+        } catch (err) {
+            console.error('Failed to create link', err);
+            error('Failed to add related locations');
+        }
+    };
+
+    const handleDeleteLocLink = async (linkId: number) => {
+        if (!editEntry || !editEntry.id) return;
+        if (!confirm('Are you sure you want to remove this relationship?')) return;
+
+        try {
+            await deleteLocationLink(linkId);
+            success('Link removed');
+            loadLocationFlow(editEntry.id);
         } catch (err) {
             console.error('Failed to delete link', err);
             error('Failed to remove relationship');
@@ -379,6 +451,9 @@ const Worldbuilding: React.FC = () => {
             setEditEntry({
                 name: '',
                 pictureUrl: '',
+                parentId: undefined,
+                parentAreaPercentage: 0,
+                forceOverpartition: false,
                 description: '',
                 whereItIs: '',
                 details: '',
@@ -725,6 +800,15 @@ const Worldbuilding: React.FC = () => {
                                 View Taxonomy
                             </Button>
                         )}
+                        {activeCategory === 'Locations' && editEntry.id && (
+                            <Button
+                                variant="outlined"
+                                startIcon={<AccountTreeIcon />}
+                                onClick={() => navigate(`/world/${storyId}/locations/${editEntry.id}/hierarchy`)}
+                            >
+                                View Hierarchy
+                            </Button>
+                        )}
                         {editEntry.id && (
                             <Button 
                                 variant="outlined" 
@@ -810,6 +894,184 @@ const Worldbuilding: React.FC = () => {
                                 onChange={(e) => markDirty({ ...editEntry, name: e.target.value })}
                                 sx={{ mb: 2 }}
                             />
+
+                            {activeCategory === 'Locations' && (
+                                <>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Parent Location"
+                                        value={(editEntry as Location).parentId || ''}
+                                        onChange={(e) => markDirty({ ...(editEntry as Location), parentId: e.target.value ? Number(e.target.value) : undefined })}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        <MenuItem value="">None</MenuItem>
+                                        {locations
+                                            .filter(l => l.id !== editEntry.id)
+                                            .map(l => (
+                                                <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
+                                            ))
+                                        }
+                                    </TextField>
+
+                                    {(editEntry as Location).parentId && (
+                                        <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
+                                                <Typography variant="subtitle2">Area Percentage</Typography>
+                                                <Typography variant="h6" color="primary">{(editEntry as Location).parentAreaPercentage || 0}%</Typography>
+                                            </Box>
+                                            
+                                            <Slider
+                                                value={(editEntry as Location).parentAreaPercentage || 0}
+                                                onChange={(_e, val) => {
+                                                    const currentVal = val as number;
+                                                    const otherChildrenArea = locations
+                                                        .filter(l => l.parentId === (editEntry as Location).parentId && l.id !== editEntry.id)
+                                                        .reduce((sum, l) => sum + (l.parentAreaPercentage || 0), 0);
+                                                    
+                                                    if (!(editEntry as Location).forceOverpartition && (otherChildrenArea + currentVal > 100)) {
+                                                        markDirty({ ...(editEntry as Location), parentAreaPercentage: Math.max(0, 100 - otherChildrenArea) });
+                                                        const now = Date.now();
+                                                        if (now - lastErrorShownTime.current > 5000) {
+                                                            error('Total area of all sub-locations cannot exceed 100% without forcing overpartition.');
+                                                            lastErrorShownTime.current = now;
+                                                        }
+                                                    } else {
+                                                        markDirty({ ...(editEntry as Location), parentAreaPercentage: currentVal });
+                                                    }
+                                                }}
+                                                min={0}
+                                                max={100}
+                                                valueLabelDisplay="auto"
+                                                marks={[
+                                                    { value: 0, label: '0%' },
+                                                    { value: 50, label: '50%' },
+                                                    { value: 100, label: '100%' }
+                                                ]}
+                                            />
+                                            
+                                            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch 
+                                                            size="small"
+                                                            checked={!!(editEntry as Location).forceOverpartition} 
+                                                            onChange={(e) => markDirty({ ...(editEntry as Location), forceOverpartition: e.target.checked })} 
+                                                        />
+                                                    }
+                                                    label={<Typography variant="caption">Force Overpartition</Typography>}
+                                                />
+                                                {(() => {
+                                                    const otherArea = locations
+                                                        .filter(l => l.parentId === (editEntry as Location).parentId && l.id !== editEntry.id)
+                                                        .reduce((sum, l) => sum + (l.parentAreaPercentage || 0), 0);
+                                                    const total = otherArea + ((editEntry as Location).parentAreaPercentage || 0);
+                                                    if (total > 100) {
+                                                        return <Alert severity="warning" icon={false} sx={{ py: 0, px: 1, '& .MuiAlert-message': { fontSize: '0.65rem' } }}>Total: {total}%</Alert>;
+                                                    }
+                                                    return null;
+                                                })()}
+                                            </Box>
+                                        </Box>
+                                    )}
+
+                                    {editEntry.id && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <LinkIcon /> Related Locations
+                                            </Typography>
+                                            <Divider sx={{ mb: 2 }} />
+                                            
+                                            {isLocFlowLoading ? (
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                                                    <CircularProgress size={24} />
+                                                </Box>
+                                            ) : (
+                                                <List>
+                                                    {locationFlow?.edges.map(edge => {
+                                                        const otherId = edge.sourceLocationId === editEntry.id ? edge.targetLocationId : edge.sourceLocationId;
+                                                        const otherLoc = locations.find(l => l.id === otherId);
+                                                        const isIncoming = edge.targetLocationId === editEntry.id && !edge.isBidirectional;
+                                                        
+                                                        return (
+                                                            <ListItem 
+                                                                key={edge.id}
+                                                                secondaryAction={
+                                                                    <IconButton edge="end" size="small" onClick={() => handleDeleteLocLink(edge.id!)}>
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                }
+                                                                sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 1 }}
+                                                            >
+                                                                <ListItemText 
+                                                                    primary={otherLoc?.name || 'Unknown'} 
+                                                                    secondary={
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                            {edge.isBidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
+                                                                            {edge.label || 'Related'}
+                                                                        </Box>
+                                                                    }
+                                                                />
+                                                            </ListItem>
+                                                        );
+                                                    })}
+                                                    {(!locationFlow || locationFlow.edges.length === 0) && (
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', p: 1 }}>
+                                                            No relationships defined.
+                                                        </Typography>
+                                                    )}
+                                                </List>
+                                            )}
+
+                                            <Box sx={{ mt: 2, p: 2, border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 1 }}>
+                                                <Typography variant="subtitle2" gutterBottom>Add Relationship</Typography>
+                                                <TextField
+                                                    select
+                                                    fullWidth
+                                                    size="small"
+                                                    label="Target Location"
+                                                    value={newLocLink.targetId}
+                                                    onChange={(e) => setNewLocLink(prev => ({ ...prev, targetId: Number(e.target.value) }))}
+                                                    sx={{ mb: 1.5 }}
+                                                >
+                                                    {locations
+                                                        .filter(l => l.id !== editEntry.id)
+                                                        .map(l => (
+                                                            <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
+                                                        ))
+                                                    }
+                                                </TextField>
+                                                <TextField
+                                                    fullWidth
+                                                    size="small"
+                                                    label="Label (e.g. Near to, Trade Route)"
+                                                    value={newLocLink.label}
+                                                    onChange={(e) => setNewLocLink(prev => ({ ...prev, label: e.target.value }))}
+                                                    sx={{ mb: 1.5 }}
+                                                />
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <Button 
+                                                        size="small" 
+                                                        variant={newLocLink.bidirectional ? "contained" : "outlined"}
+                                                        onClick={() => setNewLocLink(prev => ({ ...prev, bidirectional: !prev.bidirectional }))}
+                                                        startIcon={newLocLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
+                                                    >
+                                                        {newLocLink.bidirectional ? "Bidirectional" : "Unidirectional"}
+                                                    </Button>
+                                                    <Button 
+                                                        variant="contained" 
+                                                        size="small"
+                                                        disabled={newLocLink.targetId === ''}
+                                                        onClick={handleCreateLocLink}
+                                                    >
+                                                        Add
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </>
+                            )}
 
                                                         {activeCategory === 'Characters' && (
                                                             <>

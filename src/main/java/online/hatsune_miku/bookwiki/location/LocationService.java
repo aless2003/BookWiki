@@ -13,6 +13,9 @@ public class LocationService {
     private LocationRepository locationRepository;
 
     @Autowired
+    private LocationLinkRepository locationLinkRepository;
+
+    @Autowired
     private StoryRepository storyRepository;
 
     @Autowired
@@ -41,6 +44,9 @@ public class LocationService {
         return locationRepository.findById(id).map(l -> {
             l.setName(updated.getName());
             l.setPictureUrl(updated.getPictureUrl());
+            l.setParentId(updated.getParentId());
+            l.setParentAreaPercentage(updated.getParentAreaPercentage());
+            l.setForceOverpartition(updated.getForceOverpartition());
             l.setDescription(updated.getDescription());
             l.setWhereItIs(updated.getWhereItIs());
             l.setDetails(updated.getDetails());
@@ -56,6 +62,65 @@ public class LocationService {
             trackReferences(saved);
             return saved;
         }).orElseThrow(() -> new RuntimeException("Location not found"));
+    }
+
+    public LocationTaxonomyDTO getTaxonomy(Long id) {
+        Location target = locationRepository.findById(id).orElseThrow(() -> new RuntimeException("Location not found"));
+        
+        LocationTreeNodeDTO parentNode = null;
+        if (target.getParentId() != null) {
+            Location parent = locationRepository.findById(target.getParentId()).orElse(null);
+            if (parent != null) {
+                parentNode = mapToTreeNode(parent);
+            }
+        }
+
+        LocationTreeNodeDTO targetNode = mapToTreeNode(target);
+        targetNode.setChildren(getChildrenRecursively(id));
+
+        return new LocationTaxonomyDTO(parentNode, targetNode);
+    }
+
+    private List<LocationTreeNodeDTO> getChildrenRecursively(Long parentId) {
+        List<Location> children = locationRepository.findByParentId(parentId);
+        List<LocationTreeNodeDTO> nodes = new java.util.ArrayList<>();
+        for (Location child : children) {
+            LocationTreeNodeDTO node = mapToTreeNode(child);
+            node.setChildren(getChildrenRecursively(child.getId()));
+            nodes.add(node);
+        }
+        return nodes;
+    }
+
+    private LocationTreeNodeDTO mapToTreeNode(Location l) {
+        return new LocationTreeNodeDTO(l.getId(), l.getName(), l.getPictureUrl(), l.getParentAreaPercentage(), new java.util.ArrayList<>());
+    }
+
+    public LocationFlowDTO getLocationFlow(List<Long> locationIds) {
+        List<LocationLink> links = locationLinkRepository.findAllByLocationIds(locationIds);
+        java.util.Set<Long> allIds = new java.util.HashSet<>(locationIds);
+        for (LocationLink link : links) {
+            allIds.add(link.getSourceLocationId());
+            allIds.add(link.getTargetLocationId());
+        }
+
+        List<Location> locations = locationRepository.findAllById(allIds);
+        List<LocationTreeNodeDTO> nodes = locations.stream().map(this::mapToTreeNode).toList();
+
+        return new LocationFlowDTO(nodes, links);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public LocationLink createLink(LocationLink link) {
+        if (!locationRepository.existsById(link.getSourceLocationId()) || !locationRepository.existsById(link.getTargetLocationId())) {
+            throw new RuntimeException("One or both locations do not exist");
+        }
+        return locationLinkRepository.save(link);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteLink(Long id) {
+        locationLinkRepository.deleteById(id);
     }
 
     private void trackReferences(Location location) {

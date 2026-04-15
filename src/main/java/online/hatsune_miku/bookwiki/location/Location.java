@@ -26,6 +26,10 @@ public class Location {
     private String name;
     private String pictureUrl;
 
+    private Long parentId;
+    private Double parentAreaPercentage;
+    private Boolean forceOverpartition;
+
     @Column(columnDefinition = "TEXT")
     private String description; // "What it is"
 
