@@ -177,11 +177,12 @@ const TiptapPagedEditor = ({
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
   
-      const mentions = doc.querySelectorAll('span[data-type="mention"]');
+      // Find all potential mentions (either by class or by our data attributes)
+      const mentions = doc.querySelectorAll('.mention, [data-id][data-entity-type], [data-id][data-type]');
       mentions.forEach(el => {
-          const type = el.getAttribute('data-entity-type');
+          const type = el.getAttribute('data-entity-type') || el.getAttribute('data-type');
           const id = el.getAttribute('data-id');
-          if (type && id) {
+          if (type && id && type !== 'image' && type !== 'emote') {
               el.outerHTML = `#{${type}:${id}}`;
           }
       });
@@ -358,14 +359,14 @@ const TiptapPagedEditor = ({
                 if (!renderImages) {
                   return [
                     'span',
-                    mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+                    mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-type': 'mention' }),
                     node.attrs.label ?? node.attrs.id,
                   ]
                 }
 
                 return [
                   'span',
-                  mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+                  mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-type': 'mention' }),
                   [
                     'span',
                     { 

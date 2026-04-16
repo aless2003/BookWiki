@@ -390,7 +390,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 labelBgBorderRadius: 4,
                 labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.8 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
                 style: { stroke: alpha(theme.palette.primary.main, 0.5), strokeWidth: 2 },
             }));
             
@@ -436,7 +436,7 @@ const SpeciesFlowDiagram: React.FC<SpeciesFlowDiagramProps> = ({ data, storyId, 
                 labelBgBorderRadius: 4,
                 labelBgStyle: { fill: theme.palette.background.paper, fillOpacity: 0.8 },
                 markerEnd: { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20 },
-                markerStart: e.bidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
+                markerStart: e.isBidirectional ? { type: MarkerType.ArrowClosed, color: theme.palette.primary.main, width: 20, height: 20, orient: 'auto-start-reverse' } : undefined,
                 style: { stroke: alpha(theme.palette.primary.main, 0.5), strokeWidth: 2 },
             }));
 

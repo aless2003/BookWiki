@@ -170,19 +170,21 @@ const Worldbuilding: React.FC = () => {
     // Species Flow state
     const [speciesFlow, setSpeciesFlow] = useState<SpeciesFlow | null>(null);
     const [isFlowLoading, setIsFlowLoading] = useState(false);
-    const [newLink, setNewLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean }>({
+    const [newLink, setNewLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean, isIncoming: boolean }>({
         targetId: '',
         label: '',
-        bidirectional: false
+        bidirectional: false,
+        isIncoming: false
     });
 
     // Location Flow state
     const [locationFlow, setLocationFlow] = useState<LocationFlow | null>(null);
     const [isLocFlowLoading, setIsLocFlowLoading] = useState(false);
-    const [newLocLink, setNewLocLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean }>({
+    const [newLocLink, setNewLocLink] = useState<{ targetId: number | '', label: string, bidirectional: boolean, isIncoming: boolean }>({
         targetId: '',
         label: '',
-        bidirectional: false
+        bidirectional: false,
+        isIncoming: false
     });
 
     // Depropagation state
@@ -329,13 +331,13 @@ const Worldbuilding: React.FC = () => {
         
         try {
             await createSpeciesLink({
-                sourceSpeciesId: editEntry.id,
-                targetSpeciesId: newLink.targetId,
+                sourceSpeciesId: newLink.isIncoming ? (newLink.targetId as number) : editEntry.id,
+                targetSpeciesId: newLink.isIncoming ? editEntry.id : (newLink.targetId as number),
                 label: newLink.label,
-                bidirectional: newLink.bidirectional
+                isBidirectional: newLink.bidirectional
             });
             success('Link added');
-            setNewLink({ targetId: '', label: '', bidirectional: false });
+            setNewLink({ targetId: '', label: '', bidirectional: false, isIncoming: false });
             loadSpeciesFlow(editEntry.id);
         } catch (err) {
             console.error('Failed to create link', err);
@@ -362,13 +364,13 @@ const Worldbuilding: React.FC = () => {
         
         try {
             await createLocationLink({
-                sourceLocationId: editEntry.id,
-                targetLocationId: newLocLink.targetId as number,
+                sourceLocationId: newLocLink.isIncoming ? (newLocLink.targetId as number) : editEntry.id,
+                targetLocationId: newLocLink.isIncoming ? editEntry.id : (newLocLink.targetId as number),
                 label: newLocLink.label,
                 isBidirectional: newLocLink.bidirectional
             });
             success('Link added');
-            setNewLocLink({ targetId: '', label: '', bidirectional: false });
+            setNewLocLink({ targetId: '', label: '', bidirectional: false, isIncoming: false });
             loadLocationFlow(editEntry.id);
         } catch (err) {
             console.error('Failed to create link', err);
@@ -1049,15 +1051,27 @@ const Worldbuilding: React.FC = () => {
                                                     onChange={(e) => setNewLocLink(prev => ({ ...prev, label: e.target.value }))}
                                                     sx={{ mb: 1.5 }}
                                                 />
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <Button 
-                                                        size="small" 
-                                                        variant={newLocLink.bidirectional ? "contained" : "outlined"}
-                                                        onClick={() => setNewLocLink(prev => ({ ...prev, bidirectional: !prev.bidirectional }))}
-                                                        startIcon={newLocLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
-                                                    >
-                                                        {newLocLink.bidirectional ? "Bidirectional" : "Unidirectional"}
-                                                    </Button>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                        <Tooltip title={newLocLink.isIncoming ? "Selected Location -> This Location" : "This Location -> Selected Location"}>
+                                                            <Button 
+                                                                size="small" 
+                                                                variant="outlined"
+                                                                onClick={() => setNewLocLink(prev => ({ ...prev, isIncoming: !prev.isIncoming }))}
+                                                                disabled={newLocLink.bidirectional}
+                                                            >
+                                                                {newLocLink.isIncoming ? "← Incoming" : "→ Outgoing"}
+                                                            </Button>
+                                                        </Tooltip>
+                                                        <Button 
+                                                            size="small" 
+                                                            variant={newLocLink.bidirectional ? "contained" : "outlined"}
+                                                            onClick={() => setNewLocLink(prev => ({ ...prev, bidirectional: !prev.bidirectional, isIncoming: false }))}
+                                                            startIcon={newLocLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
+                                                        >
+                                                            {newLocLink.bidirectional ? "Bidirectional" : "Unidirectional"}
+                                                        </Button>
+                                                    </Box>
                                                     <Button 
                                                         variant="contained" 
                                                         size="small"
@@ -1215,10 +1229,10 @@ const Worldbuilding: React.FC = () => {
                                                                                 {speciesFlow?.edges.map(edge => {
                                                                                     const otherId = edge.sourceSpeciesId === editEntry.id ? edge.targetSpeciesId : edge.sourceSpeciesId;
                                                                                     const otherSpecies = species.find(s => s.id === otherId);
-                                                                                    const isIncoming = edge.targetSpeciesId === editEntry.id && !edge.bidirectional;
-                                                                                    
+                                                                                    const isIncoming = edge.targetSpeciesId === editEntry.id && !edge.isBidirectional;
+
                                                                                     return (
-                                                                                        <ListItem 
+                                                                                        <ListItem
                                                                                             key={edge.id}
                                                                                             secondaryAction={
                                                                                                 <IconButton edge="end" size="small" onClick={() => handleDeleteLink(edge.id!)}>
@@ -1227,18 +1241,17 @@ const Worldbuilding: React.FC = () => {
                                                                                             }
                                                                                             sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 1 }}
                                                                                         >
-                                                                                            <ListItemText 
-                                                                                                primary={otherSpecies?.name || 'Unknown'} 
+                                                                                            <ListItemText
+                                                                                                primary={otherSpecies?.name || 'Unknown'}
                                                                                                 secondary={
                                                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                                                        {edge.bidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
+                                                                                                        {edge.isBidirectional ? <LinkIcon sx={{ fontSize: 14 }} /> : (isIncoming ? '←' : '→')}
                                                                                                         {edge.label || 'Related'}
                                                                                                     </Box>
                                                                                                 }
                                                                                             />
                                                                                         </ListItem>
-                                                                                    );
-                                                                                })}
+                                                                                    );                                                                                })}
                                                                                 {(!speciesFlow || speciesFlow.edges.length === 0) && (
                                                                                     <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', p: 1 }}>
                                                                                         No relationships defined.
@@ -1273,15 +1286,27 @@ const Worldbuilding: React.FC = () => {
                                                                                 onChange={(e) => setNewLink(prev => ({ ...prev, label: e.target.value }))}
                                                                                 sx={{ mb: 1.5 }}
                                                                             />
-                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                                                <Button 
-                                                                                    size="small" 
-                                                                                    variant={newLink.bidirectional ? "contained" : "outlined"}
-                                                                                    onClick={() => setNewLink(prev => ({ ...prev, bidirectional: !prev.bidirectional }))}
-                                                                                    startIcon={newLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
-                                                                                >
-                                                                                    {newLink.bidirectional ? "Bidirectional" : "Unidirectional"}
-                                                                                </Button>
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                                                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                    <Tooltip title={newLink.isIncoming ? "Selected Species -> This Species" : "This Species -> Selected Species"}>
+                                                                                        <Button 
+                                                                                            size="small" 
+                                                                                            variant="outlined"
+                                                                                            onClick={() => setNewLink(prev => ({ ...prev, isIncoming: !prev.isIncoming }))}
+                                                                                            disabled={newLink.bidirectional}
+                                                                                        >
+                                                                                            {newLink.isIncoming ? "← Incoming" : "→ Outgoing"}
+                                                                                        </Button>
+                                                                                    </Tooltip>
+                                                                                    <Button 
+                                                                                        size="small" 
+                                                                                        variant={newLink.bidirectional ? "contained" : "outlined"}
+                                                                                        onClick={() => setNewLink(prev => ({ ...prev, bidirectional: !prev.bidirectional, isIncoming: false }))}
+                                                                                        startIcon={newLink.bidirectional ? <LinkIcon /> : <LinkOffIcon />}
+                                                                                    >
+                                                                                        {newLink.bidirectional ? "Bidirectional" : "Unidirectional"}
+                                                                                    </Button>
+                                                                                </Box>
                                                                                 <Button 
                                                                                     variant="contained" 
                                                                                     size="small"

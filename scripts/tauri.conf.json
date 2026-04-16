@@ -1,6 +1,6 @@
 {
   "productName": "BookWiki",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "identifier": "online.hatsune_miku.bookwiki",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -35,7 +35,7 @@
     ],
     "resources": [
       "../../scripts/dist/jre/**/*",
-      "../../scripts/dist/BookWiki-0.8.0.jar"
+      "../../scripts/dist/BookWiki-0.8.1.jar"
     ]
   },
   "plugins": {

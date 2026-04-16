@@ -137,10 +137,10 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         const doc = parser.parseFromString(html, 'text/html');
 
         // Find all potential mentions (either by class or by our data attributes)
-        const mentions = doc.querySelectorAll('.mention, [data-id][data-type]');
+        const mentions = doc.querySelectorAll('.mention, [data-id][data-type], [data-id][data-entity-type]');
 
         mentions.forEach(el => {
-            const type = el.getAttribute('data-type');
+            const type = el.getAttribute('data-type') || el.getAttribute('data-entity-type');
             const id = el.getAttribute('data-id');
             if (type && id) {
                 if (el.tagName === 'IMG') {
@@ -150,6 +150,16 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                     // Replace the entire element with the shortcode string
                     el.outerHTML = shortcode;
                 }
+            }
+        });
+
+        const images = doc.querySelectorAll('img');
+        images.forEach(img => {
+            const src = img.getAttribute('src');
+            if (src?.includes('/api/media/')) {
+                const uuid = src.split('/').pop();
+                const isEmote = img.classList.contains('inline-image-emote') || img.getAttribute('data-type') === 'emote';
+                img.setAttribute('src', `#{${isEmote ? 'emote' : 'image'}:${uuid}}`);
             }
         });
 
